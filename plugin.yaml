@@ -19,5 +19,5 @@ platformCommand:
     arch: amd64
     command: "$HELM_PLUGIN_DIR/bin/wrapper.bat"
 hooks:
-  install: "scripts/install.sh"
-  update: "scripts/update.sh"
+  install: "$HELM_PLUGIN_DIR/scripts/install.sh"
+  update: "$HELM_PLUGIN_DIR/scripts/update.sh"
