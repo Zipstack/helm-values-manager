@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "helm-values-manager"
+version = "0.1-rc1"
+description = "A Helm plugin to manage values and secrets across environments"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Ritwik G", email = "ritwik@zipstack.com" },
+]
+urls = { Homepage = "https://github.com/zipstack/helm-values-manager" }
+dependencies = [
+    "typer>=0.15.1,<0.16.0",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=24.1.1",
+    "isort>=5.13.2",
+    "flake8>=7.0.0",
+    "flake8-docstrings>=1.7.0",
+    "tox>=4.12.1",
+    "pre-commit>=3.6.0",
+]
+
+[project.scripts]
+helm-values-manager = "helm_values_manager:helm_values_manager"
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=helm_values_manager --cov-report=xml --cov-report=term-missing"
+
+[tool.flake8]
+max-line-length = 100
+exclude = [
+    ".tox",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg",
+    "venv",
+]
+extend-ignore = ["E203", "W503"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38, py39, py310, py311
+
+[gh-actions]
+python =
+    3.8: py38
+    3.9: py39
+    3.10: py310
+    3.11: py311
+"""

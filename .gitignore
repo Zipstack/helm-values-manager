@@ -169,3 +169,11 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Generated plugin files
+bin/
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride

@@ -1,80 +1,105 @@
-# **🚧 This is a work in progress not yet released for usage**
+# Helm Values Manager
 
+🚀 A powerful Helm plugin for managing values and secrets across multiple environments.
 
-# **Helm Values Manager 🚀**
-🔐 **Secure & Manage Helm Configurations and Secrets Easily!**
+## Features
 
-Helm Values Manager is a **Helm plugin** designed to simplify **configuration and secret management** across multiple **Kubernetes deployments**. It provides an intuitive **CLI** to define, validate, and securely store configuration values for Helm-based applications.
+- 🔐 **Secure Secret Management**: Safely handle sensitive data
+- 🌍 **Multi-Environment Support**: Manage values for dev, staging, prod, and more
+- 🔄 **Value Inheritance**: Define common values and override per environment
+- 🔍 **Secret Detection**: Automatically identify and protect sensitive data
+- 📦 **Easy Integration**: Works seamlessly with existing Helm workflows
 
----
+## Requirements
 
-## **✨ Features**
-- 🔴 **Deployment-Aware Configuration Management** – Define **global and per-environment configurations**.
-- 🔴 **Secure Secret Storage** – Integrates with
-    - 🔴 **Google Secret Manager**
-    - 🔴 **AWS Secrets Manager**
-    - 🔴 **Azure Key Vault**
-    - 🔴 **HashiCorp Vault**
-    - 🔴 **Git-Secrets**
-    - 🔧 **Easily Extendable** – Implement your own backend using the **SecretManager API**.
-- 🔴 **Autocompletion Support** – Smooth CLI experience with **Typer-based interactive commands**.
-- 🔴 **Validation & Missing Keys Detection** – Avoid misconfigurations with **automated checks**.
-- 🔴 **Extensible Secret Manager** – Easily add new **custom backends** for secret storage.
-- 🔴 **Seamless ArgoCD & Helm Integration** – Works **out-of-the-box** with Helm-based GitOps workflows.
+- Python 3.8 or higher
+- Helm 3.x
+- pip (Python package installer)
 
----
+## Installation
 
-## **🚀 Quick Start**
-1️⃣ **Install the Helm Plugin**
-```sh
-helm plugin install https://github.com/your-org/helm-values-manager.git
+```bash
+helm plugin install https://github.com/zipstack/helm-values-manager
 ```
 
-2️⃣ **Initialize a New Configuration**
-```sh
-helm values-manager init my-release
+## Quick Start
+
+1. Initialize a new configuration:
+```bash
+helm values-manager init
 ```
 
-3️⃣ **Define a Deployment & Add Keys**
-```sh
-helm values-manager add-deployment dev --secrets-backend=aws_secrets_manager
-helm values-manager add-key DATABASE_URL --required --sensitive --path=global.database.url
+This creates:
+- `values-manager.yaml` configuration file
+- `values` directory with environment files (`dev.yaml`, `staging.yaml`, `prod.yaml`)
+
+2. View available commands:
+```bash
+helm values-manager --help
 ```
 
-4️⃣ **Set & Retrieve Secret Values**
-```sh
-helm values-manager add-secret DATABASE_URL=mydb://connection --deployment=dev
-helm values-manager get-secret DATABASE_URL --deployment=dev
+## Development
+
+### Setup Development Environment
+
+1. Clone the repository:
+```bash
+git clone https://github.com/zipstack/helm-values-manager
+cd helm-values-manager
 ```
 
-5️⃣ **Validate Configurations**
-```sh
-helm values-manager validate
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 ```
 
-6️⃣ **Generate the Final `values.yaml`**
-```sh
-helm values-manager generate --deployment=dev
+3. Install development dependencies:
+```bash
+pip install -e ".[dev]"
 ```
 
----
+4. Install pre-commit hooks:
+```bash
+pre-commit install
+```
 
-## **📜 Documentation**
-📖 **[Read the Full Documentation](https://github.com/your-org/helm-values-manager/wiki)**
-💡 **[View the Architecture Decision Record (ADR)](https://github.com/your-org/helm-values-manager/wiki/ADRs/001-helm-values-manager.md)**
-🛠 **[Contribute to the Project](https://github.com/your-org/helm-values-manager/wiki/Contribution/contributing.md)**
+### Running Tests
 
----
+Run tests with tox (will test against multiple Python versions):
+```bash
+tox
+```
 
-## **🤝 Contributing**
-Want to help? Check out our **[contribution guidelines](https://github.com/your-org/helm-values-manager/wiki/Contribution/contributing.md)**! We welcome issues, PRs, and feature suggestions. 🎉
+Run tests for a specific Python version:
+```bash
+tox -e py39  # For Python 3.9
+```
 
----
+### Code Quality
 
-## **📌 License**
+This project uses several tools to maintain code quality:
+
+- **pre-commit**: Runs various checks before each commit
+- **black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Style guide enforcement
+
+Run all code quality checks manually:
+```bash
+pre-commit run --all-files
+```
+
+## Contributing
+
+🙌 PRs and contributions are welcome! Let's build a better Helm secret & config manager together.
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
+
+## 📌 License
+
 🔓 Open-source under the **MIT License**.
 
----
+### 🌟 Star this repo if you find it useful! 🌟
 
-### **🌟 Star this repo if you find it useful! 🌟**
-🙌 PRs and contributions are welcome! Let's build a better **Helm secret & config manager** together. 🚀
+[![Star](https://img.shields.io/github/stars/zipstack/helm-values-manager?style=social)](https://github.com/zipstack/helm-values-manager)
