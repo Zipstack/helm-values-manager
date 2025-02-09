@@ -26,31 +26,106 @@ We have decided to implement the **Helm Values Manager** as a **Helm plugin writ
 
 ## YAML Structure
 
+The configuration follows this structure:
+
 ```yaml
+version: "1.0"  # Schema version
 release: my-release
 
 deployments:
   dev:
     secrets_backend: aws_secrets_manager
+    secrets_config:
+      region: us-west-2
+      secret_prefix: "/dev/myapp/"
+      auth:
+        type: env  # Use AWS environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        # Alternative: type: file, path: "~/.aws/credentials"
+        # Alternative: type: direct
+        #             access_key_id: "AKIA..."
+        #             secret_access_key: "xyz..."
+
+  staging:
+    secrets_backend: google_secret_manager
+    secrets_config:
+      project_id: "my-gcp-project"
+      secret_prefix: "myapp-staging-"
+      auth:
+        type: file
+        path: "/path/to/gcp-service-account.json"
+        # Alternative: type: env, credential_env: "GOOGLE_APPLICATION_CREDENTIALS"
+        # Alternative: type: direct
+        #             credentials_json: "{...}"
+
   prod:
     secrets_backend: azure_key_vault
+    secrets_config:
+      vault_url: "https://my-prod-vault.vault.azure.net"
+      auth:
+        type: managed_identity  # Use Azure Managed Identity
+        # Alternative: type: service_principal
+        #             tenant_id: "${AZURE_TENANT_ID}"
+        #             client_id: "${AZURE_CLIENT_ID}"
+        #             client_secret: "${AZURE_CLIENT_SECRET}"
+
+  local:
+    secrets_backend: git_secret
+    secrets_config:
+      gpg_key: "${GPG_KEY}"  # GPG key for decryption
+      secret_files_path: "./.gitsecret"  # Path to git-secret files
+      auth:
+        type: file
+        path: "~/.gnupg/secring.gpg"
+        # Alternative: type: env
+        #             passphrase_env: "GIT_SECRET_PASSPHRASE"
+        # Alternative: type: direct
+        #             passphrase: "your-passphrase"
 
 config:
   - key: DATABASE_URL
     path: global.database.url
+    description: "Database connection string for the application"
     required: true
     sensitive: true
     values:
       dev: "mydb://dev-connection"
+      staging: "mydb://staging-connection"
       prod: "mydb://prod-connection"
+      local: "mydb://localhost"
+
   - key: LOG_LEVEL
     path: global.logging.level
+    description: "Application logging verbosity level"
     required: false
     sensitive: false
     values:
       dev: "debug"
+      staging: "info"
       prod: "warn"
+      local: "debug"
 ```
+
+### Secret Backend Configuration
+
+The configuration supports multiple secret backend types with flexible authentication methods:
+
+1. **Authentication Methods**:
+   - `env`: Use environment variables
+   - `file`: Use credential files
+   - `direct`: Direct credential specification (not recommended for production)
+   - `managed_identity`: For cloud-native authentication (Azure)
+
+2. **Supported Secret Backends**:
+   - AWS Secrets Manager
+   - Google Secret Manager
+   - Azure Key Vault
+   - git-secret (for local development)
+
+3. **Authentication Patterns**:
+   - Environment variables for cloud credentials
+   - Credential files for service accounts
+   - Direct credentials (development only)
+   - Managed identities for cloud services
 
 ## Consequences
 - The project will be built as a Helm plugin with Python as the core language.
