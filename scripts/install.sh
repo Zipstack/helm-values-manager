@@ -22,7 +22,7 @@ fi
 # Upgrade pip and install package
 echo "Installing dependencies..."
 "$HELM_PLUGIN_DIR/venv/bin/pip" install --upgrade pip
-"$HELM_PLUGIN_DIR/venv/bin/pip" install -e . || {
+"$HELM_PLUGIN_DIR/venv/bin/pip" install -e $HELM_PLUGIN_DIR || {
     echo "Error: Failed to install package dependencies"
     exit 1
 }
