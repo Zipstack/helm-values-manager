@@ -25,7 +25,27 @@ We have decided to implement the **Helm Values Manager** as a **Helm plugin writ
 7. **ArgoCD Compatibility:** Generates `values.json` dynamically for GitOps workflows.
 8. **JSON for Configuration:** Using JSON for configuration files provides better schema validation and consistent parsing across different platforms.
 
+### Value Storage Model
+The system uses a key-value storage model with clean separation of concerns:
+1. **Configuration Layer**: Manages paths and environments, generating unique keys
+2. **Storage Layer**: Simple key-value interface for all backend implementations
+
+This design:
+- Simplifies backend implementations
+- Better aligns with cloud provider secret managers
+- Provides flexibility in key generation strategies
+- Enables easier testing and mocking
+
+For detailed implementation, see [Low-Level Design](../Design/low-level-design.md).
+
 ## Configuration Structure
+
+While the configuration file uses a hierarchical structure with paths and environments, internally values are stored using a key-value model. This provides:
+- Simpler backend implementations
+- Better alignment with secret manager APIs
+- Flexibility in key generation strategies
+
+See the [Low-Level Design](../Design/low-level-design.md) for implementation details.
 
 The configuration follows this structure:
 

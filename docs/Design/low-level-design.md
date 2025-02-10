@@ -38,35 +38,37 @@ classDiagram
 
 ### Value Storage
 
-The value storage system follows a clean separation between the domain model and storage backends:
+The value storage system follows a clean separation between the domain model and storage backends. The key design principle is separation of concerns:
+1. `HelmValuesConfig` handles the organization of values (paths and environments)
+2. `ValueBackend` focuses purely on key-value storage
 
 ```mermaid
 classDiagram
     class ValueBackend {
         <<interface>>
-        +get_value(path: str, environment: str)* str
-        +set_value(path: str, environment: str, value: str)* None
+        +get_value(key: str)* str
+        +set_value(key: str, value: str)* None
         +validate_auth_config(auth_config: dict)* None
     }
 
     class PlainTextBackend {
         -Path values_file
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
+        +get_value(key: str) str
+        +set_value(key: str, value: str) None
         +validate_auth_config(auth_config: dict) None
     }
 
     class AWSSecretsBackend {
         -SecretsManagerClient client
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
+        +get_value(key: str) str
+        +set_value(key: str, value: str) None
         +validate_auth_config(auth_config: dict) None
     }
 
     class AzureKeyVaultBackend {
         -KeyVaultClient client
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
+        +get_value(key: str) str
+        +set_value(key: str, value: str) None
         +validate_auth_config(auth_config: dict) None
     }
 
@@ -74,6 +76,50 @@ classDiagram
     ValueBackend <|.. AWSSecretsBackend
     ValueBackend <|.. AzureKeyVaultBackend
 ```
+
+Key responsibilities:
+
+1. **HelmValuesConfig**:
+   - Maintains the path/environment organization
+   - Generates unique keys for the backend
+   - Maps keys back to path/environment structure
+   ```python
+   class HelmValuesConfig:
+       def _generate_key(self, path: str, environment: str) -> str:
+           # Could use various strategies
+           return f"{path}:{environment}"  # Simple concatenation
+           # or
+           # return hashlib.sha256(f"{path}:{environment}".encode()).hexdigest()
+
+       def get_value(self, path: str, environment: str) -> str:
+           deployment = self._get_deployment(environment)
+           backend = self._create_backend(deployment)
+           key = self._generate_key(path, environment)
+           return backend.get_value(key)
+   ```
+
+2. **ValueBackend**:
+   - Focuses purely on key-value storage
+   - Handles storage-specific authentication
+   - Manages storage operations and error handling
+   ```python
+   class ValueBackend(ABC):
+       @abstractmethod
+       def get_value(self, key: str) -> str:
+           """Get a value from storage using a unique key."""
+           pass
+
+       @abstractmethod
+       def set_value(self, key: str, value: str) -> None:
+           """Store a value using a unique key."""
+           pass
+   ```
+
+This design provides several benefits:
+1. **Clean Separation**: Each component has a single responsibility
+2. **Cloud Provider Alignment**: Better matches cloud secret manager APIs
+3. **Simplified Backend Implementation**: Reduces complexity in backends
+4. **Future Extensibility**: Easy to add new organizational schemes
 
 ### Configuration Flow
 
@@ -100,7 +146,8 @@ sequenceDiagram
     HelmValuesConfig->>ValueBackend: create_backend(deployment)
     activate ValueBackend
     ValueBackend->>ValueBackend: validate_auth_config()
-    ValueBackend->>Storage: read_value(path, env)
+    HelmValuesConfig->>HelmValuesConfig: generate_key(path, env)
+    ValueBackend->>Storage: read_value(key)
     Storage-->>ValueBackend: value
     ValueBackend-->>HelmValuesConfig: value
     deactivate ValueBackend
@@ -111,7 +158,8 @@ sequenceDiagram
     HelmValuesConfig->>HelmValuesConfig: validate_value(value)
     HelmValuesConfig->>ValueBackend: create_backend(deployment)
     activate ValueBackend
-    ValueBackend->>Storage: write_value(path, env, value)
+    HelmValuesConfig->>HelmValuesConfig: generate_key(path, env)
+    ValueBackend->>Storage: write_value(key, value)
     Storage-->>ValueBackend: success
     ValueBackend-->>HelmValuesConfig: success
     deactivate ValueBackend
@@ -158,7 +206,7 @@ This flow diagram shows:
            backend = self._create_backend(deployment)
 
            # Get the value through the backend
-           return backend.get_value(path, environment)
+           return backend.get_value(self._generate_key(path, environment))
    ```
 
 ### Backend Implementation
@@ -167,11 +215,11 @@ This flow diagram shows:
    ```python
    class ValueBackend(ABC):
        @abstractmethod
-       def get_value(self, path: str, environment: str) -> str:
+       def get_value(self, key: str) -> str:
            pass
 
        @abstractmethod
-       def set_value(self, path: str, environment: str, value: str) -> None:
+       def set_value(self, key: str, value: str) -> None:
            pass
 
        @abstractmethod

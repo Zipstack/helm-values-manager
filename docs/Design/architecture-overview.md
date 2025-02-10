@@ -8,7 +8,8 @@ Helm Values Manager simplifies **configuration and secret management** across mu
 The Helm plugin consists of:
 - **CLI Command Interface (Python Typer-based)**: Handles command execution.
 - **Validation Engine**: Ensures required values have values for each deployment.
-- **Value Storage Backend**: Supports AWS Secrets Manager, Azure Key Vault, HashiCorp Vault, and Git-Secrets.
+- **Configuration Manager**: Manages path/environment organization and key generation.
+- **Value Storage Backend**: Provides key-value storage through AWS Secrets Manager, Azure Key Vault, HashiCorp Vault, and Git-Secrets.
 - **values.yaml Generator**: Produces the final Helm-compatible values file.
 - **Helm Plugin System**: Integrates seamlessly with Helm commands.
 - **JSON Schema Validation**: Ensures configuration files follow the correct structure.
@@ -57,12 +58,12 @@ from abc import ABC, abstractmethod
 
 class ValueBackend(ABC):
     @abstractmethod
-    def get_value(self, path: str, environment: str) -> str:
+    def get_value(self, key: str) -> str:
         """Get a value from the secrets backend."""
         pass
 
     @abstractmethod
-    def set_value(self, path: str, environment: str, value: str) -> None:
+    def set_value(self, key: str, value: str) -> None:
         """Set a value in the secrets backend."""
         pass
 ```
