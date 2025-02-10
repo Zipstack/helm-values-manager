@@ -1,23 +1,11 @@
 name: "values-manager"
-version: "0.1-rc1"
+version: "0.1.0rc1"
 usage: "Manage Helm values and secrets across environments"
 description: |-
   This plugin helps you manage Helm values and secrets across different environments
   while supporting multiple secret backends like AWS Secrets Manager, Azure Key Vault,
   and HashiCorp Vault.
-platformCommand:
-  - os: linux
-    arch: amd64
-    command: "$HELM_PLUGIN_DIR/bin/wrapper.sh"
-  - os: darwin
-    arch: amd64
-    command: "$HELM_PLUGIN_DIR/bin/wrapper.sh"
-  - os: darwin
-    arch: arm64
-    command: "$HELM_PLUGIN_DIR/bin/wrapper.sh"
-  - os: windows
-    arch: amd64
-    command: "$HELM_PLUGIN_DIR/bin/wrapper.bat"
+command: "$HELM_PLUGIN_DIR/venv/bin/python3 $HELM_PLUGIN_DIR/helm_values_manager/cli.py"
 hooks:
   install: "$HELM_PLUGIN_DIR/scripts/install.sh"
   update: "$HELM_PLUGIN_DIR/scripts/update.sh"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helm-values-manager"
-version = "0.1-rc1"
+version = "0.1.0rc1"
 description = "A Helm plugin to manage values and secrets across environments"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -39,14 +39,14 @@ dev = [
 ]
 
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ['py38']
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-line_length = 100
+line_length = 120
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -54,7 +54,7 @@ python_files = ["test_*.py"]
 addopts = "--cov=helm_values_manager --cov-report=xml --cov-report=term-missing"
 
 [tool.flake8]
-max-line-length = 100
+max-line-length = 120
 exclude = [
     ".tox",
     ".git",

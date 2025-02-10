@@ -5,7 +5,7 @@ import typer
 app = typer.Typer(
     name="values-manager",
     help="A Helm plugin to manage values and secrets across environments.",
-    add_completion=False,
+    add_completion=True,
 )
 
 
@@ -24,15 +24,16 @@ def main(ctx: typer.Context):
 
 @app.command()
 def init(
+    release_name: str = typer.Option(..., "--release", "-r", help="Name of the Helm release"),
     config_file: str = typer.Option(
         "values-manager.yaml",
         "--config",
         "-c",
         help="Path to the values manager configuration file",
-    )
+    ),
 ):
     """Initialize a new values manager configuration."""
-    typer.echo(f"Initializing values manager with config file: {config_file}")
+    typer.echo(f"Initializing values manager with config file: {config_file}, for the release: {release_name}.")
     # TODO: Implement initialization logic
 
 
