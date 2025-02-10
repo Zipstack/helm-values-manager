@@ -9,7 +9,7 @@ Managing configurations and secrets across multiple Kubernetes deployments is a 
 Key challenges include:
 - Ensuring configurations remain consistent across different environments (e.g., dev, staging, production).
 - Managing sensitive values securely using external secret management systems.
-- Automating the generation of `values.yaml` while integrating with GitOps tools like ArgoCD.
+- Automating the generation of `values.json` while integrating with GitOps tools like ArgoCD.
 - Providing a user-friendly CLI that integrates well with Helm workflows.
 
 ## Decision
@@ -22,110 +22,145 @@ We have decided to implement the **Helm Values Manager** as a **Helm plugin writ
 4. **Secret Storage Abstraction:** Securely manages sensitive values by integrating with AWS Secrets Manager, Azure Key Vault, and HashiCorp Vault.
 5. **CLI-Based Approach:** Interactive commands for managing configurations and secrets.
 6. **Autocomplete Support:** Smooth CLI experience.
-7. **ArgoCD Compatibility:** Generates `values.yaml` dynamically for GitOps workflows.
+7. **ArgoCD Compatibility:** Generates `values.json` dynamically for GitOps workflows.
+8. **JSON for Configuration:** Using JSON for configuration files provides better schema validation and consistent parsing across different platforms.
 
-## YAML Structure
+## Configuration Structure
 
 The configuration follows this structure:
 
-```yaml
-version: "1.0"  # Schema version
-release: my-release
-
-deployments:
-  dev:
-    secrets_backend: aws_secrets_manager
-    secrets_config:
-      region: us-west-2
-      secret_prefix: "/dev/myapp/"
-      auth:
-        type: env  # Use AWS environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-        # Alternative: type: file, path: "~/.aws/credentials"
-        # Alternative: type: direct
-        #             access_key_id: "AKIA..."
-        #             secret_access_key: "xyz..."
-
-  staging:
-    secrets_backend: google_secret_manager
-    secrets_config:
-      project_id: "my-gcp-project"
-      secret_prefix: "myapp-staging-"
-      auth:
-        type: file
-        path: "/path/to/gcp-service-account.json"
-        # Alternative: type: env, credential_env: "GOOGLE_APPLICATION_CREDENTIALS"
-        # Alternative: type: direct
-        #             credentials_json: "{...}"
-
-  prod:
-    secrets_backend: azure_key_vault
-    secrets_config:
-      vault_url: "https://my-prod-vault.vault.azure.net"
-      auth:
-        type: managed_identity  # Use Azure Managed Identity
-        # Alternative: type: service_principal
-        #             tenant_id: "${AZURE_TENANT_ID}"
-        #             client_id: "${AZURE_CLIENT_ID}"
-        #             client_secret: "${AZURE_CLIENT_SECRET}"
-
-  local:
-    secrets_backend: git_secret
-    secrets_config:
-      gpg_key: "${GPG_KEY}"  # GPG key for decryption
-      secret_files_path: "./.gitsecret"  # Path to git-secret files
-      auth:
-        type: file
-        path: "~/.gnupg/secring.gpg"
-        # Alternative: type: env
-        #             passphrase_env: "GIT_SECRET_PASSPHRASE"
-        # Alternative: type: direct
-        #             passphrase: "your-passphrase"
-
-config:
-  - key: DATABASE_URL
-    path: global.database.url
-    description: "Database connection string for the application"
-    required: true
-    sensitive: true
-    values:
-      dev: "mydb://dev-connection"
-      staging: "mydb://staging-connection"
-      prod: "mydb://prod-connection"
-      local: "mydb://localhost"
-
-  - key: LOG_LEVEL
-    path: global.logging.level
-    description: "Application logging verbosity level"
-    required: false
-    sensitive: false
-    values:
-      dev: "debug"
-      staging: "info"
-      prod: "warn"
-      local: "debug"
+```json
+{
+  "version": "1.0",
+  "release": "my-release",
+  "deployments": {
+    "dev": {
+      "secrets_backend": "aws_secrets_manager",
+      "secrets_config": {
+        "region": "us-west-2",
+        "secret_prefix": "/dev/myapp/",
+        "auth": {
+          "type": "env"
+        }
+      }
+    },
+    "staging": {
+      "secrets_backend": "google_secret_manager",
+      "secrets_config": {
+        "project_id": "my-gcp-project",
+        "secret_prefix": "myapp-staging-",
+        "auth": {
+          "type": "file",
+          "path": "/path/to/gcp-service-account.json"
+        }
+      }
+    },
+    "prod": {
+      "secrets_backend": "azure_key_vault",
+      "secrets_config": {
+        "vault_url": "https://my-prod-vault.vault.azure.net",
+        "auth": {
+          "type": "managed_identity"
+        }
+      }
+    },
+    "local": {
+      "secrets_backend": "git_secret",
+      "secrets_config": {
+        "gpg_key": "${GPG_KEY}",
+        "secret_files_path": "./.gitsecret",
+        "auth": {
+          "type": "file",
+          "path": "~/.gnupg/secring.gpg"
+        }
+      }
+    }
+  },
+  "config": [
+    {
+      "path": "global.database.url",
+      "description": "Database connection string for the application",
+      "required": true,
+      "sensitive": true,
+      "values": {
+        "dev": "mydb://dev-connection",
+        "staging": "mydb://staging-connection",
+        "prod": "mydb://prod-connection",
+        "local": "mydb://localhost"
+      }
+    },
+    {
+      "path": "global.logging.level",
+      "description": "Application logging verbosity level",
+      "required": false,
+      "sensitive": false,
+      "values": {
+        "dev": "DEBUG",
+        "staging": "INFO",
+        "prod": "WARN",
+        "local": "DEBUG"
+      }
+    }
+  ]
+}
 ```
 
-### Secret Backend Configuration
+Alternative authentication configurations:
+- AWS:
+  ```json
+  {
+    "type": "file",
+    "path": "~/.aws/credentials"
+  }
+  ```
+  or
+  ```json
+  {
+    "type": "direct",
+    "access_key_id": "AKIA...",
+    "secret_access_key": "xyz..."
+  }
+  ```
 
-The configuration supports multiple secret backend types with flexible authentication methods:
+- Google Cloud:
+  ```json
+  {
+    "type": "env",
+    "credential_env": "GOOGLE_APPLICATION_CREDENTIALS"
+  }
+  ```
+  or
+  ```json
+  {
+    "type": "direct",
+    "credentials_json": "{...}"
+  }
+  ```
 
-1. **Authentication Methods**:
-   - `env`: Use environment variables
-   - `file`: Use credential files
-   - `direct`: Direct credential specification (not recommended for production)
-   - `managed_identity`: For cloud-native authentication (Azure)
+- Azure:
+  ```json
+  {
+    "type": "service_principal",
+    "tenant_id": "${AZURE_TENANT_ID}",
+    "client_id": "${AZURE_CLIENT_ID}",
+    "client_secret": "${AZURE_CLIENT_SECRET}"
+  }
+  ```
 
-2. **Supported Secret Backends**:
-   - AWS Secrets Manager
-   - Google Secret Manager
-   - Azure Key Vault
-   - git-secret (for local development)
-
-3. **Authentication Patterns**:
-   - Environment variables for cloud credentials
-   - Credential files for service accounts
-   - Direct credentials (development only)
-   - Managed identities for cloud services
+- Git Secret:
+  ```json
+  {
+    "type": "env",
+    "passphrase_env": "GIT_SECRET_PASSPHRASE"
+  }
+  ```
+  or
+  ```json
+  {
+    "type": "direct",
+    "passphrase": "your-passphrase"
+  }
+  ```
 
 ## Consequences
 - The project will be built as a Helm plugin with Python as the core language.
