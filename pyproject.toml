@@ -7,7 +7,7 @@ name = "helm-values-manager"
 version = "0.1.0rc1"
 description = "A Helm plugin to manage values and secrets across environments"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [
     { name = "Ritwik G", email = "ritwik@zipstack.com" },
@@ -20,7 +20,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -35,12 +34,12 @@ dev = [
     "flake8>=7.0.0",
     "flake8-docstrings>=1.7.0",
     "tox>=4.12.1",
-    "pre-commit>=3.5.0",
+    "pre-commit>=4.0.0",
 ]
 
 [tool.black]
 line-length = 120
-target-version = ['py38']
+target-version = ['py39']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -69,11 +68,10 @@ extend-ignore = ["E203", "W503"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py38, py39, py310, py311
+envlist = py39, py310, py311
 
 [gh-actions]
 python =
-    3.8: py38
     3.9: py39
     3.10: py310
     3.11: py311
