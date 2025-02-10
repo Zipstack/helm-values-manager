@@ -47,9 +47,7 @@ def plugin_install(tmp_path):
         pass
 
     # Install the plugin
-    subprocess.run(
-        ["helm", "plugin", "install", str(project_root)], capture_output=True, text=True, check=True
-    )
+    subprocess.run(["helm", "plugin", "install", str(project_root)], capture_output=True, text=True, check=True)
 
     yield
 
@@ -59,7 +57,7 @@ def test_help_command(plugin_install):
     stdout, stderr, returncode = run_helm_command(["values-manager", "--help"])
 
     assert returncode == 0
-    assert "Usage: helm_values_manager.py [OPTIONS] COMMAND [ARGS]..." in stdout
+    assert "Usage: helm values-manager [OPTIONS] COMMAND [ARGS]..." in stdout
     assert "A Helm plugin to manage values and secrets across environments" in stdout
     assert "init" in stdout  # Check that init command is listed
 
@@ -76,7 +74,7 @@ def test_init_help_command(plugin_install):
 
 def test_init_command(plugin_install, tmp_path):
     """Test that the init command works with default config file."""
-    stdout, stderr, returncode = run_helm_command(["values-manager", "init"])
+    stdout, stderr, returncode = run_helm_command(["values-manager", "init", "-r", "test"])
 
     assert returncode == 0
-    assert "Initializing values manager with config file: values-manager.yaml" in stdout
+    assert "Initializing values manager with config file: values-manager.yaml, for the release: test." in stdout

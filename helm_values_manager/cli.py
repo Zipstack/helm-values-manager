@@ -2,6 +2,8 @@
 
 import typer
 
+COMMAND_INFO = "helm values-manager"
+
 app = typer.Typer(
     name="values-manager",
     help="A Helm plugin to manage values and secrets across environments.",
@@ -18,6 +20,7 @@ def main(ctx: typer.Context):
     environments while supporting multiple secret backends like AWS Secrets
     Manager, Azure Key Vault, and HashiCorp Vault.
     """
+    ctx.info_name = COMMAND_INFO
     if ctx.invoked_subcommand is None:
         typer.echo(ctx.get_help())
 
@@ -38,4 +41,4 @@ def init(
 
 
 if __name__ == "__main__":
-    app()
+    app(prog_name=COMMAND_INFO)
