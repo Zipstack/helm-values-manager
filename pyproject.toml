@@ -15,6 +15,7 @@ authors = [
 urls = { Homepage = "https://github.com/zipstack/helm-values-manager" }
 dependencies = [
     "typer>=0.15.1,<0.16.0",
+    "jsonschema>=4.21.1",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [project.optional-dependencies]
@@ -35,11 +37,12 @@ dev = [
     "flake8-docstrings>=1.7.0",
     "tox>=4.12.1",
     "pre-commit>=4.0.0",
+    "types-jsonschema>=4.21.0.0",
 ]
 
 [tool.black]
 line-length = 120
-target-version = ['py39']
+target-version = ['py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -50,7 +53,36 @@ line_length = 120
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--cov=helm_values_manager --cov-report=xml --cov-report=term-missing"
+addopts = "--cov=helm_values_manager --cov-report=term-missing --cov-report=xml"
+
+[tool.coverage.run]
+source = ["helm_values_manager"]
+omit = ["tests/*"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+show_missing = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py39, py310, py311, py312
+
+[gh-actions]
+python =
+    3.9: py39
+    3.10: py310
+    3.11: py311
+    3.12: py312
+"""
 
 [tool.flake8]
 max-line-length = 120
@@ -64,15 +96,3 @@ exclude = [
     "venv",
 ]
 extend-ignore = ["E203", "W503"]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py39, py310, py311
-
-[gh-actions]
-python =
-    3.9: py39
-    3.10: py310
-    3.11: py311
-"""

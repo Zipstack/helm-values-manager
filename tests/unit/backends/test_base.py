@@ -42,6 +42,19 @@ class DummyBackend(ValueBackend):
         """
         self.store[key] = value
 
+    def remove_value(self, key: str) -> None:
+        """Remove a value from the store.
+
+        Args:
+            key: The key to remove
+
+        Raises:
+            ValueError: If key not found
+        """
+        if key not in self.store:
+            raise ValueError(f"Key not found: {key}")
+        del self.store[key]
+
 
 @pytest.fixture
 def backend():
@@ -49,49 +62,62 @@ def backend():
     return DummyBackend()
 
 
-def test_backend_initialization():
-    """Test backend initialization with different auth configs."""
-    # Test with default auth config
-    backend = DummyBackend()
-    assert isinstance(backend, ValueBackend)
+def test_auth_config_validation():
+    """Test authentication configuration validation."""
+    # Test valid auth types
+    valid_types = ["env", "file", "direct", "managed_identity"]
+    for auth_type in valid_types:
+        backend = DummyBackend({"type": auth_type})
+        assert isinstance(backend, DummyBackend)
 
-    # Test with direct auth type
-    backend = DummyBackend(auth_config={"type": "direct"})
-    assert isinstance(backend, ValueBackend)
-
-    # Test with managed identity auth type
-    backend = DummyBackend(auth_config={"type": "managed_identity"})
-    assert isinstance(backend, ValueBackend)
-
-    # Test with invalid auth config
-    with pytest.raises(ValueError, match="Auth config must contain 'type'"):
-        backend = DummyBackend(auth_config={})
-
+    # Test invalid auth config type
     with pytest.raises(ValueError, match="Auth config must be a dictionary"):
-        backend = DummyBackend(auth_config=None)
+        DummyBackend(None)
+
+    # Test missing type field
+    with pytest.raises(ValueError, match="Auth config must contain 'type' field"):
+        DummyBackend({})
+
+    # Test invalid auth type
+    with pytest.raises(ValueError, match="Invalid auth type"):
+        DummyBackend({"type": "invalid"})
 
 
 def test_get_value(backend):
     """Test getting values from the backend."""
-    # Set some test values
-    backend.set_value("key1", "value1")
-    backend.set_value("key2", "value2")
+    # Set test value
+    backend.set_value("test/key", "test_value")
 
-    # Test getting existing values
-    assert backend.get_value("key1") == "value1"
-    assert backend.get_value("key2") == "value2"
+    # Test getting existing value
+    assert backend.get_value("test/key") == "test_value"
 
-    # Test getting non-existent key
+    # Test getting non-existent value
     with pytest.raises(ValueError, match="Key not found"):
-        backend.get_value("non_existent")
+        backend.get_value("non/existent")
 
 
 def test_set_value(backend):
     """Test setting values in the backend."""
     # Test setting new value
-    backend.set_value("key1", "value1")
-    assert backend.get_value("key1") == "value1"
+    backend.set_value("test/key", "test_value")
+    assert backend.get_value("test/key") == "test_value"
 
     # Test overwriting existing value
-    backend.set_value("key1", "new_value")
-    assert backend.get_value("key1") == "new_value"
+    backend.set_value("test/key", "new_value")
+    assert backend.get_value("test/key") == "new_value"
+
+
+def test_remove_value(backend):
+    """Test removing values from the backend."""
+    # Set test value
+    backend.set_value("test/key", "test_value")
+    assert backend.get_value("test/key") == "test_value"
+
+    # Test removing existing value
+    backend.remove_value("test/key")
+    with pytest.raises(ValueError, match="Key not found"):
+        backend.get_value("test/key")
+
+    # Test removing non-existent value
+    with pytest.raises(ValueError, match="Key not found"):
+        backend.remove_value("non/existent")

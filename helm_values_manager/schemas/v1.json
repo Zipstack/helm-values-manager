@@ -1,0 +1,123 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["version", "release", "deployments", "config"],
+    "properties": {
+        "version": {
+            "type": "string",
+            "enum": ["1.0"],
+            "description": "Schema version"
+        },
+        "release": {
+            "type": "string",
+            "description": "Name of the Helm release"
+        },
+        "deployments": {
+            "type": "object",
+            "description": "Map of deployment names to their configurations",
+            "additionalProperties": {
+                "type": "object",
+                "required": ["backend", "auth"],
+                "properties": {
+                    "backend": {
+                        "type": "string",
+                        "enum": ["git-secret", "aws", "azure", "gcp"],
+                        "description": "Type of backend to use for value storage"
+                    },
+                    "auth": {
+                        "type": "object",
+                        "required": ["type"],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": ["env", "file", "direct", "managed_identity"],
+                                "description": "Authentication method to use"
+                            }
+                        },
+                        "allOf": [
+                            {
+                                "if": {
+                                    "properties": { "type": { "const": "env" } }
+                                },
+                                "then": {
+                                    "required": ["env_prefix"],
+                                    "properties": {
+                                        "env_prefix": { "type": "string" }
+                                    }
+                                }
+                            },
+                            {
+                                "if": {
+                                    "properties": { "type": { "const": "file" } }
+                                },
+                                "then": {
+                                    "required": ["file_path"],
+                                    "properties": {
+                                        "file_path": { "type": "string" }
+                                    }
+                                }
+                            },
+                            {
+                                "if": {
+                                    "properties": { "type": { "const": "direct" } }
+                                },
+                                "then": {
+                                    "required": ["credentials"],
+                                    "properties": {
+                                        "credentials": {
+                                            "type": "object",
+                                            "additionalProperties": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "backend_config": {
+                        "type": "object",
+                        "description": "Optional backend-specific configuration",
+                        "properties": {
+                            "region": { "type": "string" },
+                            "prefix": { "type": "string" },
+                            "endpoint": { "type": "string" }
+                        }
+                    }
+                }
+            }
+        },
+        "config": {
+            "type": "array",
+            "description": "List of configuration values to manage",
+            "items": {
+                "type": "object",
+                "required": ["path", "required", "sensitive", "values"],
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*$",
+                        "description": "Dot-notation path where this value should be placed in values.yaml. Must be unique across all config items."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description of what this value is used for"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Whether this value must be present in all environments"
+                    },
+                    "sensitive": {
+                        "type": "boolean",
+                        "description": "Whether this value contains sensitive data"
+                    },
+                    "values": {
+                        "type": "object",
+                        "description": "Map of environment names to their values",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
