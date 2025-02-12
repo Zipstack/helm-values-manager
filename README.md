@@ -96,9 +96,18 @@ pre-commit run --all-files
 
 Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
 
+## Acknowledgments
+
+We would like to acknowledge the following AI tools that have helped in the development of this project:
+
+- **[Windsurf IDE with Cascade](https://codeium.com/windsurf)**: For providing intelligent code assistance and pair programming capabilities. Also for helping with improving and documenting the architecture.
+- **[Software Architect GPT](https://chatgpt.com/g/g-J0FYgDhN5-software-architect-gpt)**: For initial architectural guidance and design decisions.
+
+While these AI tools have been valuable in our development process, all code and design decisions have been carefully reviewed and validated by our development team to ensure quality and security.
+
 ## 📌 License
 
-🔓 Open-source under the **MIT License**.
+🔓 Open-source under the [MIT License](LICENSE).
 
 ### 🌟 Star this repo if you find it useful! 🌟
 
