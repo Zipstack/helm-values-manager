@@ -39,7 +39,6 @@ jobs:
 
     - name: SonarCloud Scan
       if: matrix.python-version == '3.12'  # Only run once, on the latest Python version
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@v4
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
