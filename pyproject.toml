@@ -53,7 +53,9 @@ line_length = 120
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--cov=helm_values_manager --cov-report=term-missing --cov-report=xml"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=helm_values_manager --cov-report=term-missing --cov-report=xml --cov-branch"
 
 [tool.coverage.run]
 source = ["helm_values_manager"]
@@ -64,12 +66,15 @@ branch = true
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "if self.debug:",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
     "pass",
     "raise ImportError",
 ]
-show_missing = true
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 [tool.tox]
 legacy_tox_ini = """
