@@ -59,7 +59,10 @@ addopts = "-v"
 
 [tool.coverage.run]
 source = ["helm_values_manager"]
-omit = ["tests/*"]
+omit = [
+    "tests/*",
+    "helm_values_manager/schemas/*"
+]
 branch = true
 
 [tool.coverage.report]

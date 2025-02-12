@@ -1,5 +1,13 @@
 # Helm Values Manager
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
+[![Build Status](https://github.com/Zipstack/helm-values-manager/actions/workflows/test.yml/badge.svg)](https://github.com/Zipstack/helm-values-manager/actions/workflows/test.yml)
+[![Security](https://github.com/Zipstack/helm-values-manager/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Zipstack/helm-values-manager/actions/workflows/github-code-scanning/codeql)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
+
 🚀 A powerful Helm plugin for managing values and secrets across multiple environments.
 
 ## Features
