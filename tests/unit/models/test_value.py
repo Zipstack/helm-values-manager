@@ -16,126 +16,66 @@ def mock_backend():
     return backend
 
 
-def test_value_init_local():
-    """Test Value initialization with local storage."""
-    value = Value(path="app.replicas", environment="dev")
+def test_value_init(mock_backend):
+    """Test Value initialization."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     assert value.path == "app.replicas"
     assert value.environment == "dev"
-    assert value.storage_type == "local"
-    assert value._backend is None
-    assert value._value is None
-
-
-def test_value_init_remote(mock_backend):
-    """Test Value initialization with remote storage."""
-    value = Value(path="app.replicas", environment="dev", storage_type="remote", _backend=mock_backend)
-    assert value.storage_type == "remote"
     assert value._backend == mock_backend
 
 
-def test_value_init_invalid_storage():
-    """Test Value initialization with invalid storage type."""
-    with pytest.raises(ValueError, match="Invalid storage type"):
-        Value(path="app.replicas", environment="dev", storage_type="invalid")
-
-
-def test_value_init_remote_no_backend():
-    """Test Value initialization with remote storage but no backend."""
-    with pytest.raises(ValueError, match="Remote storage type requires a backend"):
-        Value(path="app.replicas", environment="dev", storage_type="remote")
-
-
-def test_get_local():
-    """Test getting a local value."""
-    value = Value(path="app.replicas", environment="dev", _value="3")
-    assert value.get() == "3"
-
-
-def test_get_local_not_set():
-    """Test getting an unset local value."""
-    value = Value(path="app.replicas", environment="dev")
-    with pytest.raises(ValueError, match="No value set"):
-        value.get()
-
-
-def test_get_remote(mock_backend):
-    """Test getting a remote value."""
-    value = Value(path="app.replicas", environment="dev", storage_type="remote", _backend=mock_backend)
+def test_get_value(mock_backend):
+    """Test getting a value."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     assert value.get() == "mock_value"
-    mock_backend.get_value.assert_called_once_with("app.replicas:dev")
+    mock_backend.get_value.assert_called_once_with("app.replicas", "dev")
 
 
-def test_set_local():
-    """Test setting a local value."""
-    value = Value(path="app.replicas", environment="dev")
+def test_set_value(mock_backend):
+    """Test setting a value."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     value.set("3")
-    assert value._value == "3"
+    mock_backend.set_value.assert_called_once_with("app.replicas", "dev", "3")
 
 
-def test_set_remote(mock_backend):
-    """Test setting a remote value."""
-    value = Value(path="app.replicas", environment="dev", storage_type="remote", _backend=mock_backend)
-    value.set("3")
-    mock_backend.set_value.assert_called_once_with("app.replicas:dev", "3")
-
-
-def test_set_invalid_type():
+def test_set_invalid_type(mock_backend):
     """Test setting a non-string value."""
-    value = Value(path="app.replicas", environment="dev")
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     with pytest.raises(ValueError, match="Value must be a string"):
         value.set(3)
 
 
-def test_to_dict_local():
-    """Test serializing a local value."""
-    value = Value(path="app.replicas", environment="dev", _value="3")
+def test_to_dict(mock_backend):
+    """Test serializing a value."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     data = value.to_dict()
-    assert data == {"path": "app.replicas", "environment": "dev", "storage_type": "local", "value": "3"}
+    assert data == {"path": "app.replicas", "environment": "dev"}
 
 
-def test_to_dict_remote(mock_backend):
-    """Test serializing a remote value."""
-    value = Value(path="app.replicas", environment="dev", storage_type="remote", _backend=mock_backend)
-    data = value.to_dict()
-    assert data == {"path": "app.replicas", "environment": "dev", "storage_type": "remote", "value": None}
-
-
-def test_from_dict_local():
-    """Test deserializing a local value."""
-    data = {"path": "app.replicas", "environment": "dev", "storage_type": "local", "value": "3"}
-    value = Value.from_dict(data)
-    assert value.path == "app.replicas"
-    assert value.environment == "dev"
-    assert value.storage_type == "local"
-    assert value._value == "3"
-
-
-def test_from_dict_remote(mock_backend):
-    """Test deserializing a remote value."""
-    data = {"path": "app.replicas", "environment": "dev", "storage_type": "remote", "value": None}
+def test_from_dict(mock_backend):
+    """Test deserializing a value."""
+    data = {"path": "app.replicas", "environment": "dev"}
     value = Value.from_dict(data, mock_backend)
     assert value.path == "app.replicas"
     assert value.environment == "dev"
-    assert value.storage_type == "remote"
     assert value._backend == mock_backend
-    assert value._value is None
 
 
 def test_from_dict_invalid():
     """Test deserializing with invalid data."""
     with pytest.raises(ValueError, match="Data must be a dictionary"):
-        Value.from_dict("not a dict")
+        Value.from_dict("not a dict", Mock(spec=ValueBackend))
 
 
-def test_from_dict_missing_path():
+def test_from_dict_missing_path(mock_backend):
     """Test deserializing with missing path."""
-    data = {"environment": "dev", "storage_type": "local", "value": "3"}
+    data = {"environment": "dev"}
     with pytest.raises(ValueError, match="Missing required field: path"):
-        Value.from_dict(data)
+        Value.from_dict(data, mock_backend)
 
 
-def test_from_dict_missing_environment():
+def test_from_dict_missing_environment(mock_backend):
     """Test deserializing with missing environment."""
-    data = {"path": "app.replicas", "storage_type": "local", "value": "3"}
+    data = {"path": "app.replicas"}
     with pytest.raises(ValueError, match="Missing required field: environment"):
-        Value.from_dict(data)
+        Value.from_dict(data, mock_backend)
