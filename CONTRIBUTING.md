@@ -86,6 +86,27 @@ tox -e py39  # For Python 3.9
 - Follow Google style for docstrings
 - Keep the README.md and other documentation up to date
 
+### Documentation Requirements
+
+- Use docstrings for all public modules, functions, classes, and methods
+- Follow Google style for docstrings
+- Keep the README.md and other documentation up to date
+
+#### Required Extensions
+
+When contributing to documentation, please note that we use the following extensions:
+
+- **Mermaid**: For creating diagrams and visualizations in markdown. All architecture and flow diagrams should be written using Mermaid.
+  ```mermaid
+  graph TD
+    A[Process Start] --> B[Process End]
+  ```
+
+To preview Mermaid diagrams locally, you can:
+- Use VS Code with the "Markdown Preview Mermaid Support" extension
+- Use any Markdown editor that supports Mermaid rendering
+- Preview on GitHub, which has native Mermaid support
+
 ## Pull Request Process
 
 1. Update the README.md with details of changes to the interface, if applicable.
