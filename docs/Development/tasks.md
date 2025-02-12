@@ -3,23 +3,23 @@
 ## Core Components
 
 ### Value Class Implementation
-- [ ] Create basic Value class structure
-  - [ ] Add path, environment, storage_type, and backend attributes
-  - [ ] Implement constructor with type hints
-  - [ ] Add basic validation for attributes
-- [ ] Implement value resolution
-  - [ ] Add get() method with local value support
-  - [ ] Add set() method with local value support
-  - [ ] Add remote value support in get() method
-  - [ ] Add remote value support in set() method
-- [ ] Add serialization support
-  - [ ] Implement to_dict() method
-  - [ ] Implement from_dict() static method
-  - [ ] Add tests for serialization/deserialization
-- [ ] Add value validation
-  - [ ] Implement basic type validation
-  - [ ] Add support for required field validation
-  - [ ] Add support for sensitive field handling
+- [x] Create basic Value class structure
+  - [x] Add path, environment, storage_type, and backend attributes
+  - [x] Implement constructor with type hints
+  - [x] Add basic validation for attributes
+- [x] Implement value resolution
+  - [x] Add get() method with local value support
+  - [x] Add set() method with local value support
+  - [x] Add remote value support in get() method
+  - [x] Add remote value support in set() method
+- [x] Add serialization support
+  - [x] Implement to_dict() method
+  - [x] Implement from_dict() static method
+  - [x] Add tests for serialization/deserialization
+- [x] Add value validation
+  - [x] Implement basic type validation
+  - [x] Add support for required field validation
+  - [x] Add support for sensitive field handling
 
 ### PathData Class Implementation
 - [ ] Create PathData class

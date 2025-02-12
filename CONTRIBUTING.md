@@ -19,6 +19,53 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 5. Make sure your code passes all code quality checks.
 6. Issue that pull request!
 
+## Version Control Guidelines
+
+### Branch Naming
+- Feature branches: `feature/short-description`
+- Bug fixes: `fix/issue-description`
+- Documentation: `docs/what-changed`
+- Release branches: `release/version-number`
+
+### Commit Messages
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding missing tests or correcting existing tests
+- `chore`: Changes to the build process or auxiliary tools
+
+Example:
+```
+feat(value): add support for remote storage backends
+
+- Implement ValueBackend interface
+- Add AWS Secrets Manager backend
+- Add Azure Key Vault backend
+
+Closes #123
+```
+
+## Important Documentation
+
+Before contributing, please review these important documents:
+
+1. [Code Structure](docs/Development/code-structure.md) - Understanding the codebase organization
+2. [Testing Guide](docs/Development/testing.md) - Testing standards and practices
+3. [Architecture Overview](docs/Design/low-level-design.md) - System architecture and design decisions
+4. [ADRs](docs/ADRs/) - Architecture Decision Records
+
 ## Development Setup
 
 1. Clone your fork:
@@ -86,12 +133,6 @@ tox -e py39  # For Python 3.9
 - Follow Google style for docstrings
 - Keep the README.md and other documentation up to date
 
-### Documentation Requirements
-
-- Use docstrings for all public modules, functions, classes, and methods
-- Follow Google style for docstrings
-- Keep the README.md and other documentation up to date
-
 #### Required Extensions
 
 When contributing to documentation, please note that we use the following extensions:
@@ -115,7 +156,7 @@ To preview Mermaid diagrams locally, you can:
 
 ## Any contributions you make will be under the MIT Software License
 
-In short, when you submit code changes, your submissions are understood to be under the same [MIT License](LICENSE) that covers the project. Feel free to contact the maintainers if that's a concern.
+In short, when you submit code changes, your submissions are understood to be under the same [MIT License](./LICENSE) that covers the project. Feel free to contact the maintainers if that's a concern.
 
 ## Report bugs using GitHub's [issue tracker](https://github.com/zipstack/helm-values-manager/issues)
 
@@ -135,4 +176,4 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under its MIT License.
+By contributing, you agree that your contributions will be licensed under its [MIT License](./LICENSE).

@@ -28,13 +28,11 @@ classDiagram
     class Value {
         +str path
         +str environment
-        +str storage_type
         -ValueBackend _backend
-        -Optional~str~ _value
         +get() str
         +set(value: str) None
         +to_dict() dict
-        +from_dict(data: dict, path: str, environment: str, backend: ValueBackend) Value
+        +from_dict(data: dict, backend: ValueBackend) Value
     }
 
     class ConfigValue {
@@ -49,6 +47,7 @@ classDiagram
         +str name
         +Dict~str,Any~ auth
         +str backend
+        +Dict~str,Any~ backend_config
     }
 
     class BaseCommand {
@@ -61,22 +60,28 @@ classDiagram
 
     class ValueBackend {
         <<interface>>
-        +get_value(key: str)* str
-        +set_value(key: str, value: str)* None
+        +get_value(path: str, environment: str)* str
+        +set_value(path: str, environment: str, value: str)* None
         +validate_auth_config(auth_config: dict)* None
+    }
+
+    class SimpleValueBackend {
+        -Dict~str,str~ values
+        +get_value(path: str, environment: str) str
+        +set_value(path: str, environment: str, value: str) None
     }
 
     class AWSSecretsBackend {
         -SecretsManagerClient client
-        +get_value(key: str) str
-        +set_value(key: str, value: str) None
+        +get_value(path: str, environment: str) str
+        +set_value(path: str, environment: str, value: str) None
         +validate_auth_config(auth_config: dict) None
     }
 
     class AzureKeyVaultBackend {
         -KeyVaultClient client
-        +get_value(key: str) str
-        +set_value(key: str, value: str) None
+        +get_value(path: str, environment: str) str
+        +set_value(path: str, environment: str, value: str) None
         +validate_auth_config(auth_config: dict) None
     }
 
@@ -84,7 +89,8 @@ classDiagram
     HelmValuesConfig "1" *-- "*" Deployment
     HelmValuesConfig "1" *-- "*" PathData
     PathData "1" *-- "*" Value
-    Value "1" o-- "0..1" ValueBackend
+    Value "1" o-- "1" ValueBackend
+    ValueBackend <|.. SimpleValueBackend
     ValueBackend <|.. AWSSecretsBackend
     ValueBackend <|.. AzureKeyVaultBackend
     BaseCommand <|-- SetValueCommand
@@ -98,36 +104,25 @@ The system uses a unified approach to value storage and resolution through the `
 ```python
 class Value:
     def __init__(self, path: str, environment: str,
-                 storage_type: str = "local",
-                 backend: Optional[ValueBackend] = None):
+                 backend: ValueBackend):
         self.path = path
         self.environment = environment
-        self.storage_type = storage_type
         self._backend = backend
-        self._value: Optional[str] = None
 
     def get(self) -> str:
         """Get the resolved value"""
-        if self.storage_type == "local":
-            return self._value
-        return self._backend.get_value(
-            self._generate_key(self.path, self.environment)
-        )
+        return self._backend.get_value(self.path, self.environment)
 
     def set(self, value: str) -> None:
         """Set the value"""
-        if self.storage_type == "local":
-            self._value = value
-        else:
-            self._backend.set_value(
-                self._generate_key(self.path, self.environment),
-                value
-            )
+        if not isinstance(value, str):
+            raise ValueError("Value must be a string")
+        self._backend.set_value(self.path, self.environment, value)
 ```
 
 Key features:
 - Encapsulated value resolution logic
-- Unified interface for local and remote storage
+- Unified interface for all storage backends
 - Clear separation of concerns
 - Type-safe value handling
 
@@ -174,13 +169,13 @@ The `ValueBackend` interface defines the contract for value storage:
 ```python
 class ValueBackend(ABC):
     @abstractmethod
-    def get_value(self, key: str) -> str:
-        """Get a value from storage using a unique key."""
+    def get_value(self, path: str, environment: str) -> str:
+        """Get a value from storage."""
         pass
 
     @abstractmethod
-    def set_value(self, key: str, value: str) -> None:
-        """Store a value using a unique key."""
+    def set_value(self, path: str, environment: str, value: str) -> None:
+        """Store a value."""
         pass
 
     @abstractmethod
@@ -190,6 +185,7 @@ class ValueBackend(ABC):
 ```
 
 Implementations:
+- SimpleValueBackend (for non-sensitive values)
 - AWS Secrets Manager Backend
 - Azure Key Vault Backend
 - Additional backends can be easily added
@@ -198,22 +194,34 @@ Implementations:
 
 ### 1. Configuration Structure
 
-The configuration is stored in a hierarchical structure:
-
-```python
+The configuration follows the v1 schema:
+```json
 {
-    "app.replicas": {
-        "metadata": {
-            "description": "Number of replicas",
-            "required": True,
-            "sensitive": False
-        },
-        "values": {
-            "dev": Value(path="app.replicas", environment="dev", storage_type="local"),
-            "prod": Value(path="app.replicas", environment="prod",
-                         storage_type="aws", backend=aws_backend)
+    "version": "1.0",
+    "release": "my-app",
+    "deployments": {
+        "prod": {
+            "backend": "aws",
+            "auth": {
+                "type": "managed_identity"
+            },
+            "backend_config": {
+                "region": "us-west-2"
+            }
         }
-    }
+    },
+    "config": [
+        {
+            "path": "app.replicas",
+            "description": "Number of application replicas",
+            "required": true,
+            "sensitive": false,
+            "values": {
+                "dev": "3",
+                "prod": "5"
+            }
+        }
+    ]
 }
 ```
 
@@ -226,7 +234,7 @@ The configuration is stored in a hierarchical structure:
 
 2. Value Resolution:
    - Uses `Value` class to handle resolution
-   - Automatically selects local or remote storage
+   - Automatically selects storage backend
    - Handles errors and validation
 
 ### 3. Security Features
