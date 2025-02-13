@@ -9,7 +9,7 @@ Managing configurations and secrets across multiple Kubernetes deployments is a 
 Key challenges include:
 - Ensuring configurations remain consistent across different environments (e.g., dev, staging, production).
 - Managing sensitive values securely using external secret management systems.
-- Automating the generation of `values.json` while integrating with GitOps tools like ArgoCD.
+- Automating the generation of `values.yaml` while integrating with GitOps tools like ArgoCD.
 - Providing a user-friendly CLI that integrates well with Helm workflows.
 
 ## Decision
@@ -22,7 +22,7 @@ We have decided to implement the **Helm Values Manager** as a **Helm plugin writ
 4. **Secret Storage Abstraction:** Securely manages sensitive values by integrating with AWS Secrets Manager, Azure Key Vault, and HashiCorp Vault.
 5. **CLI-Based Approach:** Interactive commands for managing configurations and secrets.
 6. **Autocomplete Support:** Smooth CLI experience.
-7. **ArgoCD Compatibility:** Generates `values.json` dynamically for GitOps workflows.
+7. **ArgoCD Compatibility:** Generates `values.yaml` dynamically for GitOps workflows.
 8. **JSON for Configuration:** Using JSON for configuration files provides better schema validation and consistent parsing across different platforms.
 
 ### Value Storage Model
