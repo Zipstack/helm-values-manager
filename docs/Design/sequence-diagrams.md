@@ -147,28 +147,28 @@ sequenceDiagram
     BaseCommand->>HelmValuesConfig: set_value(path, env, value)
     activate HelmValuesConfig
 
-    alt Value Exists
-        HelmValuesConfig->>Value: set(value)
-        activate Value
-    else Create New Value
+    HelmValuesConfig->>HelmValuesConfig: find_config_item(path)
+    HelmValuesConfig->>HelmValuesConfig: get_backend_for_config(config_item, env)
+
+    alt Sensitive Value
         HelmValuesConfig->>HelmValuesConfig: get_deployment(env)
-        HelmValuesConfig->>ValueBackend: create_backend(deployment)
-        HelmValuesConfig->>Value: create(path, env, backend)
-        HelmValuesConfig->>Value: set(value)
-        activate Value
+        HelmValuesConfig->>ValueBackend: create_secure_backend(deployment)
+    else Non-Sensitive Value
+        HelmValuesConfig->>ValueBackend: create_simple_backend()
     end
 
-    alt Local Storage
-        Value->>Value: store_value_locally()
-    else Remote Storage
-        Value->>ValueBackend: set_value(key, value)
-        activate ValueBackend
+    HelmValuesConfig->>Value: create(path, env, backend)
+    activate Value
+    Value->>ValueBackend: set_value(path, env, value)
+    activate ValueBackend
+
+    alt Secure Backend
         ValueBackend->>Storage: write(key, value)
         Storage-->>ValueBackend: success
-        ValueBackend-->>Value: success
-        deactivate ValueBackend
     end
 
+    ValueBackend-->>Value: success
+    deactivate ValueBackend
     Value-->>HelmValuesConfig: success
     deactivate Value
 
@@ -202,30 +202,44 @@ sequenceDiagram
     CLI->>BaseCommand: execute()
     activate BaseCommand
 
+    BaseCommand->>BaseCommand: acquire_lock()
     BaseCommand->>BaseCommand: load_config()
     BaseCommand->>HelmValuesConfig: get_value(path, env)
     activate HelmValuesConfig
 
-    HelmValuesConfig->>Value: get()
-    activate Value
+    HelmValuesConfig->>HelmValuesConfig: find_config_item(path)
+    HelmValuesConfig->>HelmValuesConfig: get_backend_for_config(config_item, env)
 
-    alt Local Storage
-        Value->>Value: return_local_value()
-    else Remote Storage
-        Value->>ValueBackend: get_value(key)
-        ValueBackend-->>Value: value
+    alt Sensitive Value
+        HelmValuesConfig->>HelmValuesConfig: get_deployment(env)
+        HelmValuesConfig->>ValueBackend: create_secure_backend(deployment)
+    else Non-Sensitive Value
+        HelmValuesConfig->>ValueBackend: create_simple_backend()
     end
 
-    Value-->>HelmValuesConfig: resolved_value
+    HelmValuesConfig->>Value: create(path, env, backend)
+    activate Value
+    Value->>ValueBackend: get_value(path, env)
+    activate ValueBackend
+
+    alt Secure Backend
+        ValueBackend->>Storage: read(key)
+        Storage-->>ValueBackend: value
+    end
+
+    ValueBackend-->>Value: value
+    deactivate ValueBackend
+    Value-->>HelmValuesConfig: value
     deactivate Value
 
     HelmValuesConfig-->>BaseCommand: value
     deactivate HelmValuesConfig
 
+    BaseCommand->>BaseCommand: release_lock()
     BaseCommand-->>CLI: value
     deactivate BaseCommand
 
-    CLI-->>User: display value
+    CLI-->>User: value
     deactivate CLI
 ```
 

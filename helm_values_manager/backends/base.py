@@ -1,7 +1,7 @@
 """Base module for value storage backends.
 
 This module provides the abstract base class for all value storage backends.
-Each backend must implement the key-value interface defined here.
+Each backend must implement the path-based interface defined here.
 """
 
 from abc import ABC, abstractmethod
@@ -15,8 +15,8 @@ class ValueBackend(ABC):
     Each backend is responsible for storing and retrieving values securely using
     their respective storage systems (e.g., AWS Secrets Manager, Azure Key Vault).
 
-    The backend operates on a simple key-value model where:
-    - Keys are unique identifiers for values
+    The backend operates on a path-based model where:
+    - Values are identified by their path and environment
     - Values are strings that may be encrypted depending on the backend
     """
 
@@ -59,49 +59,49 @@ class ValueBackend(ABC):
             raise ValueError(f"Invalid auth type: {auth_config['type']}. " f"Must be one of: {', '.join(valid_types)}")
 
     @abstractmethod
-    def get_value(self, key: str) -> str:
+    def get_value(self, path: str, environment: str) -> str:
         """Get a value from the storage backend.
 
         Args:
-            key: The unique key to retrieve the value for.
-                This should be a valid key that exists in the backend.
+            path: The configuration path (e.g., "app.replicas")
+            environment: The environment name (e.g., "dev", "prod")
 
         Returns:
             str: The value stored in the backend.
 
         Raises:
-            ValueError: If the key doesn't exist
+            ValueError: If the value doesn't exist
             ConnectionError: If there's an error connecting to the backend
             PermissionError: If there's an authentication or authorization error
         """
         pass
 
     @abstractmethod
-    def set_value(self, key: str, value: str) -> None:
+    def set_value(self, path: str, environment: str, value: str) -> None:
         """Set a value in the storage backend.
 
         Args:
-            key: The unique key to store the value under.
-                This should follow the backend's key naming conventions.
+            path: The configuration path (e.g., "app.replicas")
+            environment: The environment name (e.g., "dev", "prod")
             value: The value to store. Must be a string.
 
         Raises:
-            ValueError: If the key or value is invalid
+            ValueError: If the value is invalid
             ConnectionError: If there's an error connecting to the backend
             PermissionError: If there's an authentication or authorization error
         """
         pass
 
     @abstractmethod
-    def remove_value(self, key: str) -> None:
+    def remove_value(self, path: str, environment: str) -> None:
         """Remove a value from the storage backend.
 
         Args:
-            key: The unique key to remove.
-                This should be a valid key that exists in the backend.
+            path: The configuration path (e.g., "app.replicas")
+            environment: The environment name (e.g., "dev", "prod")
 
         Raises:
-            ValueError: If the key doesn't exist
+            ValueError: If the value doesn't exist
             ConnectionError: If there's an error connecting to the backend
             PermissionError: If there's an authentication or authorization error
         """
