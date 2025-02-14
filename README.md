@@ -2,6 +2,7 @@
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
 [![Build Status](https://github.com/Zipstack/helm-values-manager/actions/workflows/test.yml/badge.svg)](https://github.com/Zipstack/helm-values-manager/actions/workflows/test.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Zipstack/helm-values-manager/main.svg)](https://results.pre-commit.ci/latest/github/Zipstack/helm-values-manager/main)
 [![Security](https://github.com/Zipstack/helm-values-manager/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Zipstack/helm-values-manager/actions/workflows/github-code-scanning/codeql)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Zipstack_helm-values-manager&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Zipstack_helm-values-manager)

@@ -1,0 +1,67 @@
+# Architecture Decision Records (ADRs)
+
+This directory contains Architecture Decision Records (ADRs) for the Helm Values Manager project.
+
+## What is an ADR?
+An Architecture Decision Record (ADR) is a document that captures an important architectural decision made along with its context and consequences.
+
+## ADR Index
+
+### [ADR-001: Helm Values Manager as a Helm Plugin](001-helm-values-manager.md)
+- **Status**: Accepted
+- **Context**: Need for managing configurations and secrets across multiple Kubernetes deployments
+- **Decision**: Implement as a Helm plugin in Python with key-value storage model
+- **Impact**: Defines core architecture and integration approach
+
+### [ADR-002: Config Path and Storage Design](002-config-path-and-storage-design.md)
+- **Status**: Accepted
+- **Context**: Need for separate config definition from value storage
+- **Decision**: Implement path map and standardized command pattern
+- **Impact**: Establishes core data structures and file operations
+- **Dependencies**: ADR-001
+
+### [ADR-003: Unified Path and Value Storage](003-unified-path-value-storage.md)
+- **Status**: Accepted
+- **Context**: Complexity from separate path and value storage
+- **Decision**: Unified dictionary structure for paths and values
+- **Impact**: Simplifies storage and improves consistency
+- **Dependencies**: ADR-002
+
+### [ADR-004: Value Resolution Strategy](004-value-resolution-strategy.md)
+- **Status**: Accepted
+- **Context**: Need for clear value resolution in unified storage
+- **Decision**: Introduce Value class for encapsulation
+- **Impact**: Clarifies value handling and storage strategy
+- **Dependencies**: ADR-003
+
+### [ADR-005: Unified Backend Approach](005-unified-backend-approach.md)
+- **Status**: Proposed
+- **Context**: Split logic in Value class for different storage types
+- **Decision**: Remove storage type distinction, use SimpleValueBackend
+- **Impact**: Simplifies Value class and unifies storage interface
+- **Dependencies**: ADR-004
+
+### [ADR-006: Helm-Style Logging System](006-helm-style-logging.md)
+- **Status**: Accepted
+- **Context**: Need for consistent logging following Helm conventions
+- **Decision**: Implement HelmLogger with Helm-style output
+- **Impact**: Ensures consistent user experience and debugging
+- **Dependencies**: ADR-001
+
+## ADR Template
+For new ADRs, use this template:
+```markdown
+# ADR-NNN: Title
+
+## Status
+[Proposed | Accepted | Deprecated | Superseded]
+
+## Context
+What is the issue that we're seeing that is motivating this decision or change?
+
+## Decision
+What is the change that we're proposing and/or doing?
+
+## Consequences
+What becomes easier or more difficult to do because of this change?
+```

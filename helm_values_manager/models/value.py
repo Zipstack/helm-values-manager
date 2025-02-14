@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 from ..backends.base import ValueBackend
+from ..utils.logger import logger
 
 
 @dataclass
@@ -26,6 +27,10 @@ class Value:
     environment: str
     _backend: ValueBackend
 
+    def __post_init__(self):
+        """Post-initialization validation and logging."""
+        logger.debug("Created Value instance for path %s in environment %s", self.path, self.environment)
+
     def get(self) -> str:
         """
         Get the resolved value.
@@ -37,7 +42,14 @@ class Value:
             ValueError: If value doesn't exist
             RuntimeError: If backend operation fails
         """
-        return self._backend.get_value(self.path, self.environment)
+        logger.debug("Getting value for path %s in environment %s", self.path, self.environment)
+        try:
+            value = self._backend.get_value(self.path, self.environment)
+            logger.debug("Successfully retrieved value for path %s", self.path)
+            return value
+        except Exception as e:
+            logger.error("Failed to get value for path %s in environment %s: %s", self.path, self.environment, str(e))
+            raise
 
     def set(self, value: str) -> None:
         """
@@ -50,23 +62,28 @@ class Value:
             ValueError: If value is not a string
             RuntimeError: If backend operation fails
         """
+        logger.debug("Setting value for path %s in environment %s", self.path, self.environment)
+
         if not isinstance(value, str):
+            logger.error("Invalid value type for path %s: expected str, got %s", self.path, type(value))
             raise ValueError("Value must be a string")
-        self._backend.set_value(self.path, self.environment, value)
+
+        try:
+            self._backend.set_value(self.path, self.environment, value)
+            logger.debug("Successfully set value for path %s", self.path)
+        except Exception as e:
+            logger.error("Failed to set value for path %s in environment %s: %s", self.path, self.environment, str(e))
+            raise
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Serialize the value configuration to a dictionary.
+        Convert the Value instance to a dictionary.
 
         Returns:
-            dict: Serialized representation of the value containing:
-                - path: The configuration path
-                - environment: The environment name
+            Dict[str, Any]: Dictionary representation of the Value instance
         """
-        return {
-            "path": self.path,
-            "environment": self.environment,
-        }
+        logger.debug("Converting Value to dict for path %s", self.path)
+        return {"path": self.path, "environment": self.environment, "backend_type": self._backend.backend_type}
 
     @staticmethod
     def from_dict(data: Dict[str, Any], backend: ValueBackend) -> "Value":

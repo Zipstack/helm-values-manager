@@ -10,27 +10,61 @@ We love your input! We want to make contributing to Helm Values Manager as easy 
 
 ## Development Process
 
-We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
+Before starting work:
+1. Check if a GitHub issue exists for your feature/bug
+   - If not, create a new issue using the appropriate template:
+     - Bug Report: For reporting bugs
+     - Feature Request: For proposing new features
+     - Documentation: For documentation improvements
+   - If yes, comment on the issue to let others know you're working on it
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code passes all code quality checks.
-6. Issue that pull request!
+For contributors with write access:
+1. Create a new branch from `main` using the issue number (see Branch Naming below)
+2. Make your changes following our development guidelines
+3. Create a pull request
+
+For contributors without write access:
+1. Fork the repository
+2. Create a new branch in your fork
+   - We recommend creating a branch even in your fork to:
+     - Keep your fork's main branch clean and in sync with upstream
+     - Work on multiple issues simultaneously
+     - Make PR feedback changes easier
+3. Make your changes in the branch
+4. Create a pull request from your fork's branch to our main repository
+
+For all contributors:
+1. If you've added code that should be tested, add tests
+2. If you've changed APIs, update the documentation
+3. Ensure the test suite passes
+4. Make sure your code passes all code quality checks
 
 ## Version Control Guidelines
 
-### Branch Naming
-- Feature branches: `feature/short-description`
-- Bug fixes: `fix/issue-description`
-- Documentation: `docs/what-changed`
-- Release branches: `release/version-number`
+### Branch Naming Convention
+
+All branches should follow this naming convention:
+
+```
+<issue-number>-<short-description>
+```
+
+For example:
+- `123-add-aws-secrets-backend`
+- `456-fix-path-validation`
+- `789-update-documentation`
+
+Note: This naming convention is required for branches in the main repository. When working in your own fork, we recommend:
+1. Creating a dedicated branch for each issue (don't work in main)
+2. Following the same naming convention for consistency
+3. Keeping your fork's main branch clean for easy upstream syncing
 
 ### Commit Messages
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification with issue number references:
+
 ```
-<type>[optional scope]: <description>
+<type>[optional scope]: #<issue-number> <description>
 
 [optional body]
 
@@ -38,24 +72,32 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 ```
 
 Types:
-- `feat`: New feature
-- `fix`: Bug fix
+- `feat`: A new feature
+- `fix`: A bug fix
 - `docs`: Documentation only changes
 - `style`: Changes that do not affect the meaning of the code
-- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `refactor`: A code change that neither fixes a bug nor adds a feature
 - `test`: Adding missing tests or correcting existing tests
 - `chore`: Changes to the build process or auxiliary tools
 
-Example:
+Examples:
 ```
-feat(value): add support for remote storage backends
-
-- Implement ValueBackend interface
-- Add AWS Secrets Manager backend
-- Add Azure Key Vault backend
-
-Closes #123
+feat: #123 add AWS Secrets backend
+fix: #456 handle empty paths correctly
+docs: #789 update installation guide
+test: #234 add integration tests for Value class
 ```
+
+For multiple issues, include all issue numbers:
+```
+fix: #111 #222 resolve path handling edge cases
+```
+
+Note:
+- Always include the issue number with a `#` prefix
+- Place the issue number before the description
+- Multiple issues should be space-separated
+- The description should still be clear without the issue number
 
 ## Important Documentation
 

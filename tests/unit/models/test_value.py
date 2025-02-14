@@ -47,9 +47,10 @@ def test_set_invalid_type(mock_backend):
 
 def test_to_dict(mock_backend):
     """Test serializing a value."""
+    mock_backend.backend_type = "mock"
     value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     data = value.to_dict()
-    assert data == {"path": "app.replicas", "environment": "dev"}
+    assert data == {"path": "app.replicas", "environment": "dev", "backend_type": "mock"}
 
 
 def test_from_dict(mock_backend):

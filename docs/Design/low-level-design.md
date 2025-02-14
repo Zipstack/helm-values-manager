@@ -21,8 +21,14 @@ classDiagram
     }
 
     class PathData {
+        +str path
         +Dict metadata
         +Dict~str,Value~ values
+        +validate() None
+        +add_value(environment: str, value: Value) None
+        +get_value(environment: str) Optional[Value]
+        +to_dict() Dict
+        +from_dict(data: Dict, create_value_fn) PathData
     }
 
     class Value {
@@ -85,6 +91,11 @@ classDiagram
         +validate_auth_config(auth_config: dict) None
     }
 
+    class HelmLogger {
+        +debug(msg: str, *args: Any) None
+        +error(msg: str, *args: Any) None
+    }
+
     HelmValuesConfig "1" *-- "*" ConfigValue
     HelmValuesConfig "1" *-- "*" Deployment
     HelmValuesConfig "1" *-- "*" PathData
@@ -99,32 +110,32 @@ classDiagram
 
 ### 2. Value Management
 
-The system uses a unified approach to value storage and resolution through the `Value` class:
+The system manages configuration values through a hierarchy of classes:
 
-```python
-class Value:
-    def __init__(self, path: str, environment: str,
-                 backend: ValueBackend):
-        self.path = path
-        self.environment = environment
-        self._backend = backend
+1. **HelmValuesConfig**
+   - Top-level configuration manager
+   - Maintains mapping of paths to PathData instances
+   - Handles backend selection based on value sensitivity
+   - Manages deployments and their configurations
 
-    def get(self) -> str:
-        """Get the resolved value"""
-        return self._backend.get_value(self.path, self.environment)
+2. **PathData**
+   - Represents a single configuration path and its properties
+   - Owns the configuration path and ensures consistency
+   - Stores metadata (description, required status, sensitivity)
+   - Manages environment-specific values through Value instances
+   - Validates path consistency between itself and its Values
+   - Delegates actual value storage to Value instances
 
-    def set(self, value: str) -> None:
-        """Set the value"""
-        if not isinstance(value, str):
-            raise ValueError("Value must be a string")
-        self._backend.set_value(self.path, self.environment, value)
-```
+3. **Value**
+   - Handles actual value storage and retrieval
+   - Uses appropriate backend for storage operations
+   - Maintains reference to its path and environment
 
-Key features:
-- Encapsulated value resolution logic
-- Unified interface for all storage backends
+This hierarchy ensures:
 - Clear separation of concerns
-- Type-safe value handling
+- Consistent path handling across the system
+- Proper validation at each level
+- Flexible backend selection based on value sensitivity
 
 ### 3. Command Pattern
 
@@ -248,6 +259,31 @@ The configuration follows the v1 schema:
    - Automatic file locking
    - Backup before writes
    - Atomic updates
+
+## Logging System
+
+The logging system follows Helm plugin conventions and provides consistent output formatting:
+
+1. **HelmLogger Class**
+   - Provides debug and error logging methods
+   - Follows Helm output conventions
+   - Uses stderr for all output
+   - Controls debug output via HELM_DEBUG environment variable
+
+2. **Global Logger Instance**
+   - Available via `from helm_values_manager.utils.logger import logger`
+   - Ensures consistent logging across all components
+   - Simplifies testing with mock support
+
+3. **Performance Features**
+   - Uses string formatting for efficiency
+   - Lazy evaluation of debug messages
+   - Minimal memory overhead
+
+4. **Testing Support**
+   - Mockable stderr output
+   - Environment variable control
+   - String format verification
 
 ## Benefits of This Design
 
