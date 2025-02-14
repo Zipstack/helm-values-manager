@@ -184,3 +184,6 @@ bin/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# windsurf rules
+.windsurfrules
