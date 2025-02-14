@@ -1,0 +1,64 @@
+name: 📚 Documentation
+description: Suggest improvements or report issues in documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve our documentation!
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs attention?
+      options:
+        - README
+        - API Documentation
+        - Installation Guide
+        - Usage Examples
+        - Architecture/Design Docs
+        - Contributing Guide
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-issue
+    attributes:
+      label: Current Documentation Issue
+      description: What's missing, unclear, or incorrect in the current documentation?
+      placeholder: The current documentation lacks information about...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-changes
+    attributes:
+      label: Suggested Changes
+      description: Describe your suggested changes or additions
+      placeholder: |
+        The documentation should include:
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I've checked that this isn't already documented somewhere else
+          required: true
+        - label: I've provided specific suggestions for improvement
+          required: true
+        - label: I've included examples where relevant
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the documentation request here
