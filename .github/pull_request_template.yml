@@ -1,0 +1,101 @@
+name: Pull Request
+description: Create a pull request
+title: "[PR]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for creating this pull request! Please ensure you've read our contributing guidelines.
+
+  - type: input
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: List any related issues this PR addresses
+      placeholder: "#123, #456"
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes
+    attributes:
+      label: Changes Made
+      description: Describe the changes you've made
+      placeholder: |
+        - Added feature X
+        - Fixed bug Y
+        - Updated documentation for Z
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing Done
+      description: Describe the testing you've performed
+      placeholder: |
+        - Added unit tests for X
+        - Added integration tests for Y
+        - Manually tested scenario Z
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pull Request Checklist
+      description: Please check all that apply
+      options:
+        - label: I have read the CONTRIBUTING guidelines
+          required: true
+        - label: My code follows the project's style guidelines
+          required: true
+        - label: I have added tests that prove my fix/feature works
+          required: true
+        - label: I have updated the documentation accordingly
+          required: true
+        - label: All new and existing tests passed
+          required: true
+        - label: My commits follow the project's commit message convention
+          required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of Change
+      description: What type of change does this PR introduce?
+      options:
+        - Feature
+        - Bug Fix
+        - Documentation
+        - Performance Improvement
+        - Code Style Update
+        - Refactoring
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking Change
+      description: Does this PR introduce a breaking change?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+
+  - type: textarea
+    id: breaking-description
+    attributes:
+      label: Breaking Change Description
+      description: If this PR introduces a breaking change, describe it and migration steps
+      placeholder: Describe the breaking changes and how to migrate...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Add any other context about the PR here
