@@ -63,3 +63,96 @@ def test_get_environments(path_data, mock_value):
     assert len(environments) == 2
     assert "test1" in environments
     assert "test2" in environments
+
+
+def test_validate_path_mismatch(path_data):
+    """Test validation with mismatched paths."""
+    mock_value = Mock(spec=Value)
+    mock_value.path = "wrong.path"
+    path_data.set_value("test_env", mock_value)
+
+    with pytest.raises(
+        ValueError, match=r"Value for environment test_env has inconsistent path: wrong\.path != test\.path"
+    ):
+        path_data.validate()
+
+
+def test_validate_required_missing_value(path_data):
+    """Test validation with missing required value."""
+    mock_value = Mock(spec=Value)
+    mock_value.path = "test.path"
+    mock_value.get.return_value = None
+    path_data.set_value("test_env", mock_value)
+
+    with pytest.raises(ValueError, match=r"Missing required value for path test\.path in environment test_env"):
+        path_data.validate()
+
+
+def test_validate_required_empty_value(path_data):
+    """Test validation with empty required value."""
+    mock_value = Mock(spec=Value)
+    mock_value.path = "test.path"
+    mock_value.get.return_value = ""
+    path_data.set_value("test_env", mock_value)
+
+    with pytest.raises(ValueError, match=r"Missing required value for path test\.path in environment test_env"):
+        path_data.validate()
+
+
+def test_validate_success(path_data, mock_value):
+    """Test successful validation."""
+    mock_value.get.return_value = "test_value"
+    path_data.set_value("test_env", mock_value)
+    path_data.validate()  # Should not raise any error
+
+
+def test_validate_not_required(path_data, mock_value):
+    """Test validation when path is not required."""
+    path_data.metadata["required"] = False
+    mock_value.get.return_value = None
+    path_data.set_value("test_env", mock_value)
+    path_data.validate()  # Should not raise any error
+
+
+def test_to_dict(path_data, mock_value):
+    """Test converting PathData to dictionary."""
+    mock_value.to_dict.return_value = {"value": "test_value"}
+    path_data.set_value("test_env", mock_value)
+
+    result = path_data.to_dict()
+    assert result["path"] == "test.path"
+    assert result["metadata"] == {
+        "description": "Test description",
+        "required": True,
+        "sensitive": False,
+    }
+    assert result["values"] == {"test_env": {"value": "test_value"}}
+
+
+def test_from_dict():
+    """Test creating PathData from dictionary."""
+    data = {
+        "path": "test.path",
+        "metadata": {
+            "description": "Test description",
+            "required": True,
+            "sensitive": False,
+        },
+        "values": {"test_env": {"value": "test_value"}},
+    }
+
+    def create_value_fn(path, env, value_data):
+        mock_value = Mock(spec=Value)
+        mock_value.path = path
+        mock_value.environment = env
+        return mock_value
+
+    path_data = PathData.from_dict(data, create_value_fn)
+    assert path_data.path == "test.path"
+    assert path_data.metadata == {
+        "description": "Test description",
+        "required": True,
+        "sensitive": False,
+    }
+    assert len(list(path_data.get_environments())) == 1
+    assert "test_env" in path_data._values

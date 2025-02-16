@@ -35,7 +35,7 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **Dependencies**: ADR-003
 
 ### [ADR-005: Unified Backend Approach](005-unified-backend-approach.md)
-- **Status**: Proposed
+- **Status**: Accepted
 - **Context**: Split logic in Value class for different storage types
 - **Decision**: Remove storage type distinction, use SimpleValueBackend
 - **Impact**: Simplifies Value class and unifies storage interface
@@ -49,7 +49,7 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **Dependencies**: ADR-001
 
 ### [ADR-007: Sensitive Value Storage](007-sensitive-value-storage.md)
-- **Status**: Proposed
+- **Status**: Accepted
 - **Context**: Need for secure handling of sensitive configuration values
 - **Decision**: Store sensitive values using reference-based approach in secure backends
 - **Impact**: Ensures security while maintaining flexibility and traceability

@@ -1,7 +1,7 @@
-# ADR 0002: Sensitive Value Storage
+# ADR 007: Sensitive Value Storage
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The helm-values-manager needs to handle both sensitive and non-sensitive configuration values. While non-sensitive values can be stored directly in the configuration files, sensitive values require special handling to ensure security.

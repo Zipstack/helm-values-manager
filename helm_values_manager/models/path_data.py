@@ -31,24 +31,27 @@ class PathData:
         Validate the PathData instance.
 
         Ensures that:
-        1. If path is marked as required, all environments have values
-        2. All Value instances use the same path as this PathData
+        1. All Value instances use the same path as this PathData
+        2. If path is marked as required, each environment has a non-empty value
 
         Raises:
             ValueError: If validation fails
         """
         logger.debug("Validating PathData for path: %s", self.path)
 
-        # Validate path consistency
+        # Validate path consistency and required values
         for env, value in self._values.items():
+            # Check path consistency
             if value.path != self.path:
                 logger.error("Path mismatch for environment %s: %s != %s", env, value.path, self.path)
-                raise ValueError(f"Value path {value.path} doesn't match PathData path {self.path}")
+                raise ValueError(f"Value for environment {env} has inconsistent path: {value.path} != {self.path}")
 
-        # If path is required, ensure all environments have values
-        if self.metadata.get("required", False) and not self._values:
-            logger.error("Missing required value for path %s", self.path)
-            raise ValueError("Missing required value")
+            # Check required values
+            if self.metadata.get("required", False):
+                val = value.get()
+                if val is None or val == "":
+                    logger.error("Missing required value for path %s in environment %s", self.path, env)
+                    raise ValueError(f"Missing required value for path {self.path} in environment {env}")
 
     def set_value(self, environment: str, value: Value) -> None:
         """
