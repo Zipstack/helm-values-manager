@@ -6,7 +6,7 @@ This module provides a simple in-memory backend for storing non-sensitive values
 
 from typing import Dict
 
-from .base import ValueBackend
+from helm_values_manager.backends.base import ValueBackend
 
 
 class SimpleValueBackend(ValueBackend):

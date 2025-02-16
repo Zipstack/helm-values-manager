@@ -5,6 +5,6 @@ Each backend is responsible for securely storing and retrieving values using
 different storage systems like AWS Secrets Manager or Azure Key Vault.
 """
 
-from .base import ValueBackend
+from helm_values_manager.backends.base import ValueBackend
 
 __all__ = ["ValueBackend"]

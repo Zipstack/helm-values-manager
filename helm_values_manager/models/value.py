@@ -8,8 +8,8 @@ of configuration values using the appropriate backend.
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from ..backends.base import ValueBackend
-from ..utils.logger import logger
+from helm_values_manager.backends.base import ValueBackend
+from helm_values_manager.utils.logger import logger
 
 
 @dataclass
