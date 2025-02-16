@@ -34,15 +34,18 @@ helm plugin install https://github.com/zipstack/helm-values-manager
 ## Quick Start
 
 1. Initialize a new configuration:
+
 ```bash
 helm values-manager init
 ```
 
 This creates:
+
 - `values-manager.yaml` configuration file
 - `values` directory with environment files (`dev.yaml`, `staging.yaml`, `prod.yaml`)
 
 2. View available commands:
+
 ```bash
 helm values-manager --help
 ```
@@ -52,23 +55,27 @@ helm values-manager --help
 ### Setup Development Environment
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/zipstack/helm-values-manager
 cd helm-values-manager
 ```
 
 2. Create and activate a virtual environment:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 ```
 
 3. Install development dependencies:
+
 ```bash
 pip install -e ".[dev]"
 ```
 
 4. Install pre-commit hooks:
+
 ```bash
 pre-commit install
 ```
@@ -76,11 +83,13 @@ pre-commit install
 ### Running Tests
 
 Run tests with tox (will test against multiple Python versions):
+
 ```bash
 tox
 ```
 
 Run tests for a specific Python version:
+
 ```bash
 tox -e py39  # For Python 3.9
 ```
@@ -95,6 +104,7 @@ This project uses several tools to maintain code quality:
 - **flake8**: Style guide enforcement
 
 Run all code quality checks manually:
+
 ```bash
 pre-commit run --all-files
 ```

@@ -202,6 +202,88 @@ Implementations:
 - Azure Key Vault Backend
 - Additional backends can be easily added
 
+### 5. Schema Validation
+
+The configuration system uses JSON Schema validation to ensure data integrity and consistency:
+
+```mermaid
+classDiagram
+    class SchemaValidator {
+        +validate_config(data: dict) None
+        -load_schema() dict
+        -handle_validation_error(error: ValidationError) str
+    }
+
+    class HelmValuesConfig {
+        +from_dict(data: dict) HelmValuesConfig
+        +to_dict() dict
+        +validate() None
+    }
+
+    HelmValuesConfig ..> SchemaValidator : uses
+```
+
+#### Schema Structure
+
+The schema (`schemas/v1.json`) defines:
+1. **Version Control**
+   - Schema version validation
+   - Backward compatibility checks
+
+2. **Deployment Configuration**
+   - Backend type validation (git-secret, aws, azure, gcp)
+   - Authentication method validation
+   - Backend-specific configuration validation
+
+3. **Value Configuration**
+   - Path format validation (dot notation)
+   - Required/optional field validation
+   - Sensitive value handling
+   - Environment-specific value validation
+
+#### Validation Points
+
+Schema validation occurs at critical points:
+1. **Configuration Loading** (`from_dict`)
+   - Validates complete configuration structure
+   - Ensures all required fields are present
+   - Validates data types and formats
+
+2. **Pre-save Validation** (`to_dict`)
+   - Ensures configuration remains valid after modifications
+   - Validates new values match schema requirements
+
+3. **Path Addition** (`add_config_path`)
+   - Validates new path format
+   - Ensures path uniqueness
+   - Validates metadata structure
+
+#### Error Handling
+
+The validation system provides:
+1. **Detailed Error Messages**
+   - Exact location of validation failures
+   - Clear explanation of validation rules
+   - Suggestions for fixing issues
+
+2. **Validation Categories**
+   - Schema version mismatches
+   - Missing required fields
+   - Invalid value formats
+   - Backend configuration errors
+   - Authentication configuration errors
+
+3. **Error Recovery**
+   - Validation before persistence
+   - Prevents invalid configurations from being saved
+   - Maintains system consistency
+
+This validation ensures:
+- Configuration integrity
+- Consistent data structure
+- Clear error reporting
+- Safe configuration updates
+
 ## Implementation Details
 
 ### 1. Configuration Structure

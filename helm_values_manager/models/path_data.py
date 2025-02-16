@@ -106,8 +106,10 @@ class PathData:
         """
         return {
             "path": self.path,
-            "metadata": self.metadata,
-            "values": {env: value.to_dict() for env, value in self._values.items()},
+            "description": self.metadata.get("description"),
+            "required": self.metadata.get("required", False),
+            "sensitive": self.metadata.get("sensitive", False),
+            "values": {env: value.get() for env, value in self._values.items()},
         }
 
     @classmethod
@@ -133,18 +135,23 @@ class PathData:
 
         logger.debug("Creating PathData from dict with path: %s", data.get("path"))
 
-        required_keys = {"path", "metadata", "values"}
+        required_keys = {"path", "values"}
         if not all(key in data for key in required_keys):
             missing = required_keys - set(data.keys())
             logger.error("Missing required keys in data: %s", missing)
             raise ValueError(f"Missing required keys: {missing}")
 
-        path_data = cls(path=data["path"], metadata=data["metadata"])
+        metadata = {
+            "description": data.get("description"),
+            "required": data.get("required", False),
+            "sensitive": data.get("sensitive", False),
+        }
+        path_data = cls(path=data["path"], metadata=metadata)
 
         # Create Value instances for each environment
-        for env, value_data in data.get("values", {}).items():
+        for env, value in data.get("values", {}).items():
             logger.debug("Creating value for environment %s", env)
-            value = create_value_fn(data["path"], env, value_data)
-            path_data.set_value(env, value)
+            value_obj = create_value_fn(data["path"], env, {"value": value})
+            path_data.set_value(env, value_obj)
 
         return path_data

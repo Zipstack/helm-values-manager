@@ -51,9 +51,9 @@
                                     "properties": { "type": { "const": "file" } }
                                 },
                                 "then": {
-                                    "required": ["file_path"],
+                                    "required": ["path"],
                                     "properties": {
-                                        "file_path": { "type": "string" }
+                                        "path": { "type": "string" }
                                     }
                                 }
                             },
@@ -90,7 +90,7 @@
             "description": "List of configuration values to manage",
             "items": {
                 "type": "object",
-                "required": ["path", "required", "sensitive", "values"],
+                "required": ["path", "values"],
                 "properties": {
                     "path": {
                         "type": "string",
@@ -103,17 +103,19 @@
                     },
                     "required": {
                         "type": "boolean",
-                        "description": "Whether this value must be present in all environments"
+                        "description": "Whether this value is required to be set in all environments",
+                        "default": false
                     },
                     "sensitive": {
                         "type": "boolean",
-                        "description": "Whether this value contains sensitive data. When true, the corresponding value should be a secret reference in the format: secret://<backend-type>/<secret-path>"
+                        "description": "Whether this value contains sensitive data that should be stored securely",
+                        "default": false
                     },
                     "values": {
                         "type": "object",
-                        "description": "Map of environment names to their values",
+                        "description": "Map of environment names to values",
                         "additionalProperties": {
-                            "type": "string"
+                            "type": ["string", "number", "boolean", "null", "object", "array"]
                         }
                     }
                 }
