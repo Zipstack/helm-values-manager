@@ -107,7 +107,7 @@
                     },
                     "sensitive": {
                         "type": "boolean",
-                        "description": "Whether this value contains sensitive data"
+                        "description": "Whether this value contains sensitive data. When true, the corresponding value should be a secret reference in the format: secret://<backend-type>/<secret-path>"
                     },
                     "values": {
                         "type": "object",

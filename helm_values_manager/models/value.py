@@ -8,8 +8,8 @@ of configuration values using the appropriate backend.
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from ..backends.base import ValueBackend
-from ..utils.logger import logger
+from helm_values_manager.backends.base import ValueBackend
+from helm_values_manager.utils.logger import logger
 
 
 @dataclass
@@ -31,12 +31,16 @@ class Value:
         """Post-initialization validation and logging."""
         logger.debug("Created Value instance for path %s in environment %s", self.path, self.environment)
 
-    def get(self) -> str:
+    def get(self, resolve: bool = False) -> str:
         """
-        Get the resolved value.
+        Get the value.
+
+        Args:
+            resolve (bool): If True, resolve any secret references to their actual values.
+                          If False, return the raw value which may be a secret reference.
 
         Returns:
-            str: The resolved value
+            str: The value (resolved or raw depending on resolve parameter)
 
         Raises:
             ValueError: If value doesn't exist
@@ -44,7 +48,7 @@ class Value:
         """
         logger.debug("Getting value for path %s in environment %s", self.path, self.environment)
         try:
-            value = self._backend.get_value(self.path, self.environment)
+            value = self._backend.get_value(self.path, self.environment, resolve)
             logger.debug("Successfully retrieved value for path %s", self.path)
             return value
         except Exception as e:
@@ -56,18 +60,16 @@ class Value:
         Set the value using the backend.
 
         Args:
-            value: The value to store
+            value: The value to store, can be a raw value or a secret reference
 
         Raises:
             ValueError: If value is not a string
             RuntimeError: If backend operation fails
         """
-        logger.debug("Setting value for path %s in environment %s", self.path, self.environment)
-
         if not isinstance(value, str):
-            logger.error("Invalid value type for path %s: expected str, got %s", self.path, type(value))
             raise ValueError("Value must be a string")
 
+        logger.debug("Setting value for path %s in environment %s", self.path, self.environment)
         try:
             self._backend.set_value(self.path, self.environment, value)
             logger.debug("Successfully set value for path %s", self.path)

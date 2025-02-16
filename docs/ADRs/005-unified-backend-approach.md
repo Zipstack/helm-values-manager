@@ -1,7 +1,7 @@
 # ADR-005: Unified Backend Approach for Value Storage
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 Currently, the Value class handles two distinct storage types: local and remote. This creates a split in logic within the Value class, requiring different code paths and validation rules based on the storage type. This complexity makes the code harder to maintain and test.

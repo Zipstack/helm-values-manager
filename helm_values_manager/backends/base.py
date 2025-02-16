@@ -35,6 +35,7 @@ class ValueBackend(ABC):
             ValueError: If the auth_config is invalid
         """
         self._validate_auth_config(auth_config)
+        self.backend_type = self.__class__.__name__.lower().replace("backend", "")
 
     def _validate_auth_config(self, auth_config: Dict[str, str]) -> None:
         """Validate the authentication configuration.
@@ -59,20 +60,18 @@ class ValueBackend(ABC):
             raise ValueError(f"Invalid auth type: {auth_config['type']}. " f"Must be one of: {', '.join(valid_types)}")
 
     @abstractmethod
-    def get_value(self, path: str, environment: str) -> str:
-        """Get a value from the storage backend.
+    def get_value(self, path: str, environment: str, resolve: bool = False) -> str:
+        """
+        Get a value from storage.
 
         Args:
-            path: The configuration path (e.g., "app.replicas")
-            environment: The environment name (e.g., "dev", "prod")
+            path: The configuration path
+            environment: The environment name
+            resolve: If True, resolve any secret references to their actual values.
+                    If False, return the raw value which may be a secret reference.
 
         Returns:
-            str: The value stored in the backend.
-
-        Raises:
-            ValueError: If the value doesn't exist
-            ConnectionError: If there's an error connecting to the backend
-            PermissionError: If there's an authentication or authorization error
+            str: The value (resolved or raw depending on resolve parameter)
         """
         pass
 
