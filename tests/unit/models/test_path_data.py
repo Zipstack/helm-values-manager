@@ -69,12 +69,8 @@ def test_validate_path_mismatch(path_data):
     """Test validation with mismatched paths."""
     mock_value = Mock(spec=Value)
     mock_value.path = "wrong.path"
-    path_data.set_value("test_env", mock_value)
-
-    with pytest.raises(
-        ValueError, match=r"Value for environment test_env has inconsistent path: wrong\.path != test\.path"
-    ):
-        path_data.validate()
+    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
+        path_data.set_value("test_env", mock_value)
 
 
 def test_validate_required_missing_value(path_data):
@@ -167,8 +163,12 @@ def test_from_dict_invalid_type():
 def test_from_dict_missing_keys():
     """Test from_dict with missing required keys."""
     data = {"path": "test.path"}  # Missing metadata and values
-    with pytest.raises(ValueError, match="Missing required keys: {'metadata', 'values'}"):
+    with pytest.raises(ValueError) as exc_info:
         PathData.from_dict(data, lambda p, e, d: None)
+
+    # Check that both required keys are mentioned in the error
+    assert "metadata" in str(exc_info.value)
+    assert "values" in str(exc_info.value)
 
 
 def test_from_dict_value_path_mismatch():
