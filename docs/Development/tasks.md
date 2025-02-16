@@ -30,6 +30,20 @@
   - [x] Implement to_dict() method
   - [x] Implement from_dict() method
   - [x] Add tests for serialization
+- [x] Add metadata handling
+  - [x] Create ConfigMetadata class
+  - [x] Add tests for ConfigMetadata
+  - [x] Integrate with PathData
+
+### ConfigMetadata
+- [x] Implement ConfigMetadata class
+  - [x] Add metadata attributes
+  - [x] Implement constructor with type hints
+  - [x] Add basic validation for attributes
+- [x] Add serialization support
+  - [x] Implement to_dict() method
+  - [x] Implement from_dict() static method
+  - [x] Add tests for serialization/deserialization
 
 ### HelmValuesConfig Refactoring
 - [ ] Remove PlainTextBackend references
@@ -82,6 +96,7 @@
 - [x] Add unit tests
   - [x] Value class tests
   - [x] PathData class tests
+  - [x] ConfigMetadata tests
   - [ ] HelmValuesConfig tests
   - [ ] Backend tests
   - [ ] Command tests
@@ -110,6 +125,7 @@
 - [ ] Update API documentation
   - [ ] Document Value class
   - [ ] Document PathData class
+  - [ ] Document ConfigMetadata class
   - [ ] Update HelmValuesConfig docs
 - [ ] Add usage examples
   - [ ] Basic usage examples
