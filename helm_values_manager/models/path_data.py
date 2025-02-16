@@ -5,7 +5,7 @@ This module contains the PathData class which is responsible for managing
 metadata and values associated with a specific configuration path.
 """
 
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Callable, Dict, Iterator, Optional
 
 from helm_values_manager.models.value import Value
 from helm_values_manager.utils.logger import logger
@@ -61,6 +61,7 @@ class PathData:
             environment (str): The environment to set the value for
             value (Value): The Value object to set
         """
+        logger.debug("Setting value for path %s in environment %s", self.path, environment)
         self._values[environment] = value
 
     def get_value(self, environment: str, resolve: bool = False) -> Optional[str]:
@@ -74,8 +75,10 @@ class PathData:
         Returns:
             Optional[str]: The value if found, None otherwise
         """
+        logger.debug("Getting value for path %s in environment %s", self.path, environment)
         value = self._values.get(environment)
         if value is None:
+            logger.debug("No value found for path %s in environment %s", self.path, environment)
             return None
 
         return value.get(resolve=resolve)
@@ -103,13 +106,15 @@ class PathData:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], create_value_fn: callable) -> "PathData":
+    def from_dict(
+        cls, data: Dict[str, Any], create_value_fn: Callable[[str, str, Dict[str, Any]], Value]
+    ) -> "PathData":
         """
         Create a PathData instance from a dictionary.
 
         Args:
             data (Dict[str, Any]): Dictionary containing PathData data
-            create_value_fn: Function to create Value instances
+            create_value_fn: Function to create Value instances. Takes (path, env, value_data) and returns Value
 
         Returns:
             PathData: New PathData instance
