@@ -50,9 +50,8 @@ def test_get_value_nonexistent_environment(path_data):
 
 def test_get_value(path_data, mock_value):
     """Test getting a value."""
-    mock_value.get.return_value = "test_value"
     path_data.set_value("test", mock_value)
-    assert path_data.get_value("test") == "test_value"
+    assert path_data.get_value("test") == mock_value
 
 
 def test_get_environments(path_data, mock_value):

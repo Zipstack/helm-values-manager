@@ -72,24 +72,21 @@ class PathData:
 
         self._values[environment] = value
 
-    def get_value(self, environment: str, resolve: bool = False) -> Optional[str]:
+    def get_value(self, environment: str) -> Optional[Value]:
         """
-        Get the value for a specific environment.
+        Get the Value object for a specific environment.
 
         Args:
-            environment: The environment to get the value for
-            resolve: Whether to resolve the value (for sensitive values)
+            environment (str): The environment to get the value for
 
         Returns:
-            Optional[str]: The value if found, None otherwise
+            Optional[Value]: The Value object if it exists, None otherwise
         """
         logger.debug("Getting value for path %s in environment %s", self.path, environment)
         value = self._values.get(environment)
         if value is None:
             logger.debug("No value found for path %s in environment %s", self.path, environment)
-            return None
-
-        return value.get(resolve=resolve)
+        return value
 
     def get_environments(self) -> Iterator:
         """
