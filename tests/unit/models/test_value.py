@@ -12,7 +12,11 @@ from helm_values_manager.models.value import Value
 def mock_backend():
     """Create a mock backend for testing."""
     backend = Mock(spec=ValueBackend)
-    backend.get_value.return_value = "mock_value"
+    # Return different values based on resolve parameter
+    backend.get_value.side_effect = lambda path, env, resolve: (
+        "secret://gcp-secrets/my-app/dev/value" if not resolve else "resolved_value"
+    )
+    backend.backend_type = "mock"
     return backend
 
 
@@ -24,11 +28,18 @@ def test_value_init(mock_backend):
     assert value._backend == mock_backend
 
 
-def test_get_value(mock_backend):
-    """Test getting a value."""
+def test_get_value_without_resolve(mock_backend):
+    """Test getting a value without resolving."""
     value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
-    assert value.get() == "mock_value"
-    mock_backend.get_value.assert_called_once_with("app.replicas", "dev")
+    assert value.get(resolve=False) == "secret://gcp-secrets/my-app/dev/value"
+    mock_backend.get_value.assert_called_once_with("app.replicas", "dev", False)
+
+
+def test_get_value_with_resolve(mock_backend):
+    """Test getting a value with resolving."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
+    assert value.get(resolve=True) == "resolved_value"
+    mock_backend.get_value.assert_called_once_with("app.replicas", "dev", True)
 
 
 def test_set_value(mock_backend):
@@ -47,7 +58,6 @@ def test_set_invalid_type(mock_backend):
 
 def test_to_dict(mock_backend):
     """Test serializing a value."""
-    mock_backend.backend_type = "mock"
     value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
     data = value.to_dict()
     assert data == {"path": "app.replicas", "environment": "dev", "backend_type": "mock"}

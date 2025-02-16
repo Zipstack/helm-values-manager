@@ -25,16 +25,18 @@ class SimpleValueBackend(ValueBackend):
         """Generate a unique storage key."""
         return f"{path}:{environment}"
 
-    def get_value(self, path: str, environment: str) -> str:
+    def get_value(self, path: str, environment: str, resolve: bool = False) -> str:
         """
         Get a value from the in-memory storage.
 
         Args:
             path: The configuration path (e.g., "app.replicas")
             environment: The environment name (e.g., "dev", "prod")
+            resolve: If True, resolve any secret references to their actual values.
+                    If False, return the raw value which may be a secret reference.
 
         Returns:
-            str: The stored value
+            str: The value (resolved or raw depending on resolve parameter)
 
         Raises:
             ValueError: If the value doesn't exist

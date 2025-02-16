@@ -48,6 +48,13 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **Impact**: Ensures consistent user experience and debugging
 - **Dependencies**: ADR-001
 
+### [ADR-007: Sensitive Value Storage](007-sensitive-value-storage.md)
+- **Status**: Proposed
+- **Context**: Need for secure handling of sensitive configuration values
+- **Decision**: Store sensitive values using reference-based approach in secure backends
+- **Impact**: Ensures security while maintaining flexibility and traceability
+- **Dependencies**: ADR-005
+
 ## ADR Template
 For new ADRs, use this template:
 ```markdown

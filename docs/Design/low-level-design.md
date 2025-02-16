@@ -23,10 +23,11 @@ classDiagram
     class PathData {
         +str path
         +Dict metadata
-        +Dict~str,Value~ values
+        -Dict~str,Value~ _values
         +validate() None
-        +add_value(environment: str, value: Value) None
+        +set_value(environment: str, value: Value) None
         +get_value(environment: str) Optional[Value]
+        +get_environments() Iterator[str]
         +to_dict() Dict
         +from_dict(data: Dict, create_value_fn) PathData
     }
@@ -212,12 +213,12 @@ The configuration follows the v1 schema:
     "release": "my-app",
     "deployments": {
         "prod": {
-            "backend": "aws",
+            "backend": "gcp",
             "auth": {
                 "type": "managed_identity"
             },
             "backend_config": {
-                "region": "us-west-2"
+                "region": "us-central1"
             }
         }
     },
@@ -230,6 +231,16 @@ The configuration follows the v1 schema:
             "values": {
                 "dev": "3",
                 "prod": "5"
+            }
+        },
+        {
+            "path": "app.database.password",
+            "description": "Database password",
+            "required": true,
+            "sensitive": true,
+            "values": {
+                "dev": "secret://gcp-secrets/my-app/dev/db-password",
+                "prod": "secret://gcp-secrets/my-app/prod/db-password"
             }
         }
     ]
