@@ -156,3 +156,33 @@ def test_from_dict():
     }
     assert len(list(path_data.get_environments())) == 1
     assert "test_env" in path_data._values
+
+
+def test_from_dict_invalid_type():
+    """Test from_dict with invalid data type."""
+    with pytest.raises(ValueError, match="Data must be a dictionary"):
+        PathData.from_dict(["not a dict"], lambda p, e, d: None)
+
+
+def test_from_dict_missing_keys():
+    """Test from_dict with missing required keys."""
+    data = {"path": "test.path"}  # Missing metadata and values
+    with pytest.raises(ValueError, match="Missing required keys: {'metadata', 'values'}"):
+        PathData.from_dict(data, lambda p, e, d: None)
+
+
+def test_from_dict_value_path_mismatch():
+    """Test from_dict when create_value_fn returns value with wrong path."""
+    data = {
+        "path": "test.path",
+        "metadata": {"required": True},
+        "values": {"test_env": {"value": "test"}},
+    }
+
+    def create_value_fn(path, env, value_data):
+        mock_value = Mock(spec=Value)
+        mock_value.path = "wrong.path"  # Mismatched path
+        return mock_value
+
+    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
+        PathData.from_dict(data, create_value_fn)

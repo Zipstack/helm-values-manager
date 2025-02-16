@@ -126,11 +126,27 @@ class PathData:
 
         Returns:
             PathData: New PathData instance
+
+        Raises:
+            ValueError: If the dictionary structure is invalid
         """
+        if not isinstance(data, dict):
+            logger.error("Invalid data type provided: %s", type(data))
+            raise ValueError("Data must be a dictionary")
+
+        logger.debug("Creating PathData from dict with path: %s", data.get("path"))
+
+        required_keys = {"path", "metadata", "values"}
+        if not all(key in data for key in required_keys):
+            missing = required_keys - set(data.keys())
+            logger.error("Missing required keys in data: %s", missing)
+            raise ValueError(f"Missing required keys: {missing}")
+
         path_data = cls(path=data["path"], metadata=data["metadata"])
 
         # Create Value instances for each environment
         for env, value_data in data.get("values", {}).items():
+            logger.debug("Creating value for environment %s", env)
             value = create_value_fn(data["path"], env, value_data)
             path_data.set_value(env, value)
 
