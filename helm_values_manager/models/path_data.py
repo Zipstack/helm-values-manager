@@ -60,8 +60,16 @@ class PathData:
         Args:
             environment (str): The environment to set the value for
             value (Value): The Value object to set
+
+        Raises:
+            ValueError: If the Value object's path doesn't match this PathData's path
         """
         logger.debug("Setting value for path %s in environment %s", self.path, environment)
+
+        if value.path != self.path:
+            logger.error("Value path %s doesn't match PathData path %s", value.path, self.path)
+            raise ValueError(f"Value path {value.path} doesn't match PathData path {self.path}")
+
         self._values[environment] = value
 
     def get_value(self, environment: str, resolve: bool = False) -> Optional[str]:
