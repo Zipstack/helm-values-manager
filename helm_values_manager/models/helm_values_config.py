@@ -1,6 +1,7 @@
 """HelmValuesConfig class for managing Helm values and secrets."""
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
@@ -11,6 +12,8 @@ from jsonschema.exceptions import ValidationError
 from helm_values_manager.backends.simple import SimpleValueBackend
 from helm_values_manager.models.path_data import PathData
 from helm_values_manager.models.value import Value
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -44,6 +47,24 @@ class HelmValuesConfig:
         schema_path = os.path.join(os.path.dirname(__file__), "..", "schemas", "v1.json")
         with open(schema_path, "r", encoding="utf-8") as f:
             return json.load(f)
+
+    @classmethod
+    def _validate_schema(cls, data: dict) -> None:
+        """
+        Validate data against JSON schema.
+
+        Args:
+            data: Dictionary to validate against schema
+
+        Raises:
+            ValidationError: If the data does not match the schema
+        """
+        schema = cls._load_schema()
+        try:
+            jsonschema.validate(instance=data, schema=schema)
+        except ValidationError as e:
+            logger.error("JSON schema validation failed: %s", e)
+            raise
 
     def add_config_path(
         self, path: str, description: Optional[str] = None, required: bool = False, sensitive: bool = False
@@ -110,6 +131,10 @@ class HelmValuesConfig:
 
     def validate(self) -> None:
         """Validate the configuration."""
+        # Validate against JSON schema first
+        self._validate_schema(self.to_dict())
+
+        # Then validate each path_data
         for path_data in self._path_map.values():
             path_data.validate()
 
@@ -136,19 +161,9 @@ class HelmValuesConfig:
         Raises:
             ValidationError: If the configuration data is invalid
         """
-        # Convert string boolean values to actual booleans for backward compatibility
-        data = data.copy()  # Don't modify the input
-        for config_item in data.get("config", []):
-            for boolean_field in ["required", "sensitive"]:
-                if boolean_field in config_item and isinstance(config_item[boolean_field], str):
-                    config_item[boolean_field] = config_item[boolean_field].lower() == "true"
-
         # Validate against schema
-        schema = cls._load_schema()
-        try:
-            jsonschema.validate(instance=data, schema=schema)
-        except ValidationError as e:
-            raise e
+        data = data.copy()  # Don't modify the input
+        cls._validate_schema(data)
 
         config = cls()
         config.version = data["version"]

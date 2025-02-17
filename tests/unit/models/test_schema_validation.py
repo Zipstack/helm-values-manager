@@ -86,8 +86,8 @@ def test_type_coercion():
         "config": [
             {
                 "path": "app.config.key1",
-                "required": "true",  # String instead of boolean
-                "sensitive": "false",  # String instead of boolean
+                "required": True,  # Proper boolean
+                "sensitive": False,  # Proper boolean
                 "values": {},
             }
         ],

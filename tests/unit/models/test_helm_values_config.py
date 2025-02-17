@@ -1,5 +1,6 @@
 """Test suite for HelmValuesConfig class."""
 
+import jsonschema
 import pytest
 
 from helm_values_manager.models.helm_values_config import HelmValuesConfig
@@ -157,3 +158,18 @@ def test_validate():
 
     # Should not raise error since path_data.validate() handles validation
     config.validate()
+
+
+def test_validate_with_schema():
+    """Test validation including schema validation."""
+    # Create config with invalid version
+    config = HelmValuesConfig()
+    config.version = "invalid"  # Version must match pattern in schema
+
+    # Should raise ValidationError due to schema validation
+    with pytest.raises(jsonschema.exceptions.ValidationError, match=r"'invalid' is not one of"):
+        config.validate()
+
+    # Fix version and test valid case
+    config.version = "1.0"
+    config.validate()  # Should not raise error
