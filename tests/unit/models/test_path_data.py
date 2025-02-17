@@ -32,9 +32,9 @@ def mock_value():
 def test_path_data_init(path_data):
     """Test PathData initialization."""
     assert path_data.path == "test.path"
-    assert path_data.metadata["description"] == "Test description"
-    assert path_data.metadata["required"] is True
-    assert path_data.metadata["sensitive"] is False
+    assert path_data.metadata.description == "Test description"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
 
 
 def test_set_value(path_data, mock_value):
@@ -64,12 +64,16 @@ def test_get_environments(path_data, mock_value):
     assert "test2" in environments
 
 
-def test_validate_path_mismatch(path_data):
-    """Test validation with mismatched paths."""
+def test_validate_path_mismatch():
+    """Test validation when a value has a mismatched path."""
+    path_data = PathData("test.path", {"required": True})
     mock_value = Mock(spec=Value)
     mock_value.path = "wrong.path"
-    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
-        path_data.set_value("test_env", mock_value)
+    path_data._values["test_env"] = mock_value
+    with pytest.raises(
+        ValueError, match=r"Value for environment test_env has inconsistent path: wrong\.path != test\.path"
+    ):
+        path_data.validate()
 
 
 def test_validate_required_missing_value(path_data):
@@ -103,7 +107,7 @@ def test_validate_success(path_data, mock_value):
 
 def test_validate_not_required(path_data, mock_value):
     """Test validation when path is not required."""
-    path_data.metadata["required"] = False
+    path_data.metadata.required = False
     mock_value.get.return_value = None
     path_data.set_value("test_env", mock_value)
     path_data.validate()  # Should not raise any error
@@ -111,29 +115,25 @@ def test_validate_not_required(path_data, mock_value):
 
 def test_to_dict(path_data, mock_value):
     """Test converting PathData to dictionary."""
-    mock_value.to_dict.return_value = {"value": "test_value"}
+    mock_value.get.return_value = "test_value"
     path_data.set_value("test_env", mock_value)
 
     result = path_data.to_dict()
     assert result["path"] == "test.path"
-    assert result["metadata"] == {
-        "description": "Test description",
-        "required": True,
-        "sensitive": False,
-    }
-    assert result["values"] == {"test_env": {"value": "test_value"}}
+    assert result["description"] == "Test description"
+    assert result["required"] is True
+    assert result["sensitive"] is False
+    assert result["values"] == {"test_env": "test_value"}
 
 
 def test_from_dict():
     """Test creating PathData from dictionary."""
     data = {
         "path": "test.path",
-        "metadata": {
-            "description": "Test description",
-            "required": True,
-            "sensitive": False,
-        },
-        "values": {"test_env": {"value": "test_value"}},
+        "description": "Test description",
+        "required": True,
+        "sensitive": False,
+        "values": {"test_env": "test_value"},
     }
 
     def create_value_fn(path, env, value_data):
@@ -144,12 +144,10 @@ def test_from_dict():
 
     path_data = PathData.from_dict(data, create_value_fn)
     assert path_data.path == "test.path"
-    assert path_data.metadata == {
-        "description": "Test description",
-        "required": True,
-        "sensitive": False,
-    }
-    assert len(list(path_data.get_environments())) == 1
+    assert path_data.metadata.description == "Test description"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
+    assert len(path_data._values) == 1
     assert "test_env" in path_data._values
 
 
@@ -161,13 +159,15 @@ def test_from_dict_invalid_type():
 
 def test_from_dict_missing_keys():
     """Test from_dict with missing required keys."""
-    data = {"path": "test.path"}  # Missing metadata and values
-    with pytest.raises(ValueError) as exc_info:
-        PathData.from_dict(data, lambda p, e, d: None)
+    data = {"path": "test.path"}  # Missing values field
 
-    # Check that both required keys are mentioned in the error
-    assert "metadata" in str(exc_info.value)
-    assert "values" in str(exc_info.value)
+    def create_value_fn(path, env, value_data):
+        mock_value = Mock(spec=Value)
+        mock_value.path = path
+        return mock_value
+
+    with pytest.raises(ValueError, match=r"Missing required keys: {'values'}"):
+        PathData.from_dict(data, create_value_fn)
 
 
 def test_from_dict_value_path_mismatch():
@@ -183,5 +183,5 @@ def test_from_dict_value_path_mismatch():
         mock_value.path = "wrong.path"  # Mismatched path
         return mock_value
 
-    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
+    with pytest.raises(ValueError, match=r"Value path wrong\.path does not match PathData path test\.path"):
         PathData.from_dict(data, create_value_fn)

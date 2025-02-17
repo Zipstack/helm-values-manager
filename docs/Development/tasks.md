@@ -35,6 +35,20 @@
   - [x] Add tests for ConfigMetadata
   - [x] Integrate with PathData
 
+### Schema Validation Integration
+- [x] Add Basic Schema Validation
+  - [x] Create test_schema_validation.py
+    - [x] Test valid configuration loading
+    - [x] Test invalid configuration detection
+    - [x] Test error message clarity
+  - [x] Add schema validation to HelmValuesConfig
+    - [x] Add jsonschema dependency
+    - [x] Implement validation in from_dict
+    - [x] Add clear error messages
+  - [x] Update documentation
+    - [x] Schema documentation in low-level design
+    - [x] Example configuration in design docs
+
 ### ConfigMetadata
 - [x] Implement ConfigMetadata class
   - [x] Add metadata attributes
@@ -44,21 +58,6 @@
   - [x] Implement to_dict() method
   - [x] Implement from_dict() static method
   - [x] Add tests for serialization/deserialization
-
-### HelmValuesConfig Refactoring
-- [ ] Remove PlainTextBackend references
-  - [ ] Update imports and dependencies
-  - [ ] Remove plaintext.py
-  - [ ] Update tests
-- [ ] Implement unified path storage
-  - [ ] Add _path_map dictionary
-  - [ ] Migrate existing code to use _path_map
-  - [ ] Update tests for new structure
-- [ ] Update value management
-  - [ ] Refactor set_value() to use Value class
-  - [ ] Refactor get_value() to use Value class
-  - [ ] Add value validation in set operations
-  - [ ] Update tests for new value handling
 
 ### Backend System
 - [ ] Clean up base ValueBackend
@@ -97,7 +96,6 @@
   - [x] Value class tests
   - [x] PathData class tests
   - [x] ConfigMetadata tests
-  - [ ] HelmValuesConfig tests
   - [ ] Backend tests
   - [ ] Command tests
 - [ ] Add integration tests

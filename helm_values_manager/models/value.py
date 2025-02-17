@@ -6,10 +6,10 @@ of configuration values using the appropriate backend.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from helm_values_manager.backends.base import ValueBackend
-from helm_values_manager.utils.logger import logger
+from helm_values_manager.utils.logger import HelmLogger
 
 
 @dataclass
@@ -29,52 +29,48 @@ class Value:
 
     def __post_init__(self):
         """Post-initialization validation and logging."""
-        logger.debug("Created Value instance for path %s in environment %s", self.path, self.environment)
+        HelmLogger.debug("Created Value instance for path %s in environment %s", self.path, self.environment)
 
-    def get(self, resolve: bool = False) -> str:
+    def get(self, resolve: bool = False) -> Union[str, int, float, bool, None]:
         """
-        Get the value.
+        Get the value using the backend.
 
         Args:
-            resolve (bool): If True, resolve any secret references to their actual values.
-                          If False, return the raw value which may be a secret reference.
+            resolve: Whether to resolve any secret references
 
         Returns:
-            str: The value (resolved or raw depending on resolve parameter)
+            The value from the backend, can be a string, number, boolean, or None
 
         Raises:
-            ValueError: If value doesn't exist
             RuntimeError: If backend operation fails
         """
-        logger.debug("Getting value for path %s in environment %s", self.path, self.environment)
         try:
             value = self._backend.get_value(self.path, self.environment, resolve)
-            logger.debug("Successfully retrieved value for path %s", self.path)
+            HelmLogger.debug("Successfully retrieved value for path %s", self.path)
             return value
         except Exception as e:
-            logger.error("Failed to get value for path %s in environment %s: %s", self.path, self.environment, str(e))
+            HelmLogger.error("Failed to get value for path %s in environment %s: %s", self.path, self.environment, e)
             raise
 
-    def set(self, value: str) -> None:
+    def set(self, value: Union[str, int, float, bool, None]) -> None:
         """
         Set the value using the backend.
 
         Args:
-            value: The value to store, can be a raw value or a secret reference
+            value: The value to store, can be a raw value, a secret reference, or None
 
         Raises:
-            ValueError: If value is not a string
+            ValueError: If value is not a string, number, boolean, or None
             RuntimeError: If backend operation fails
         """
-        if not isinstance(value, str):
-            raise ValueError("Value must be a string")
+        if not isinstance(value, (str, int, float, bool, type(None))):
+            raise ValueError("Value must be a string, number, boolean, or None")
 
-        logger.debug("Setting value for path %s in environment %s", self.path, self.environment)
         try:
             self._backend.set_value(self.path, self.environment, value)
-            logger.debug("Successfully set value for path %s", self.path)
+            HelmLogger.debug("Successfully set value for path %s", self.path)
         except Exception as e:
-            logger.error("Failed to set value for path %s in environment %s: %s", self.path, self.environment, str(e))
+            HelmLogger.error("Failed to set value for path %s in environment %s: %s", self.path, self.environment, e)
             raise
 
     def to_dict(self) -> Dict[str, Any]:
@@ -84,7 +80,7 @@ class Value:
         Returns:
             Dict[str, Any]: Dictionary representation of the Value instance
         """
-        logger.debug("Converting Value to dict for path %s", self.path)
+        HelmLogger.debug("Converting Value to dict for path %s", self.path)
         return {"path": self.path, "environment": self.environment, "backend_type": self._backend.backend_type}
 
     @staticmethod

@@ -58,7 +58,9 @@ def test_help_command(plugin_install):
 
     assert returncode == 0
     assert "Usage: helm values-manager [OPTIONS] COMMAND [ARGS]..." in stdout
-    assert "A Helm plugin to manage values and secrets across environments" in stdout
+    # Check for description split across lines
+    assert "A Helm plugin to manage values and secrets across" in stdout
+    assert "environments" in stdout
     assert "init" in stdout  # Check that init command is listed
 
 

@@ -7,8 +7,9 @@ metadata and values associated with a specific configuration path.
 
 from typing import Any, Callable, Dict, Iterator, Optional
 
+from helm_values_manager.models.config_metadata import ConfigMetadata
 from helm_values_manager.models.value import Value
-from helm_values_manager.utils.logger import logger
+from helm_values_manager.utils.logger import HelmLogger
 
 
 class PathData:
@@ -19,12 +20,17 @@ class PathData:
         Initialize PathData with a path and metadata.
 
         Args:
-            path: The configuration path
-            metadata: Dictionary containing metadata fields
+            path: The configuration path (e.g., "app.replicas")
+            metadata: Dictionary containing metadata for the path
         """
         self.path = path
-        self.metadata = metadata
+        self._metadata = ConfigMetadata(
+            description=metadata.get("description"),
+            required=metadata.get("required", False),
+            sensitive=metadata.get("sensitive", False),
+        )
         self._values: Dict[str, Value] = {}
+        HelmLogger.debug("Created PathData instance for path %s", path)
 
     def validate(self) -> None:
         """
@@ -37,20 +43,20 @@ class PathData:
         Raises:
             ValueError: If validation fails
         """
-        logger.debug("Validating PathData for path: %s", self.path)
+        HelmLogger.debug("Validating PathData for path: %s", self.path)
 
         # Validate path consistency and required values
         for env, value in self._values.items():
             # Check path consistency
             if value.path != self.path:
-                logger.error("Path mismatch for environment %s: %s != %s", env, value.path, self.path)
+                HelmLogger.error("Path mismatch for environment %s: %s != %s", env, value.path, self.path)
                 raise ValueError(f"Value for environment {env} has inconsistent path: {value.path} != {self.path}")
 
             # Check required values
-            if self.metadata.get("required", False):
+            if self._metadata.required:
                 val = value.get()
                 if val is None or val == "":
-                    logger.error("Missing required value for path %s in environment %s", self.path, env)
+                    HelmLogger.error("Missing required value for path %s in environment %s", self.path, env)
                     raise ValueError(f"Missing required value for path {self.path} in environment {env}")
 
     def set_value(self, environment: str, value: Value) -> None:
@@ -64,11 +70,11 @@ class PathData:
         Raises:
             ValueError: If the Value object's path doesn't match this PathData's path
         """
-        logger.debug("Setting value for path %s in environment %s", self.path, environment)
+        HelmLogger.debug("Setting value for path %s in environment %s", self.path, environment)
 
         if value.path != self.path:
-            logger.error("Value path %s doesn't match PathData path %s", value.path, self.path)
-            raise ValueError(f"Value path {value.path} doesn't match PathData path {self.path}")
+            HelmLogger.error("Value path %s does not match PathData path %s", value.path, self.path)
+            raise ValueError(f"Value path {value.path} does not match PathData path {self.path}")
 
         self._values[environment] = value
 
@@ -82,10 +88,12 @@ class PathData:
         Returns:
             Optional[Value]: The Value object if it exists, None otherwise
         """
-        logger.debug("Getting value for path %s in environment %s", self.path, environment)
+        HelmLogger.debug("Getting value for path %s in environment %s", self.path, environment)
         value = self._values.get(environment)
         if value is None:
-            logger.debug("No value found for path %s in environment %s", self.path, environment)
+            HelmLogger.debug("No value found for path %s in environment %s", self.path, environment)
+        else:
+            HelmLogger.debug("Found value for path %s in environment %s", self.path, environment)
         return value
 
     def get_environments(self) -> Iterator:
@@ -106,9 +114,21 @@ class PathData:
         """
         return {
             "path": self.path,
-            "metadata": self.metadata,
-            "values": {env: value.to_dict() for env, value in self._values.items()},
+            "description": self._metadata.description,
+            "required": self._metadata.required,
+            "sensitive": self._metadata.sensitive,
+            "values": {env: value.get() for env, value in self._values.items()},
         }
+
+    @property
+    def metadata(self) -> ConfigMetadata:
+        """
+        Get metadata for this path.
+
+        Returns:
+            ConfigMetadata: Metadata instance for this path
+        """
+        return self._metadata
 
     @classmethod
     def from_dict(
@@ -128,23 +148,28 @@ class PathData:
             ValueError: If the dictionary structure is invalid
         """
         if not isinstance(data, dict):
-            logger.error("Invalid data type provided: %s", type(data))
+            HelmLogger.error("Invalid data type provided: %s", type(data))
             raise ValueError("Data must be a dictionary")
 
-        logger.debug("Creating PathData from dict with path: %s", data.get("path"))
+        HelmLogger.debug("Creating PathData from dict with path: %s", data.get("path"))
 
-        required_keys = {"path", "metadata", "values"}
+        required_keys = {"path", "values"}
         if not all(key in data for key in required_keys):
             missing = required_keys - set(data.keys())
-            logger.error("Missing required keys in data: %s", missing)
+            HelmLogger.error("Missing required keys in data: %s", missing)
             raise ValueError(f"Missing required keys: {missing}")
 
-        path_data = cls(path=data["path"], metadata=data["metadata"])
+        metadata = {
+            "description": data.get("description"),
+            "required": data.get("required", False),
+            "sensitive": data.get("sensitive", False),
+        }
+        path_data = cls(path=data["path"], metadata=metadata)
 
         # Create Value instances for each environment
-        for env, value_data in data.get("values", {}).items():
-            logger.debug("Creating value for environment %s", env)
-            value = create_value_fn(data["path"], env, value_data)
-            path_data.set_value(env, value)
+        for env, value in data.get("values", {}).items():
+            HelmLogger.debug("Creating value for environment %s", env)
+            value_obj = create_value_fn(data["path"], env, {"value": value})
+            path_data.set_value(env, value_obj)
 
         return path_data

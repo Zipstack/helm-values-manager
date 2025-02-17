@@ -47,7 +47,3 @@ class HelmLogger:
         if args:
             msg = msg % args
         print("Error: %s" % msg, file=sys.stderr)
-
-
-# Global logger instance
-logger = HelmLogger()

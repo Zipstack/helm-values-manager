@@ -49,11 +49,36 @@ def test_set_value(mock_backend):
     mock_backend.set_value.assert_called_once_with("app.replicas", "dev", "3")
 
 
-def test_set_invalid_type(mock_backend):
-    """Test setting a non-string value."""
+def test_set_valid_types(mock_backend):
+    """Test setting various valid value types."""
     value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
-    with pytest.raises(ValueError, match="Value must be a string"):
-        value.set(3)
+
+    # Test string
+    value.set("test-value")
+    mock_backend.set_value.assert_called_with("app.replicas", "dev", "test-value")
+
+    # Test integer
+    value.set(42)
+    mock_backend.set_value.assert_called_with("app.replicas", "dev", 42)
+
+    # Test float
+    value.set(3.14)
+    mock_backend.set_value.assert_called_with("app.replicas", "dev", 3.14)
+
+    # Test boolean
+    value.set(True)
+    mock_backend.set_value.assert_called_with("app.replicas", "dev", True)
+
+    # Test None
+    value.set(None)
+    mock_backend.set_value.assert_called_with("app.replicas", "dev", None)
+
+
+def test_set_invalid_type(mock_backend):
+    """Test setting an invalid value type."""
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
+    with pytest.raises(ValueError, match="Value must be a string, number, boolean, or None"):
+        value.set({"key": "value"})  # Dictionary is not a valid type
 
 
 def test_to_dict(mock_backend):
