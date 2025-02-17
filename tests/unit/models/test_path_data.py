@@ -64,12 +64,16 @@ def test_get_environments(path_data, mock_value):
     assert "test2" in environments
 
 
-def test_validate_path_mismatch(path_data):
-    """Test validation with mismatched paths."""
+def test_validate_path_mismatch():
+    """Test validation when a value has a mismatched path."""
+    path_data = PathData("test.path", {"required": True})
     mock_value = Mock(spec=Value)
     mock_value.path = "wrong.path"
-    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
-        path_data.set_value("test_env", mock_value)
+    path_data._values["test_env"] = mock_value
+    with pytest.raises(
+        ValueError, match=r"Value for environment test_env has inconsistent path: wrong\.path != test\.path"
+    ):
+        path_data.validate()
 
 
 def test_validate_required_missing_value(path_data):
@@ -179,5 +183,5 @@ def test_from_dict_value_path_mismatch():
         mock_value.path = "wrong.path"  # Mismatched path
         return mock_value
 
-    with pytest.raises(ValueError, match=r"Value path wrong\.path doesn't match PathData path test\.path"):
+    with pytest.raises(ValueError, match=r"Value path wrong\.path does not match PathData path test\.path"):
         PathData.from_dict(data, create_value_fn)

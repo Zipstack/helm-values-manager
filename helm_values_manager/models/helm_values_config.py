@@ -1,7 +1,6 @@
 """HelmValuesConfig class for managing Helm values and secrets."""
 
 import json
-import logging
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
@@ -12,8 +11,7 @@ from jsonschema.exceptions import ValidationError
 from helm_values_manager.backends.simple import SimpleValueBackend
 from helm_values_manager.models.path_data import PathData
 from helm_values_manager.models.value import Value
-
-logger = logging.getLogger(__name__)
+from helm_values_manager.utils.logger import HelmLogger
 
 
 @dataclass
@@ -63,7 +61,7 @@ class HelmValuesConfig:
         try:
             jsonschema.validate(instance=data, schema=schema)
         except ValidationError as e:
-            logger.error("JSON schema validation failed: %s", e)
+            HelmLogger.error("JSON schema validation failed: %s", e)
             raise
 
     def add_config_path(
@@ -89,7 +87,7 @@ class HelmValuesConfig:
         path_data = PathData(path, metadata)
         self._path_map[path] = path_data
 
-    def get_value(self, path: str, environment: str, resolve: bool = False) -> str:
+    def get_value(self, path: str, environment: str, resolve: bool = False) -> Optional[str]:
         """
         Get a value for the given path and environment.
 
@@ -100,24 +98,27 @@ class HelmValuesConfig:
                     If False, return the raw value which may be a secret reference.
 
         Returns:
-            str: The value (resolved or raw depending on resolve parameter)
+            Optional[str]: The value (resolved or raw depending on resolve parameter), or None if value doesn't exist.
 
         Raises:
             KeyError: If path doesn't exist
-            ValueError: If value doesn't exist for the given environment
         """
         if path not in self._path_map:
+            HelmLogger.debug("Path %s not found in path map", path)
             raise KeyError(f"Path {path} not found")
 
         path_data = self._path_map[path]
         value_obj = path_data.get_value(environment)
         if value_obj is None:
-            raise ValueError(f"No value found for path {path} in environment {environment}")
+            HelmLogger.debug("No value object found for path %s in environment %s", path, environment)
+            return None
 
         value = value_obj.get(resolve=resolve)
         if value is None:
-            raise ValueError(f"No value found for path {path} in environment {environment}")
+            HelmLogger.debug("No value found for path %s in environment %s", path, environment)
+            return None
 
+        HelmLogger.debug("Found value for path %s in environment %s", path, environment)
         return value
 
     def set_value(self, path: str, environment: str, value: str) -> None:

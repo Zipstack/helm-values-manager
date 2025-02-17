@@ -66,8 +66,7 @@ def test_get_value_nonexistent_environment():
     config = HelmValuesConfig()
     path = "app.config.key1"
     config.add_config_path(path, description="Test config", required=True, sensitive=False)
-    with pytest.raises(ValueError, match=f"No value found for path {path} in environment dev"):
-        config.get_value(path, "dev")
+    assert config.get_value(path, "dev") is None
 
 
 def test_get_value_nonexistent_value():
@@ -75,8 +74,7 @@ def test_get_value_nonexistent_value():
     config = HelmValuesConfig()
     path = "app.config.key1"
     config.add_config_path(path, description="Test config")
-    with pytest.raises(ValueError, match=f"No value found for path {path} in environment dev"):
-        config.get_value(path, "dev")
+    assert config.get_value(path, "dev") is None
 
 
 def test_set_value_without_path():
