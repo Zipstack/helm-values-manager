@@ -57,10 +57,10 @@ class Value:
         Set the value using the backend.
 
         Args:
-            value: The value to store, can be a raw value, a secret reference, or None
+            value: The value to store, can be a string, number, boolean, or None
 
         Raises:
-            ValueError: If value is not a string, number, boolean, or None
+            ValueError: If the value is not a string, number, boolean, or None
             RuntimeError: If backend operation fails
         """
         if not isinstance(value, (str, int, float, bool, type(None))):
@@ -71,6 +71,7 @@ class Value:
             HelmLogger.debug("Successfully set value for path %s", self.path)
         except Exception as e:
             HelmLogger.error("Failed to set value for path %s in environment %s: %s", self.path, self.environment, e)
+            HelmLogger.error("Error setting value: %s", e)
             raise
 
     def to_dict(self) -> Dict[str, Any]:

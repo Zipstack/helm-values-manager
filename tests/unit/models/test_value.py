@@ -81,6 +81,28 @@ def test_set_invalid_type(mock_backend):
         value.set({"key": "value"})  # Dictionary is not a valid type
 
 
+def test_get_value_backend_error(mock_backend):
+    """Test error handling when backend.get_value raises an exception."""
+    mock_backend.get_value.side_effect = RuntimeError("Backend error")
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
+
+    with pytest.raises(RuntimeError, match="Backend error"):
+        value.get()
+
+    mock_backend.get_value.assert_called_once_with("app.replicas", "dev", False)
+
+
+def test_set_value_backend_error(mock_backend):
+    """Test error handling when backend.set_value raises an exception."""
+    mock_backend.set_value.side_effect = RuntimeError("Backend error")
+    value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
+
+    with pytest.raises(RuntimeError, match="Backend error"):
+        value.set("test-value")
+
+    mock_backend.set_value.assert_called_once_with("app.replicas", "dev", "test-value")
+
+
 def test_to_dict(mock_backend):
     """Test serializing a value."""
     value = Value(path="app.replicas", environment="dev", _backend=mock_backend)
