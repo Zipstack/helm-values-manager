@@ -74,18 +74,90 @@
   - [ ] Add better validation
 
 ### Command System
-- [ ] Implement BaseCommand improvements
-  - [ ] Add file locking mechanism
-  - [ ] Implement backup strategy
-  - [ ] Add better error handling
-- [ ] Add new commands
+
+#### Phase 1: Core Infrastructure & Essential Commands
+- [ ] Basic Command Framework
+  - [ ] Create commands directory structure
+  - [ ] Implement BaseCommand class with basic flow
+    - [ ] Add configuration loading/saving
+    - [ ] Add error handling and logging
+  - [ ] Add command registration in CLI
+  - [ ] Add basic command discovery
+
+- [ ] Configuration Setup Commands
+  - [ ] Implement init command
+    - [ ] Add empty config initialization
+    - [ ] Add config file creation
+    - [ ] Add schema template generation
   - [ ] Implement add-value-config command
+    - [ ] Add basic path validation
+    - [ ] Add metadata validation
+    - [ ] Add config update
+  - [ ] Implement add-deployment command
+    - [ ] Add basic deployment validation
+    - [ ] Add backend validation
+    - [ ] Add deployment registration
+  - [ ] Implement generate command
+    - [ ] Add template generation
+    - [ ] Add basic value substitution
+
+- [ ] Value Management Commands
+  - [ ] Implement get-value command
+    - [ ] Add basic path validation
+    - [ ] Add value retrieval
+  - [ ] Implement set-value command
+    - [ ] Add basic path validation
+    - [ ] Add value storage
+
+#### Phase 2: Enhanced Safety & Management
+- [ ] Enhanced Command Infrastructure
+  - [ ] Add file locking mechanism
+  - [ ] Add atomic writes
+  - [ ] Add basic backup strategy
+
+- [ ] Configuration Management
   - [ ] Implement remove-value-config command
-  - [ ] Update existing commands for new structure
-- [ ] Update command validation
-  - [ ] Add input validation
-  - [ ] Improve error messages
-  - [ ] Add command-specific validation
+    - [ ] Add path validation
+    - [ ] Add basic cleanup
+  - [ ] Enhance add-value-config
+    - [ ] Add conflict detection
+    - [ ] Add dependency validation
+
+- [ ] Basic Validation System
+  - [ ] Add PathValidator class
+    - [ ] Add path format validation
+    - [ ] Add existence checks
+
+#### Phase 3: Advanced Features
+- [ ] Enhanced Security & Recovery
+  - [ ] Add comprehensive backup strategy
+  - [ ] Add rollback support
+  - [ ] Improve error handling
+
+- [ ] Deployment Management
+  - [ ] Add DeploymentValidator class
+
+- [ ] Advanced Validation
+  - [ ] Add ValueValidator class
+  - [ ] Add conflict detection
+  - [ ] Add dependency checking
+
+#### Phase 4: Polish & Documentation
+- [ ] Command Documentation
+  - [ ] Add command documentation generation
+  - [ ] Add help text improvements
+  - [ ] Add usage examples
+
+- [ ] Testing Infrastructure
+  - [ ] Add command test fixtures
+  - [ ] Add mock file system
+  - [ ] Add mock backend
+  - [ ] Add integration tests
+
+- [ ] Final Touches
+  - [ ] Add command output formatting
+  - [ ] Add progress indicators
+  - [ ] Add interactive mode support
 
 ### Testing Infrastructure
 - [x] Set up test infrastructure
