@@ -5,7 +5,7 @@ Each backend must implement the path-based interface defined here.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Union
 
 
 class ValueBackend(ABC):
@@ -60,34 +60,37 @@ class ValueBackend(ABC):
             raise ValueError(f"Invalid auth type: {auth_config['type']}. " f"Must be one of: {', '.join(valid_types)}")
 
     @abstractmethod
-    def get_value(self, path: str, environment: str, resolve: bool = False) -> str:
+    def get_value(self, path: str, environment: str, resolve: bool = False) -> Union[str, int, float, bool, None]:
         """
-        Get a value from storage.
-
-        Args:
-            path: The configuration path
-            environment: The environment name
-            resolve: If True, resolve any secret references to their actual values.
-                    If False, return the raw value which may be a secret reference.
-
-        Returns:
-            str: The value (resolved or raw depending on resolve parameter)
-        """
-        pass
-
-    @abstractmethod
-    def set_value(self, path: str, environment: str, value: str) -> None:
-        """Set a value in the storage backend.
+        Get a value from the backend.
 
         Args:
             path: The configuration path (e.g., "app.replicas")
             environment: The environment name (e.g., "dev", "prod")
-            value: The value to store. Must be a string.
+            resolve: Whether to resolve any secret references
+
+        Returns:
+            The value from the backend, can be a string, number, boolean, or None
 
         Raises:
-            ValueError: If the value is invalid
-            ConnectionError: If there's an error connecting to the backend
-            PermissionError: If there's an authentication or authorization error
+            ValueError: If the value doesn't exist
+            RuntimeError: If backend operation fails
+        """
+        pass
+
+    @abstractmethod
+    def set_value(self, path: str, environment: str, value: Union[str, int, float, bool, None]) -> None:
+        """
+        Set a value in the backend.
+
+        Args:
+            path: The configuration path (e.g., "app.replicas")
+            environment: The environment name (e.g., "dev", "prod")
+            value: The value to store, can be a string, number, boolean, or None
+
+        Raises:
+            ValueError: If the value is not a string, number, boolean, or None
+            RuntimeError: If backend operation fails
         """
         pass
 

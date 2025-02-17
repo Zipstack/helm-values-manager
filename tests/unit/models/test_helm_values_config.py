@@ -77,6 +77,20 @@ def test_get_value_nonexistent_value():
     assert config.get_value(path, "dev") is None
 
 
+def test_get_value_returns_none():
+    """Test getting a value when value_obj.get() returns None."""
+    config = HelmValuesConfig()
+    path = "app.config.key1"
+    environment = "dev"
+
+    # Add path and set None value
+    config.add_config_path(path, description="Test config")
+    config.set_value(path, environment, None)
+
+    # Verify that get_value returns None
+    assert config.get_value(path, environment) is None
+
+
 def test_set_value_without_path():
     """Test setting a value without first adding its path."""
     config = HelmValuesConfig()

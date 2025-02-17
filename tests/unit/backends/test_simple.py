@@ -24,9 +24,9 @@ def test_set_and_get_value(backend):
 
 
 def test_set_invalid_value_type(backend):
-    """Test setting a non-string value."""
-    with pytest.raises(ValueError, match="Value must be a string"):
-        backend.set_value("app.replicas", "dev", 3)
+    """Test setting an invalid value type."""
+    with pytest.raises(ValueError, match="Value must be a string, number, boolean, or None"):
+        backend.set_value("app.replicas", "dev", {"key": "value"})  # Dictionary is not a valid type
 
 
 def test_remove_value(backend):

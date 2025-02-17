@@ -6,7 +6,7 @@ of configuration values using the appropriate backend.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from helm_values_manager.backends.base import ValueBackend
 from helm_values_manager.utils.logger import HelmLogger
@@ -31,19 +31,17 @@ class Value:
         """Post-initialization validation and logging."""
         HelmLogger.debug("Created Value instance for path %s in environment %s", self.path, self.environment)
 
-    def get(self, resolve: bool = False) -> str:
+    def get(self, resolve: bool = False) -> Union[str, int, float, bool, None]:
         """
-        Get the value.
+        Get the value using the backend.
 
         Args:
-            resolve (bool): If True, resolve any secret references to their actual values.
-                          If False, return the raw value which may be a secret reference.
+            resolve: Whether to resolve any secret references
 
         Returns:
-            str: The value (resolved or raw depending on resolve parameter)
+            The value from the backend, can be a string, number, boolean, or None
 
         Raises:
-            ValueError: If value doesn't exist
             RuntimeError: If backend operation fails
         """
         try:
@@ -54,19 +52,19 @@ class Value:
             HelmLogger.error("Failed to get value for path %s in environment %s: %s", self.path, self.environment, e)
             raise
 
-    def set(self, value: str) -> None:
+    def set(self, value: Union[str, int, float, bool, None]) -> None:
         """
         Set the value using the backend.
 
         Args:
-            value: The value to store, can be a raw value or a secret reference
+            value: The value to store, can be a raw value, a secret reference, or None
 
         Raises:
-            ValueError: If value is not a string
+            ValueError: If value is not a string, number, boolean, or None
             RuntimeError: If backend operation fails
         """
-        if not isinstance(value, str):
-            raise ValueError("Value must be a string")
+        if not isinstance(value, (str, int, float, bool, type(None))):
+            raise ValueError("Value must be a string, number, boolean, or None")
 
         try:
             self._backend.set_value(self.path, self.environment, value)
