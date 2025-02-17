@@ -32,9 +32,9 @@ def mock_value():
 def test_path_data_init(path_data):
     """Test PathData initialization."""
     assert path_data.path == "test.path"
-    assert path_data.metadata["description"] == "Test description"
-    assert path_data.metadata["required"] is True
-    assert path_data.metadata["sensitive"] is False
+    assert path_data.metadata.description == "Test description"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
 
 
 def test_set_value(path_data, mock_value):
@@ -103,7 +103,7 @@ def test_validate_success(path_data, mock_value):
 
 def test_validate_not_required(path_data, mock_value):
     """Test validation when path is not required."""
-    path_data.metadata["required"] = False
+    path_data.metadata.required = False
     mock_value.get.return_value = None
     path_data.set_value("test_env", mock_value)
     path_data.validate()  # Should not raise any error
@@ -140,11 +140,9 @@ def test_from_dict():
 
     path_data = PathData.from_dict(data, create_value_fn)
     assert path_data.path == "test.path"
-    assert path_data.metadata == {
-        "description": "Test description",
-        "required": True,
-        "sensitive": False,
-    }
+    assert path_data.metadata.description == "Test description"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
     assert len(path_data._values) == 1
     assert "test_env" in path_data._values
 

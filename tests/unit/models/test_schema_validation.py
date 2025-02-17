@@ -19,7 +19,7 @@ def test_valid_minimal_config():
 
 
 def test_valid_full_config():
-    """Test loading a complete configuration with all optional fields."""
+    """Test loading a valid configuration with all fields."""
     config_data = {
         "version": "1.0",
         "release": "test-release",
@@ -56,9 +56,9 @@ def test_valid_full_config():
     # Verify config data
     path_data = config._path_map["app.config.key1"]
     assert path_data.path == "app.config.key1"
-    assert path_data.metadata["description"] == "Test config"
-    assert path_data.metadata["required"] is True
-    assert path_data.metadata["sensitive"] is True
+    assert path_data.metadata.description == "Test config"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is True
     assert config.get_value("app.config.key1", "default") == "test-value"
 
 
@@ -72,9 +72,9 @@ def test_default_values():
     }
     config = HelmValuesConfig.from_dict(config_data)
     path_data = config._path_map["app.config.key1"]
-    assert path_data.metadata["description"] is None
-    assert path_data.metadata["required"] is False
-    assert path_data.metadata["sensitive"] is False
+    assert path_data.metadata.description is None
+    assert path_data.metadata.required is False
+    assert path_data.metadata.sensitive is False
 
 
 def test_type_coercion():
@@ -94,8 +94,8 @@ def test_type_coercion():
     }
     config = HelmValuesConfig.from_dict(config_data)
     path_data = config._path_map["app.config.key1"]
-    assert path_data.metadata["required"] is True
-    assert path_data.metadata["sensitive"] is False
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
 
 
 def test_missing_required_fields():

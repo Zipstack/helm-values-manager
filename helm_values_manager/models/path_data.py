@@ -7,6 +7,7 @@ metadata and values associated with a specific configuration path.
 
 from typing import Any, Callable, Dict, Iterator, Optional
 
+from helm_values_manager.models.config_metadata import ConfigMetadata
 from helm_values_manager.models.value import Value
 from helm_values_manager.utils.logger import logger
 
@@ -23,7 +24,11 @@ class PathData:
             metadata: Dictionary containing metadata fields
         """
         self.path = path
-        self.metadata = metadata
+        self._metadata = ConfigMetadata(
+            description=metadata.get("description"),
+            required=metadata.get("required", False),
+            sensitive=metadata.get("sensitive", False),
+        )
         self._values: Dict[str, Value] = {}
 
     def validate(self) -> None:
@@ -47,7 +52,7 @@ class PathData:
                 raise ValueError(f"Value for environment {env} has inconsistent path: {value.path} != {self.path}")
 
             # Check required values
-            if self.metadata.get("required", False):
+            if self._metadata.required:
                 val = value.get()
                 if val is None or val == "":
                     logger.error("Missing required value for path %s in environment %s", self.path, env)
@@ -106,11 +111,21 @@ class PathData:
         """
         return {
             "path": self.path,
-            "description": self.metadata.get("description"),
-            "required": self.metadata.get("required", False),
-            "sensitive": self.metadata.get("sensitive", False),
+            "description": self._metadata.description,
+            "required": self._metadata.required,
+            "sensitive": self._metadata.sensitive,
             "values": {env: value.get() for env, value in self._values.items()},
         }
+
+    @property
+    def metadata(self) -> ConfigMetadata:
+        """
+        Get metadata for this path.
+
+        Returns:
+            ConfigMetadata: Metadata instance for this path
+        """
+        return self._metadata
 
     @classmethod
     def from_dict(

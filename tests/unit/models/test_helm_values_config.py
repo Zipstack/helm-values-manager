@@ -26,9 +26,9 @@ def test_add_config_path():
     path_data = config._path_map[path]
     assert isinstance(path_data, PathData)
     assert path_data.path == path
-    assert path_data.metadata["description"] == description
-    assert path_data.metadata["required"] is True
-    assert path_data.metadata["sensitive"] is False
+    assert path_data.metadata.description == description
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is False
 
 
 def test_add_duplicate_path():
@@ -88,33 +88,66 @@ def test_set_value_without_path():
 
 def test_to_dict_from_dict():
     """Test serialization and deserialization."""
-    config = HelmValuesConfig()
-    path = "app.config.key1"
-    description = "Test config"
-    value = "test-value"
-    environment = "dev"
+    config_data = {
+        "version": "1.0",
+        "release": "test-release",
+        "deployments": {
+            "prod": {
+                "backend": "aws",
+                "auth": {"type": "env", "env_prefix": "AWS_"},
+                "backend_config": {"region": "us-west-2"},
+            }
+        },
+        "config": [
+            {
+                "path": "app.config.key1",
+                "description": "Test config",
+                "required": True,
+                "sensitive": True,
+                "values": {"default": "test-value"},
+            }
+        ],
+    }
 
-    config.add_config_path(path, description=description, required=True, sensitive=False)
-    config.set_value(path, environment, value)
+    # Test from_dict
+    config = HelmValuesConfig.from_dict(config_data)
+    assert config.release == "test-release"
+    assert config.version == "1.0"
+    assert len(config.deployments) == 1
+    assert len(config._path_map) == 1
 
+    # Verify deployment data
+    deployment = config.deployments["prod"]
+    assert deployment.backend == "aws"
+    assert deployment.auth == {"type": "env", "env_prefix": "AWS_"}
+    assert deployment.backend_config == {"region": "us-west-2"}
+
+    # Verify config data
+    path_data = config._path_map["app.config.key1"]
+    assert path_data.path == "app.config.key1"
+    assert path_data.metadata.description == "Test config"
+    assert path_data.metadata.required is True
+    assert path_data.metadata.sensitive is True
+
+    # Test to_dict
     config_dict = config.to_dict()
     assert config_dict["version"] == "1.0"
-    assert config_dict["deployments"] == {}
+    assert config_dict["release"] == "test-release"
+    assert config_dict["deployments"] == {
+        "prod": {
+            "backend": "aws",
+            "auth": {"type": "env", "env_prefix": "AWS_"},
+            "backend_config": {"region": "us-west-2"},
+        }
+    }
     assert len(config_dict["config"]) == 1
 
     config_item = config_dict["config"][0]
-    assert config_item["path"] == path
-    assert config_item["description"] == description
+    assert config_item["path"] == "app.config.key1"
+    assert config_item["description"] == "Test config"
     assert config_item["required"] is True
-    assert config_item["sensitive"] is False
-    assert config_item["values"] == {environment: value}
-
-    # Test deserialization
-    new_config = HelmValuesConfig.from_dict(config_dict)
-    assert new_config.get_value(path, environment) == value
-    assert new_config._path_map[path].metadata["description"] == description
-    assert new_config._path_map[path].metadata["required"] is True
-    assert new_config._path_map[path].metadata["sensitive"] is False
+    assert config_item["sensitive"] is True
+    assert config_item["values"] == {"default": "test-value"}
 
 
 def test_validate():
