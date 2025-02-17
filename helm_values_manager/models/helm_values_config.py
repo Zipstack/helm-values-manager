@@ -37,7 +37,6 @@ class HelmValuesConfig:
         self.deployments: Dict[str, Deployment] = {}
         self._path_map: Dict[str, PathData] = {}
         self._backend = SimpleValueBackend()  # For non-sensitive values
-        self.default_environment = "default"
 
     @classmethod
     def _load_schema(cls) -> Dict[str, Any]:

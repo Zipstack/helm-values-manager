@@ -11,7 +11,6 @@ def test_helm_values_config_initialization():
     config = HelmValuesConfig()
     assert config.deployments == {}
     assert config._path_map == {}
-    assert config.default_environment == "default"
 
 
 def test_add_config_path():
