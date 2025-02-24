@@ -28,15 +28,9 @@ def main(ctx: typer.Context):
 @app.command()
 def init(
     release_name: str = typer.Option(..., "--release", "-r", help="Name of the Helm release"),
-    config_file: str = typer.Option(
-        "values-manager.yaml",
-        "--config",
-        "-c",
-        help="Path to the values manager configuration file",
-    ),
 ):
     """Initialize a new values manager configuration."""
-    typer.echo(f"Initializing values manager with config file: {config_file}, for the release: {release_name}.")
+    typer.echo(f"Initializing values manager for the release: {release_name}.")
     # TODO: Implement initialization logic
 
 

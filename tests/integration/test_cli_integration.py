@@ -70,13 +70,13 @@ def test_init_help_command(plugin_install):
 
     assert returncode == 0
     assert "Initialize a new values manager configuration" in stdout
-    assert "--config" in stdout
-    assert "-c" in stdout
+    assert "--release" in stdout
+    assert "-r" in stdout
 
 
 def test_init_command(plugin_install, tmp_path):
-    """Test that the init command works with default config file."""
+    """Test that the init command works."""
     stdout, stderr, returncode = run_helm_command(["values-manager", "init", "-r", "test"])
 
     assert returncode == 0
-    assert "Initializing values manager with config file: values-manager.yaml, for the release: test." in stdout
+    assert "Initializing values manager for the release: test." in stdout
