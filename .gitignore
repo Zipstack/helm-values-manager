@@ -122,6 +122,7 @@ ipython_config.py
 __pypackages__/
 
 # Helm Values Manager specific
+helm-values.json
 .helm-values.lock
 
 # Celery stuff

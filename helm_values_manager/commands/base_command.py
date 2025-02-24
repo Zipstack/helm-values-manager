@@ -108,15 +108,18 @@ class BaseCommand:
             self._lock_fd = None
             HelmLogger.debug("Released lock on file %s", self.lock_file)
 
-    def execute(self) -> Any:
+    def execute(self, **kwargs) -> Any:
         """Execute the command.
 
         This is the main entry point for running a command.
         It handles:
         1. Lock acquisition
-        2. Configuration loading
+        2. Configuration loading (if needed)
         3. Command execution via run()
         4. Lock release
+
+        Args:
+            **kwargs: Command-specific keyword arguments
 
         Returns:
             Any: The result of the command execution.
@@ -126,20 +129,23 @@ class BaseCommand:
         """
         try:
             self.acquire_lock()
-            config = self.load_config()
-            result = self.run(config)
+            config = None
+            if not getattr(self, "skip_config_load", False):
+                config = self.load_config()
+            result = self.run(config=config, **kwargs)
             return result
         finally:
             self.release_lock()
 
-    def run(self, config: HelmValuesConfig) -> Any:
+    def run(self, config: Optional[HelmValuesConfig] = None, **kwargs) -> Any:
         """Run the command-specific logic.
 
         This method should be implemented by each specific command subclass
         to perform its unique functionality.
 
         Args:
-            config: The loaded configuration.
+            config: The loaded configuration, or None if skip_config_load is True
+            **kwargs: Command-specific keyword arguments
 
         Returns:
             Any: The result of running the command.

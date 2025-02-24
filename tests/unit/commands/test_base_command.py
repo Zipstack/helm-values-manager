@@ -136,9 +136,12 @@ def test_execute_success(base_command, valid_config):
         patch("helm_values_manager.commands.base_command.fcntl"),
     ):
         result = base_command.execute()
-
-        assert isinstance(base_command.run.call_args[0][0], HelmValuesConfig)
         assert result == expected_result
+        # Check that run was called with a config object and empty kwargs
+        assert base_command.run.call_count == 1
+        call_args = base_command.run.call_args
+        assert isinstance(call_args.kwargs["config"], HelmValuesConfig)
+        assert len(call_args.args) == 0
 
 
 def test_execute_ensures_lock_release_on_error(base_command, valid_config):

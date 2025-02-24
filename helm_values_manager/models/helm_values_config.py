@@ -131,8 +131,16 @@ class HelmValuesConfig:
         self._path_map[path].set_value(environment, value_obj)
 
     def validate(self) -> None:
-        """Validate the configuration."""
-        # Validate against JSON schema first
+        """
+        Validate the configuration.
+
+        Raises:
+            ValueError: If validation fails.
+        """
+        if not self.release:
+            raise ValueError("Release name is required")
+
+        # Validate schema
         self._validate_schema(self.to_dict())
 
         # Then validate each path_data

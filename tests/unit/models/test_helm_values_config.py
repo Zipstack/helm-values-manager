@@ -165,6 +165,7 @@ def test_to_dict_from_dict():
 def test_validate():
     """Test validation of required paths."""
     config = HelmValuesConfig()
+    config.release = "test-release"  # Set release name
     path = "app.config.key1"
     config.add_config_path(path, description="Test config", required=True, sensitive=False)
 
@@ -176,6 +177,7 @@ def test_validate_with_schema():
     """Test validation including schema validation."""
     # Create config with invalid version
     config = HelmValuesConfig()
+    config.release = "test-release"  # Set release name
     config.version = "invalid"  # Version must match pattern in schema
 
     # Should raise ValidationError due to schema validation
@@ -185,3 +187,10 @@ def test_validate_with_schema():
     # Fix version and test valid case
     config.version = "1.0"
     config.validate()  # Should not raise error
+
+
+def test_validate_without_release():
+    """Test validation fails when release name is not set."""
+    config = HelmValuesConfig()
+    with pytest.raises(ValueError, match="Release name is required"):
+        config.validate()
