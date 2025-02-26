@@ -2,6 +2,9 @@
 
 import typer
 
+from helm_values_manager.commands.init_command import InitCommand
+from helm_values_manager.utils.logger import HelmLogger
+
 COMMAND_INFO = "helm values-manager"
 
 app = typer.Typer(
@@ -28,16 +31,15 @@ def main(ctx: typer.Context):
 @app.command()
 def init(
     release_name: str = typer.Option(..., "--release", "-r", help="Name of the Helm release"),
-    config_file: str = typer.Option(
-        "values-manager.yaml",
-        "--config",
-        "-c",
-        help="Path to the values manager configuration file",
-    ),
 ):
     """Initialize a new values manager configuration."""
-    typer.echo(f"Initializing values manager with config file: {config_file}, for the release: {release_name}.")
-    # TODO: Implement initialization logic
+    try:
+        command = InitCommand()
+        result = command.execute(release_name=release_name)
+        typer.echo(result)
+    except Exception as e:
+        HelmLogger.error("Failed to initialize: %s", str(e))
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 """Integration tests for the helm-values-manager CLI."""
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -70,13 +71,17 @@ def test_init_help_command(plugin_install):
 
     assert returncode == 0
     assert "Initialize a new values manager configuration" in stdout
-    assert "--config" in stdout
-    assert "-c" in stdout
+    assert "--release" in stdout
+    assert "-r" in stdout
 
 
 def test_init_command(plugin_install, tmp_path):
-    """Test that the init command works with default config file."""
+    """Test that the init command works."""
+    # Change to temp directory to avoid conflicts
+    os.chdir(tmp_path)
     stdout, stderr, returncode = run_helm_command(["values-manager", "init", "-r", "test"])
 
     assert returncode == 0
-    assert "Initializing values manager with config file: values-manager.yaml, for the release: test." in stdout
+    assert "Successfully initialized helm-values configuration" in stdout
+    assert Path("helm-values.json").exists()
+    assert Path(".helm-values.lock").exists()

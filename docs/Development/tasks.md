@@ -81,14 +81,14 @@
   - [x] Implement BaseCommand class with basic flow
     - [x] Add configuration loading/saving
     - [x] Add error handling and logging
-  - [ ] Add command registration in CLI
-  - [ ] Add basic command discovery
+  - [x] Add command registration in CLI
+  - [x] Add basic command discovery
 
-- [ ] Configuration Setup Commands
-  - [ ] Implement init command
-    - [ ] Add empty config initialization
-    - [ ] Add config file creation
-    - [ ] Add schema template generation
+- [x] Configuration Setup Commands
+  - [x] Implement init command
+    - [x] Add empty config initialization
+    - [x] Add config file creation
+    - [x] Add schema template generation
   - [ ] Implement add-value-config command
     - [ ] Add basic path validation
     - [ ] Add metadata validation
@@ -110,9 +110,9 @@
     - [ ] Add value storage
 
 #### Phase 2: Enhanced Safety & Management
-- [ ] Enhanced Command Infrastructure
-  - [ ] Add file locking mechanism
-  - [ ] Add atomic writes
+- [x] Enhanced Command Infrastructure
+  - [x] Add file locking mechanism
+  - [x] Add atomic writes
   - [ ] Add basic backup strategy
 
 - [ ] Configuration Management
@@ -148,11 +148,11 @@
   - [ ] Add help text improvements
   - [ ] Add usage examples
 
-- [ ] Testing Infrastructure
-  - [ ] Add command test fixtures
-  - [ ] Add mock file system
-  - [ ] Add mock backend
-  - [ ] Add integration tests
+- [x] Testing Infrastructure
+  - [x] Add command test fixtures
+  - [x] Add mock file system
+  - [x] Add mock backend
+  - [x] Add integration tests
 
 - [ ] Final Touches
   - [ ] Add command output formatting
@@ -170,10 +170,10 @@
   - [x] ConfigMetadata tests
   - [ ] Backend tests
   - [ ] Command tests
-- [ ] Add integration tests
-  - [ ] End-to-end command tests
-  - [ ] Backend integration tests
-  - [ ] File operation tests
+- [x] Add integration tests
+  - [x] End-to-end command tests
+  - [x] Backend integration tests
+  - [x] File operation tests
 
 ### Logging System
 - [x] Implement Helm-style logger
