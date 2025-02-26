@@ -65,3 +65,77 @@ def test_init_command_already_initialized(tmp_path):
     assert result.exit_code == 1
     assert "Failed to initialize: Configuration file" in result.stdout
     assert "already exists" in result.stdout
+
+
+def test_add_value_config_command(tmp_path):
+    """Test add-value-config command."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # First initialize a configuration
+    init_result = runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+    assert init_result.exit_code == 0
+
+    # Add a value configuration
+    path = "app.replicas"
+    description = "Number of application replicas"
+    result = runner.invoke(
+        app, ["add-value-config", "--path", path, "--description", description, "--required"], catch_exceptions=False
+    )
+
+    assert result.exit_code == 0
+    assert f"Successfully added value config '{path}'" in result.stdout
+
+    # Verify the configuration file was updated correctly
+    config_file = Path("helm-values.json")
+    with config_file.open() as file:
+        config_data = json.load(file)
+
+    assert "config" in config_data
+    assert len(config_data["config"]) == 1
+    assert config_data["config"][0]["path"] == path
+    assert config_data["config"][0]["description"] == description
+    assert config_data["config"][0]["required"] is True
+    assert config_data["config"][0]["sensitive"] is False
+    assert config_data["config"][0]["values"] == {}
+
+
+def test_add_value_config_duplicate_path(tmp_path):
+    """Test add-value-config command with duplicate path."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # First initialize a configuration
+    init_result = runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+    assert init_result.exit_code == 0
+
+    # Add a value configuration
+    path = "app.replicas"
+    description = "Number of application replicas"
+    first_result = runner.invoke(
+        app, ["add-value-config", "--path", path, "--description", description], catch_exceptions=False
+    )
+
+    assert first_result.exit_code == 0
+
+    # Try to add the same path again
+    second_result = runner.invoke(app, ["add-value-config", "--path", path, "--description", "Another description"])
+
+    assert second_result.exit_code == 1
+    assert f"Failed to add value config: Path {path} already exists" in second_result.stdout
+
+
+def test_add_value_config_empty_path(tmp_path):
+    """Test add-value-config command with empty path."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # First initialize a configuration
+    init_result = runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+    assert init_result.exit_code == 0
+
+    # Try to add a value configuration with empty path
+    result = runner.invoke(app, ["add-value-config", "--path", "", "--description", "Some description"])
+
+    assert result.exit_code == 1
+    assert "Failed to add value config: Path cannot be empty" in result.stdout
