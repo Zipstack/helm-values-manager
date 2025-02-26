@@ -42,3 +42,26 @@ def test_init_command(tmp_path):
     with config_file.open() as file:
         config_data = json.load(file)
         assert config_data == {"version": "1.0", "release": "test-release", "deployments": {}, "config": []}
+
+
+def test_init_command_empty_release():
+    """Test init command with empty release name."""
+    result = runner.invoke(app, ["init", "--release", ""])
+    assert result.exit_code == 1
+    assert "Failed to initialize: Release name cannot be empty" in result.stdout
+
+
+def test_init_command_already_initialized(tmp_path):
+    """Test init command when config already exists."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # First initialization
+    result = runner.invoke(app, ["init", "--release", "test-release"])
+    assert result.exit_code == 0
+
+    # Try to initialize again
+    result = runner.invoke(app, ["init", "--release", "another-release"])
+    assert result.exit_code == 1
+    assert "Failed to initialize: Configuration file" in result.stdout
+    assert "already exists" in result.stdout
