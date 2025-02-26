@@ -1,6 +1,7 @@
 """Command to initialize a new helm-values configuration."""
 
 import os
+from typing import Optional
 
 from helm_values_manager.commands.base_command import BaseCommand
 from helm_values_manager.models.helm_values_config import HelmValuesConfig
@@ -15,7 +16,7 @@ class InitCommand(BaseCommand):
         super().__init__()
         self.skip_config_load = True
 
-    def run(self, config: None = None, **kwargs) -> str:
+    def run(self, config: Optional[HelmValuesConfig] = None, **kwargs) -> str:
         """
         Initialize a new helm-values configuration.
 
@@ -40,12 +41,12 @@ class InitCommand(BaseCommand):
             raise FileExistsError(f"Configuration file {self.config_file} already exists")
 
         # Create new config
-        config = HelmValuesConfig()
-        config.version = "1.0"
-        config.release = release_name
+        new_config = HelmValuesConfig()
+        new_config.version = "1.0"
+        new_config.release = release_name
 
         # Save config
-        self.save_config(config)
+        self.save_config(new_config)
 
         HelmLogger.debug("Initialized helm-values configuration for release: %s", release_name)
         return "Successfully initialized helm-values configuration."
