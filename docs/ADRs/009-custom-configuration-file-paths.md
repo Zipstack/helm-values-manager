@@ -107,4 +107,4 @@ We will enhance the Helm Values Manager to support custom configuration file pat
 
 ## Related Issues
 
-- GitHub Issue #[TBD]: Support for custom configuration file paths
+- GitHub Issue [#17](https://github.com/Zipstack/helm-values-manager/issues/17): Support for custom configuration file paths
