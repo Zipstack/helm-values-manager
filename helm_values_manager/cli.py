@@ -1,7 +1,10 @@
 """Command line interface for the helm-values-manager plugin."""
 
+from typing import Optional
+
 import typer
 
+from helm_values_manager.commands.add_value_config_command import AddValueConfigCommand
 from helm_values_manager.commands.init_command import InitCommand
 from helm_values_manager.utils.logger import HelmLogger
 
@@ -39,6 +42,27 @@ def init(
         typer.echo(result)
     except Exception as e:
         HelmLogger.error("Failed to initialize: %s", str(e))
+        raise typer.Exit(code=1) from e
+
+
+@app.command("add-value-config")
+def add_value_config(
+    path: str = typer.Option(..., "--path", "-p", help="Configuration path (e.g., 'app.replicas')"),
+    description: Optional[str] = typer.Option(
+        None, "--description", "-d", help="Description of what this configuration does"
+    ),
+    required: bool = typer.Option(False, "--required", "-r", help="Whether this configuration is required"),
+    sensitive: bool = typer.Option(
+        False, "--sensitive", "-s", help="Whether this configuration contains sensitive data"
+    ),
+):
+    """Add a new value configuration with metadata."""
+    try:
+        command = AddValueConfigCommand()
+        result = command.execute(path=path, description=description, required=required, sensitive=sensitive)
+        typer.echo(result)
+    except Exception as e:
+        HelmLogger.error("Failed to add value config: %s", str(e))
         raise typer.Exit(code=1) from e
 
 

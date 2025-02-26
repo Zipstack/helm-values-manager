@@ -1,5 +1,6 @@
 """Integration tests for the helm-values-manager CLI."""
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -85,3 +86,109 @@ def test_init_command(plugin_install, tmp_path):
     assert "Successfully initialized helm-values configuration" in stdout
     assert Path("helm-values.json").exists()
     assert Path(".helm-values.lock").exists()
+
+
+def test_add_value_config_help_command(plugin_install):
+    """Test that the add-value-config help command works and shows expected output."""
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-value-config", "--help"])
+
+    assert returncode == 0
+    assert "Add a new value configuration with metadata" in stdout
+    assert "--path" in stdout
+    assert "--description" in stdout
+    assert "--required" in stdout
+    assert "--sensitive" in stdout
+
+
+def test_add_value_config_command(plugin_install, tmp_path):
+    """Test that the add-value-config command works correctly."""
+    # Change to temp directory to avoid conflicts
+    os.chdir(tmp_path)
+
+    # First initialize a configuration
+    init_stdout, init_stderr, init_returncode = run_helm_command(["values-manager", "init", "-r", "test-app"])
+    assert init_returncode == 0
+
+    # Add a value configuration
+    path = "app.replicas"
+    description = "Number of application replicas"
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", path, "--description", description, "--required"]
+    )
+
+    assert returncode == 0
+    assert f"Successfully added value config '{path}'" in stdout
+
+    # Verify the configuration file was updated correctly
+    with open("helm-values.json", "r") as f:
+        config = json.load(f)
+
+    # Check that the config contains our new value
+    assert "config" in config
+    assert len(config["config"]) == 1
+    assert config["config"][0]["path"] == path
+    assert config["config"][0]["description"] == description
+    assert config["config"][0]["required"] is True
+    assert config["config"][0]["sensitive"] is False
+    assert config["config"][0]["values"] == {}
+
+    # Add another value configuration
+    second_path = "app.image.tag"
+    second_description = "Application image tag"
+    stdout, stderr, returncode = run_helm_command(
+        [
+            "values-manager",
+            "add-value-config",
+            "--path",
+            second_path,
+            "--description",
+            second_description,
+            "--sensitive",
+        ]
+    )
+
+    assert returncode == 0
+    assert f"Successfully added value config '{second_path}'" in stdout
+
+    # Verify the configuration file was updated correctly
+    with open("helm-values.json", "r") as f:
+        config = json.load(f)
+
+    # Check that the config contains both values
+    assert "config" in config
+    assert len(config["config"]) == 2
+
+    # Find the second added config
+    second_config = next((c for c in config["config"] if c["path"] == second_path), None)
+    assert second_config is not None
+    assert second_config["description"] == second_description
+    assert second_config["required"] is False
+    assert second_config["sensitive"] is True
+    assert second_config["values"] == {}
+
+
+def test_add_value_config_duplicate_path(plugin_install, tmp_path):
+    """Test that adding a duplicate path fails with the correct error message."""
+    # Change to temp directory to avoid conflicts
+    os.chdir(tmp_path)
+
+    # First initialize a configuration
+    init_stdout, init_stderr, init_returncode = run_helm_command(["values-manager", "init", "-r", "test-app"])
+    assert init_returncode == 0
+
+    # Add a value configuration
+    path = "app.replicas"
+    description = "Number of application replicas"
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", path, "--description", description]
+    )
+
+    assert returncode == 0
+
+    # Try to add the same path again
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", path, "--description", "Another description"]
+    )
+
+    assert returncode != 0
+    assert f"Path {path} already exists" in stderr
