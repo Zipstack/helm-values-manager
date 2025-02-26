@@ -55,6 +55,12 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **Impact**: Ensures security while maintaining flexibility and traceability
 - **Dependencies**: ADR-005
 
+### [ADR-008: Remove Command Registry](008-remove-command-registry.md)
+- **Status**: Accepted
+- **Context**: Command Registry pattern adds unnecessary complexity
+- **Decision**: Remove registry in favor of direct command instantiation
+- **Impact**: Simplifies code and aligns better with Typer's design
+
 ## ADR Template
 For new ADRs, use this template:
 ```markdown

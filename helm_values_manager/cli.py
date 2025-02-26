@@ -3,7 +3,6 @@
 import typer
 
 from helm_values_manager.commands.init_command import InitCommand
-from helm_values_manager.commands.registry import CommandRegistry
 from helm_values_manager.utils.logger import HelmLogger
 
 COMMAND_INFO = "helm values-manager"
@@ -35,10 +34,7 @@ def init(
 ):
     """Initialize a new values manager configuration."""
     try:
-        # Initialize command registry and register commands
-        registry = CommandRegistry()
-        registry.register("init", InitCommand)
-        command = registry.get_command("init")()
+        command = InitCommand()
         result = command.execute(release_name=release_name)
         typer.echo(result)
     except Exception as e:
