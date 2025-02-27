@@ -53,12 +53,22 @@ def add_value_config(
     ),
     required: bool = typer.Option(False, "--required", "-r", help="Whether this configuration is required"),
     sensitive: bool = typer.Option(
-        False, "--sensitive", "-s", help="Whether this configuration contains sensitive data"
+        False,
+        "--sensitive",
+        "-s",
+        help="Whether this configuration contains sensitive data (coming in v0.2.0)",
+        hidden=True,  # Hide from help text until v0.2.0
     ),
 ):
     """Add a new value configuration with metadata."""
     try:
         command = AddValueConfigCommand()
+
+        # Add warning for sensitive flag until it's fully implemented
+        if sensitive:
+            HelmLogger.warning("Sensitive value support will be available in version 0.2.0. Flag will be ignored.")
+            sensitive = False  # Ignore the flag for now
+
         result = command.execute(path=path, description=description, required=required, sensitive=sensitive)
         typer.echo(result)
     except Exception as e:

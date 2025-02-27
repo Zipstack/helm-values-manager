@@ -97,7 +97,8 @@ def test_add_value_config_help_command(plugin_install):
     assert "--path" in stdout
     assert "--description" in stdout
     assert "--required" in stdout
-    assert "--sensitive" in stdout
+    # The sensitive flag is now hidden, so it shouldn't appear in help
+    # assert "--sensitive" in stdout
 
 
 def test_add_value_config_command(plugin_install, tmp_path):
@@ -143,7 +144,6 @@ def test_add_value_config_command(plugin_install, tmp_path):
             second_path,
             "--description",
             second_description,
-            "--sensitive",
         ]
     )
 
@@ -163,7 +163,7 @@ def test_add_value_config_command(plugin_install, tmp_path):
     assert second_config is not None
     assert second_config["description"] == second_description
     assert second_config["required"] is False
-    assert second_config["sensitive"] is True
+    assert second_config["sensitive"] is False
     assert second_config["values"] == {}
 
 
