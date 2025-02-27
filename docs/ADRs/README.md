@@ -71,3 +71,10 @@ For new ADRs, use the [ADR template](adr-template.md) as a starting point.
 - **Decision**: Add support for custom configuration file paths
 - **Impact**: Increases flexibility and improves integration capabilities
 - **Dependencies**: ADR-001
+
+### [ADR-010: Configuration Update and Merge](010-configuration-update-and-merge.md)
+- **Status**: Proposed
+- **Context**: Need to incorporate chart owner configuration updates without losing user customizations
+- **Decision**: Implement configuration comparison and smart merging with multiple strategies
+- **Impact**: Simplifies configuration updates and reduces risk of missing required changes
+- **Dependencies**: ADR-001

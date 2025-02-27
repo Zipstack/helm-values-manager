@@ -59,8 +59,17 @@ We will enhance the Helm Values Manager to support custom configuration file pat
        Returns:
            str: Path to the lock file
        """
-       config_path = Path(config_file)
-       lock_file = f".{config_path.name}.lock"
+       # Expand user home directory if present (e.g., ~/configs)
+       expanded_path = os.path.expanduser(config_file)
+       config_path = Path(expanded_path)
+
+       # Check if the path is a directory
+       if config_path.is_dir():
+           # Use default filename in the specified directory
+           config_path = config_path / "helm-values.json"
+
+       # Create lock file name based on the config file stem (name without extension)
+       lock_file = f".{config_path.stem}.lock"
        return str(config_path.parent / lock_file)
    ```
 
