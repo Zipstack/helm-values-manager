@@ -179,7 +179,6 @@
 - [x] Implement Helm-style logger
   - [x] Create HelmLogger class
   - [x] Add debug and error methods
-  - [x] Add warning method
   - [x] Follow Helm output conventions
   - [x] Add HELM_DEBUG support
 - [x] Add comprehensive tests
@@ -226,24 +225,6 @@
   - [ ] Improve file locking
   - [ ] Add atomic writes
   - [ ] Optimize backup strategy
-
-## Deployment and Backend Management
-- [x] Implement new command structure (ADR-011)
-  - [x] Create ADR for command structure
-  - [x] Implement add-deployment command
-  - [x] Update deployment model to support partial configurations
-  - [x] Add tests for add-deployment command
-  - [x] Add support for NO_BACKEND and NO_AUTH options
-  - [x] Add unit and integration tests for CLI add-deployment command
-  - [ ] Implement add-backend commands (future)
-  - [ ] Implement add-auth commands (future)
-  - [x] Update documentation with new command structure
-- [ ] Implement value management commands
-  - [ ] Implement add-value command
-  - [ ] Add validation to prevent adding sensitive values to NO_BACKEND deployments
-  - [ ] Implement get-value command
-  - [ ] Implement update-value command
-  - [ ] Implement delete-value command
 
 ## Clean Up Tasks
 - [x] Remove deprecated code

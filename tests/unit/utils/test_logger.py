@@ -73,19 +73,3 @@ def test_multiple_messages(logger):
         logger.debug("Debug 2")
         expected = "[debug] Debug 1\nError: Error 1\n[debug] Debug 2\n"
         assert stderr.getvalue() == expected
-
-
-def test_warning_output(logger):
-    """Test warning output."""
-    stderr = StringIO()
-    with mock.patch("helm_values_manager.utils.logger.sys.stderr", stderr):
-        logger.warning("Warning message")
-        assert stderr.getvalue() == "Warning: Warning message\n"
-
-
-def test_warning_with_formatting(logger):
-    """Test warning output with string formatting."""
-    stderr = StringIO()
-    with mock.patch("helm_values_manager.utils.logger.sys.stderr", stderr):
-        logger.warning("Warning in %s: %s", "function", "details")
-        assert stderr.getvalue() == "Warning: Warning in function: details\n"

@@ -4,7 +4,6 @@ from typing import Optional
 
 import typer
 
-from helm_values_manager.commands.add_deployment_command import AddDeploymentCommand
 from helm_values_manager.commands.add_value_config_command import AddValueConfigCommand
 from helm_values_manager.commands.init_command import InitCommand
 from helm_values_manager.utils.logger import HelmLogger
@@ -74,26 +73,6 @@ def add_value_config(
         typer.echo(result)
     except Exception as e:
         HelmLogger.error("Failed to add value config: %s", str(e))
-        raise typer.Exit(code=1) from e
-
-
-@app.command("add-deployment")
-def add_deployment(
-    name: str = typer.Argument(..., help="Deployment name (e.g., 'dev', 'prod')"),
-):
-    """Add a new deployment configuration."""
-    try:
-        command = AddDeploymentCommand()
-
-        # Create kwargs for command execution
-        kwargs = {
-            "name": name,
-        }
-
-        result = command.execute(**kwargs)
-        typer.echo(result)
-    except Exception as e:
-        HelmLogger.error("Failed to add deployment: %s", str(e))
         raise typer.Exit(code=1) from e
 
 
