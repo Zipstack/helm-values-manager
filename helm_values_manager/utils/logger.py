@@ -47,3 +47,16 @@ class HelmLogger:
         if args:
             msg = msg % args
         print("Error: %s" % msg, file=sys.stderr)
+
+    @staticmethod
+    def warning(msg: str, *args: Any) -> None:
+        """
+        Print warning message to stderr.
+
+        Args:
+            msg: Message with optional string format placeholders
+            args: Values to substitute in the message
+        """
+        if args:
+            msg = msg % args
+        print("Warning: %s" % msg, file=sys.stderr)
