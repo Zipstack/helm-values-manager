@@ -89,10 +89,10 @@
     - [x] Add empty config initialization
     - [x] Add config file creation
     - [x] Add schema template generation
-  - [ ] Implement add-value-config command
-    - [ ] Add basic path validation
-    - [ ] Add metadata validation
-    - [ ] Add config update
+  - [x] Implement add-value-config command
+    - [x] Add basic path validation
+    - [x] Add metadata validation
+    - [x] Add config update
   - [ ] Implement add-deployment command
     - [ ] Add basic deployment validation
     - [ ] Add backend validation

@@ -5,6 +5,10 @@ This directory contains Architecture Decision Records (ADRs) for the Helm Values
 ## What is an ADR?
 An Architecture Decision Record (ADR) is a document that captures an important architectural decision made along with its context and consequences.
 
+## Creating New ADRs
+
+For new ADRs, use the [ADR template](adr-template.md) as a starting point.
+
 ## ADR Index
 
 ### [ADR-001: Helm Values Manager as a Helm Plugin](001-helm-values-manager.md)
@@ -61,20 +65,16 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - **Decision**: Remove registry in favor of direct command instantiation
 - **Impact**: Simplifies code and aligns better with Typer's design
 
-## ADR Template
-For new ADRs, use this template:
-```markdown
-# ADR-NNN: Title
+### [ADR-009: Custom Configuration File Paths](009-custom-configuration-file-paths.md)
+- **Status**: Proposed
+- **Context**: Limited flexibility with hardcoded configuration file paths
+- **Decision**: Add support for custom configuration file paths
+- **Impact**: Increases flexibility and improves integration capabilities
+- **Dependencies**: ADR-001
 
-## Status
-[Proposed | Accepted | Deprecated | Superseded]
-
-## Context
-What is the issue that we're seeing that is motivating this decision or change?
-
-## Decision
-What is the change that we're proposing and/or doing?
-
-## Consequences
-What becomes easier or more difficult to do because of this change?
-```
+### [ADR-010: Configuration Update and Merge](010-configuration-update-and-merge.md)
+- **Status**: Proposed
+- **Context**: Need to incorporate chart owner configuration updates without losing user customizations
+- **Decision**: Implement configuration comparison and smart merging with multiple strategies
+- **Impact**: Simplifies configuration updates and reduces risk of missing required changes
+- **Dependencies**: ADR-001
