@@ -89,9 +89,8 @@ sequenceDiagram
     participant CLI
     participant BaseCommand
     participant HelmValuesConfig
-    participant ValueBackend
 
-    User->>CLI: helm values add-deployment --name=prod --backend=aws
+    User->>CLI: helm values add-deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -99,15 +98,11 @@ sequenceDiagram
 
     BaseCommand->>BaseCommand: acquire_lock()
     BaseCommand->>BaseCommand: load_config()
-    BaseCommand->>HelmValuesConfig: add_deployment(name, backend, auth)
+    BaseCommand->>HelmValuesConfig: add_deployment(name)
     activate HelmValuesConfig
 
-    HelmValuesConfig->>ValueBackend: validate_auth_config(auth)
-    activate ValueBackend
-    ValueBackend-->>HelmValuesConfig: validation result
-    deactivate ValueBackend
-
-    HelmValuesConfig->>HelmValuesConfig: update_deployments()
+    HelmValuesConfig->>HelmValuesConfig: validate_deployment_name(name)
+    HelmValuesConfig->>HelmValuesConfig: create_deployment(name)
     HelmValuesConfig-->>BaseCommand: success
     deactivate HelmValuesConfig
 
@@ -121,6 +116,94 @@ sequenceDiagram
     deactivate BaseCommand
 
     CLI-->>User: "Added deployment 'prod'"
+    deactivate CLI
+```
+
+## 3.1 Add Backend Command Flow (Future Implementation)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant BaseCommand
+    participant HelmValuesConfig
+    participant ValueBackend
+
+    User->>CLI: helm values add-backend aws --deployment=prod --region=us-west-2
+    activate CLI
+
+    CLI->>BaseCommand: execute()
+    activate BaseCommand
+
+    BaseCommand->>BaseCommand: acquire_lock()
+    BaseCommand->>BaseCommand: load_config()
+    BaseCommand->>HelmValuesConfig: add_backend_to_deployment(name, backend, backend_config)
+    activate HelmValuesConfig
+
+    HelmValuesConfig->>HelmValuesConfig: validate_deployment_exists(name)
+    HelmValuesConfig->>ValueBackend: validate_backend_config(backend, backend_config)
+    activate ValueBackend
+    ValueBackend-->>HelmValuesConfig: validation result
+    deactivate ValueBackend
+
+    HelmValuesConfig->>HelmValuesConfig: update_deployment_backend(name, backend, backend_config)
+    HelmValuesConfig-->>BaseCommand: success
+    deactivate HelmValuesConfig
+
+    BaseCommand->>FileSystem: write_config_file()
+    activate FileSystem
+    FileSystem-->>BaseCommand: success
+    deactivate FileSystem
+
+    BaseCommand->>BaseCommand: release_lock()
+    BaseCommand-->>CLI: success
+    deactivate BaseCommand
+
+    CLI-->>User: "Added aws backend to deployment 'prod'"
+    deactivate CLI
+```
+
+## 3.2 Add Auth Command Flow (Future Implementation)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant BaseCommand
+    participant HelmValuesConfig
+    participant ValueBackend
+
+    User->>CLI: helm values add-auth direct --deployment=prod --credentials='{...}'
+    activate CLI
+
+    CLI->>BaseCommand: execute()
+    activate BaseCommand
+
+    BaseCommand->>BaseCommand: acquire_lock()
+    BaseCommand->>BaseCommand: load_config()
+    BaseCommand->>HelmValuesConfig: add_auth_to_deployment(name, auth_type, auth_config)
+    activate HelmValuesConfig
+
+    HelmValuesConfig->>HelmValuesConfig: validate_deployment_exists(name)
+    HelmValuesConfig->>ValueBackend: validate_auth_config(auth_type, auth_config)
+    activate ValueBackend
+    ValueBackend-->>HelmValuesConfig: validation result
+    deactivate ValueBackend
+
+    HelmValuesConfig->>HelmValuesConfig: update_deployment_auth(name, auth_type, auth_config)
+    HelmValuesConfig-->>BaseCommand: success
+    deactivate HelmValuesConfig
+
+    BaseCommand->>FileSystem: write_config_file()
+    activate FileSystem
+    FileSystem-->>BaseCommand: success
+    deactivate FileSystem
+
+    BaseCommand->>BaseCommand: release_lock()
+    BaseCommand-->>CLI: success
+    deactivate BaseCommand
+
+    CLI-->>User: "Added direct authentication to deployment 'prod'"
     deactivate CLI
 ```
 

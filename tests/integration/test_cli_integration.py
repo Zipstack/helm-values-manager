@@ -192,3 +192,72 @@ def test_add_value_config_duplicate_path(plugin_install, tmp_path):
 
     assert returncode != 0
     assert f"Path {path} already exists" in stderr
+
+
+def test_add_deployment_help_command(plugin_install):
+    """Test that the add-deployment help command works and shows expected output."""
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "--help"])
+    assert returncode == 0
+    assert "Add a new deployment configuration" in stdout
+
+
+def test_add_deployment_command(plugin_install, tmp_path):
+    """Test that the add-deployment command works correctly."""
+    # Create a working directory
+    work_dir = tmp_path / "test_add_deployment"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Initialize the config
+    init_stdout, init_stderr, init_returncode = run_helm_command(
+        ["values-manager", "init", "--release", "test-release"]
+    )
+    assert init_returncode == 0
+    assert Path("helm-values.json").exists()
+
+    # Add a deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 0
+    assert "Successfully added deployment 'dev'" in stdout
+
+    # Verify the deployment was added
+    with open("helm-values.json", "r") as f:
+        config = json.load(f)
+    assert "dev" in config["deployments"]
+
+
+def test_add_deployment_duplicate(plugin_install, tmp_path):
+    """Test that adding a duplicate deployment fails with the correct error message."""
+    # Create a working directory
+    work_dir = tmp_path / "test_add_deployment_duplicate"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Initialize the config
+    init_stdout, init_stderr, init_returncode = run_helm_command(
+        ["values-manager", "init", "--release", "test-release"]
+    )
+    assert init_returncode == 0
+    assert Path("helm-values.json").exists()
+
+    # Add a deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 0
+
+    # Try to add the same deployment again
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 1
+    assert "Deployment 'dev' already exists" in stderr
+
+
+def test_add_deployment_no_config(plugin_install, tmp_path):
+    """Test that adding a deployment without initializing fails with the correct error message."""
+    # Create a working directory
+    work_dir = tmp_path / "test_add_deployment_no_config"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Try to add a deployment without initializing
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 1
+    assert "Configuration file helm-values.json not found" in stderr

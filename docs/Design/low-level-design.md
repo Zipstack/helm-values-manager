@@ -174,6 +174,31 @@ Benefits:
 - Automatic file locking
 - Configuration backup support
 
+#### Command Structure for Deployments and Backends
+
+The command structure for managing deployments and backends follows a nested subcommand pattern (see [ADR-011](../ADRs/011-command-structure-for-deployments.md)):
+
+```
+helm values add-deployment [name]
+
+helm values add-backend [backend] --deployment=[name] [backend_options]
+  - helm values add-backend aws --deployment=prod --region=us-west-2
+  - helm values add-backend azure --deployment=prod --vault-url=https://myvault.vault.azure.net
+  - helm values add-backend gcp --deployment=prod --project-id=my-project
+  - helm values add-backend git-secret --deployment=prod
+
+helm values add-auth [auth_type] --deployment=[name] [auth_options]
+  - helm values add-auth direct --deployment=prod --credentials='{...}'
+  - helm values add-auth env --deployment=prod --env-prefix=AWS_
+  - helm values add-auth file --deployment=prod --auth-path=~/.aws/credentials
+  - helm values add-auth managed-identity --deployment=prod
+```
+
+This structure:
+- Separates the concerns of creating a deployment, configuring a backend, and setting up authentication
+- Uses subcommands to provide context-specific options and help text
+- Follows a natural workflow of first creating a deployment, then adding backend and auth configuration
+
 ### 4. Storage Backends
 
 The `ValueBackend` interface defines the contract for value storage:
@@ -201,6 +226,8 @@ Implementations:
 - AWS Secrets Manager Backend
 - Azure Key Vault Backend
 - Additional backends can be easily added
+
+For a comprehensive overview of supported backends, authentication types, and backend configurations, see [Backends and Authentication Types](backends-and-auth.md).
 
 ### 5. Schema Validation
 
