@@ -93,21 +93,21 @@
     - [x] Add basic path validation
     - [x] Add metadata validation
     - [x] Add config update
-  - [ ] Implement add-deployment command
-    - [ ] Add basic deployment validation
-    - [ ] Add backend validation
-    - [ ] Add deployment registration
+  - [x] Implement add-deployment command
+    - [x] Add basic deployment validation
+    - [x] Add backend validation
+    - [x] Add deployment registration
   - [ ] Implement generate command
     - [ ] Add template generation
     - [ ] Add basic value substitution
 
 - [ ] Value Management Commands
-  - [ ] Implement get-value command
-    - [ ] Add basic path validation
-    - [ ] Add value retrieval
-  - [ ] Implement set-value command
-    - [ ] Add basic path validation
-    - [ ] Add value storage
+  - [x] Implement set-value command
+    - [x] Add basic path validation
+    - [x] Add value storage
+  - [ ] Implement generate command
+    - [ ] Add template generation
+    - [ ] Add basic value substitution
 
 #### Phase 2: Enhanced Safety & Management
 - [x] Enhanced Command Infrastructure
@@ -122,6 +122,11 @@
   - [ ] Enhance add-value-config
     - [ ] Add conflict detection
     - [ ] Add dependency validation
+
+- [ ] Value Management Commands
+  - [ ] Implement get-value command
+    - [ ] Add basic path validation
+    - [ ] Add value retrieval
 
 - [ ] Basic Validation System
   - [ ] Add PathValidator class
@@ -258,6 +263,16 @@
   - [ ] Identify coverage gaps
   - [ ] Add missing tests
   - [ ] Improve existing tests
+
+## Code Quality and Maintenance
+- [ ] Standardize terminology (environment → deployment)
+  - [ ] Update core models (HelmValuesConfig, Value)
+  - [ ] Update command classes
+  - [ ] Update backend classes
+  - [ ] Update tests
+  - [ ] Update documentation
+- [ ] Add more comprehensive error handling
+- [ ] Improve test coverage
 
 ## Development Guidelines
 1. Follow TDD approach
