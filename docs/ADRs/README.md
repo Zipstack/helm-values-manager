@@ -78,3 +78,10 @@ For new ADRs, use the [ADR template](adr-template.md) as a starting point.
 - **Decision**: Implement configuration comparison and smart merging with multiple strategies
 - **Impact**: Simplifies configuration updates and reduces risk of missing required changes
 - **Dependencies**: ADR-001
+
+### [ADR-011: Command Structure for Deployments and Backends](011-command-structure-for-deployments.md)
+- **Status**: Accepted
+- **Context**: Need for intuitive command structure for managing deployments with multiple backends and auth types
+- **Decision**: Implement nested subcommand structure for deployment, backend, and auth configuration
+- **Impact**: Improves user experience, discoverability, and maintainability
+- **Dependencies**: ADR-001

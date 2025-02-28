@@ -21,7 +21,7 @@
                 "properties": {
                     "backend": {
                         "type": "string",
-                        "enum": ["git-secret", "aws", "azure", "gcp"],
+                        "enum": ["no-backend", "git-secret", "aws", "azure", "gcp"],
                         "description": "Type of backend to use for value storage"
                     },
                     "auth": {
@@ -30,7 +30,7 @@
                         "properties": {
                             "type": {
                                 "type": "string",
-                                "enum": ["env", "file", "direct", "managed_identity"],
+                                "enum": ["no-auth", "env", "file", "direct", "managed_identity"],
                                 "description": "Authentication method to use"
                             }
                         },
