@@ -261,3 +261,117 @@ def test_add_deployment_no_config(plugin_install, tmp_path):
     stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
     assert returncode == 1
     assert "Configuration file helm-values.json not found" in stderr
+
+
+def test_set_value_command(plugin_install, tmp_path):
+    """Test that the set-value command works correctly."""
+    # Create a working directory
+    work_dir = tmp_path / "test_set_value"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Initialize the config
+    init_stdout, init_stderr, init_returncode = run_helm_command(
+        ["values-manager", "init", "--release", "test-release"]
+    )
+    assert init_returncode == 0
+    assert Path("helm-values.json").exists()
+
+    # Add a deployment
+    add_deployment_stdout, add_deployment_stderr, add_deployment_returncode = run_helm_command(
+        ["values-manager", "add-deployment", "dev"]
+    )
+    assert add_deployment_returncode == 0
+
+    # Add a value config
+    add_value_config_stdout, add_value_config_stderr, add_value_config_returncode = run_helm_command(
+        [
+            "values-manager",
+            "add-value-config",
+            "--path",
+            "app.replicas",
+            "--description",
+            "Number of replicas",
+            "--required",
+        ]
+    )
+    assert add_value_config_returncode == 0
+
+    # Set a value
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"]
+    )
+    assert returncode == 0
+    assert "Successfully set value for path 'app.replicas' in deployment 'dev'" in stdout
+
+    # Verify the value was set
+    with open("helm-values.json", "r") as f:
+        config = json.load(f)
+
+    # The value itself is stored in the backend, not directly in the config file
+    # But we can verify that the path exists in the config
+    assert any(path["path"] == "app.replicas" for path in config["config"])
+
+
+def test_set_value_nonexistent_path(plugin_install, tmp_path):
+    """Test that setting a value for a nonexistent path fails with the correct error message."""
+    # Create a working directory
+    work_dir = tmp_path / "test_set_value_nonexistent_path"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Initialize the config
+    init_stdout, init_stderr, init_returncode = run_helm_command(
+        ["values-manager", "init", "--release", "test-release"]
+    )
+    assert init_returncode == 0
+    assert Path("helm-values.json").exists()
+
+    # Add a deployment
+    add_deployment_stdout, add_deployment_stderr, add_deployment_returncode = run_helm_command(
+        ["values-manager", "add-deployment", "dev"]
+    )
+    assert add_deployment_returncode == 0
+
+    # Try to set a value for a nonexistent path
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "nonexistent.path", "--deployment", "dev", "--value", "3"]
+    )
+    assert returncode == 1
+    assert "Path nonexistent.path not found" in stderr
+
+
+def test_set_value_nonexistent_deployment(plugin_install, tmp_path):
+    """Test that setting a value for a nonexistent deployment fails with the correct error message."""
+    # Create a working directory
+    work_dir = tmp_path / "test_set_value_nonexistent_deployment"
+    work_dir.mkdir()
+    os.chdir(work_dir)
+
+    # Initialize the config
+    init_stdout, init_stderr, init_returncode = run_helm_command(
+        ["values-manager", "init", "--release", "test-release"]
+    )
+    assert init_returncode == 0
+    assert Path("helm-values.json").exists()
+
+    # Add a value config
+    add_value_config_stdout, add_value_config_stderr, add_value_config_returncode = run_helm_command(
+        [
+            "values-manager",
+            "add-value-config",
+            "--path",
+            "app.replicas",
+            "--description",
+            "Number of replicas",
+            "--required",
+        ]
+    )
+    assert add_value_config_returncode == 0
+
+    # Try to set a value for a nonexistent deployment
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.replicas", "--deployment", "nonexistent", "--value", "3"]
+    )
+    assert returncode == 1
+    assert "Deployment 'nonexistent' not found" in stderr
