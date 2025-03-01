@@ -159,29 +159,89 @@ def test_execute_ensures_lock_release_on_error(base_command, valid_config):
 
 
 def test_save_config_success(base_command):
-    """Test successful config saving."""
+    """Test successful config save."""
     config = HelmValuesConfig()
     config.version = "1.0"
     config.release = "test"
 
+    # Mock the validate method
+    config.validate = MagicMock()
+
     with patch("builtins.open", mock_open()) as mock_file:
         base_command.save_config(config)
+
+        # Verify validate was called
+        config.validate.assert_called_once()
 
         mock_file.assert_called_once_with(base_command.config_file, "w", encoding="utf-8")
         handle = mock_file()
 
+        # Verify the written data
         written_json = "".join(call.args[0] for call in handle.write.call_args_list)
         written_data = json.loads(written_json)
-        assert written_data["version"] == config.version
-        assert written_data["release"] == config.release
+        assert written_data["version"] == "1.0"
+        assert written_data["release"] == "test"
 
 
 def test_save_config_io_error(base_command):
-    """Test save_config when IO error occurs."""
+    """Test IO error handling when saving config."""
     config = HelmValuesConfig()
-    error_message = "Test error"
+    config.version = "1.0"
+    config.release = "test"
 
-    with patch("builtins.open", mock_open()) as mock_file:
-        mock_file.return_value.write.side_effect = IOError(error_message)
-        with pytest.raises(IOError, match=error_message):
+    # Mock the validate method
+    config.validate = MagicMock()
+
+    # Simulate an IO error
+    mock_file = mock_open()
+    mock_file.side_effect = IOError("Test IO Error")
+
+    with patch("builtins.open", mock_file):
+        with pytest.raises(IOError) as excinfo:
             base_command.save_config(config)
+
+        assert "Test IO Error" in str(excinfo.value)
+
+        # Verify validate was called
+        config.validate.assert_called_once()
+
+
+def test_save_config_validates_schema(base_command):
+    """Test that save_config validates the schema before saving."""
+    # Create a mock config
+    config = MagicMock(spec=HelmValuesConfig)
+
+    # Make validate method raise an error
+    config.validate.side_effect = ValueError("Schema validation failed")
+
+    # Try to save the config
+    with pytest.raises(ValueError, match="Schema validation failed"):
+        base_command.save_config(config)
+
+    # Verify that validate was called
+    config.validate.assert_called_once()
+
+
+def test_save_config_with_empty_description(base_command, tmp_path):
+    """Test that save_config handles empty description correctly."""
+    # Create a real config
+    config = HelmValuesConfig()
+    config.release = "test"
+
+    # Add a config path with empty description (default)
+    config.add_config_path("test.path")
+
+    # Set a temporary config file
+    temp_file = tmp_path / "test_config.json"
+    base_command.config_file = str(temp_file)
+
+    # Save the config
+    base_command.save_config(config)
+
+    # Read the saved file
+    with open(temp_file, "r") as f:
+        data = json.load(f)
+
+    # Verify that description is an empty string
+    assert data["config"][0]["description"] == ""
+    assert isinstance(data["config"][0]["description"], str)

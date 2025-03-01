@@ -15,7 +15,7 @@ from helm_values_manager.utils.logger import HelmLogger
 class PathData:
     """Manages metadata and values for a configuration path."""
 
-    def __init__(self, path: str, metadata: Dict[str, Any]):
+    def __init__(self, path: str, metadata: Optional[Dict[str, Any]] = None):
         """
         Initialize PathData with a path and metadata.
 
@@ -24,10 +24,12 @@ class PathData:
             metadata: Dictionary containing metadata for the path
         """
         self.path = path
+        if metadata is None:
+            metadata = {}
         self._metadata = ConfigMetadata(
-            description=metadata.get("description"),
-            required=metadata.get("required", False),
-            sensitive=metadata.get("sensitive", False),
+            description=metadata.get("description", ConfigMetadata.DEFAULT_DESCRIPTION),
+            required=metadata.get("required", ConfigMetadata.DEFAULT_REQUIRED),
+            sensitive=metadata.get("sensitive", ConfigMetadata.DEFAULT_SENSITIVE),
         )
         self._values: Dict[str, Value] = {}
         HelmLogger.debug("Created PathData instance for path %s", path)
@@ -160,9 +162,9 @@ class PathData:
             raise ValueError(f"Missing required keys: {missing}")
 
         metadata = {
-            "description": data.get("description"),
-            "required": data.get("required", False),
-            "sensitive": data.get("sensitive", False),
+            "description": data.get("description", ConfigMetadata.DEFAULT_DESCRIPTION),
+            "required": data.get("required", ConfigMetadata.DEFAULT_REQUIRED),
+            "sensitive": data.get("sensitive", ConfigMetadata.DEFAULT_SENSITIVE),
         }
         path_data = cls(path=data["path"], metadata=metadata)
 

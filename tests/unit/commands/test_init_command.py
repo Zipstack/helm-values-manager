@@ -36,18 +36,20 @@ def test_initialization(init_command, tmp_path):
 
 def test_run_creates_config(init_command):
     """Test that run creates a new config with release name."""
-    with patch("builtins.open", mock_open()) as mock_file:
-        result = init_command.run(release_name="test-release")
-        assert result == "Successfully initialized helm-values configuration."
+    # Mock the validate method
+    with patch("helm_values_manager.models.helm_values_config.HelmValuesConfig.validate"):
+        with patch("builtins.open", mock_open()) as mock_file:
+            result = init_command.run(release_name="test-release")
+            assert result == "Successfully initialized helm-values configuration."
 
-        # Verify config was saved with correct data
-        handle = mock_file()
-        written_json = "".join(call.args[0] for call in handle.write.call_args_list)
-        written_data = json.loads(written_json)
-        assert written_data["version"] == "1.0"
-        assert written_data["release"] == "test-release"
-        assert written_data["deployments"] == {}
-        assert written_data["config"] == []
+            # Verify config was saved with correct data
+            handle = mock_file()
+            written_json = "".join(call.args[0] for call in handle.write.call_args_list)
+            written_data = json.loads(written_json)
+            assert written_data["version"] == "1.0"
+            assert written_data["release"] == "test-release"
+            assert written_data["deployments"] == {}
+            assert written_data["config"] == []
 
 
 def test_run_with_existing_config(init_command):

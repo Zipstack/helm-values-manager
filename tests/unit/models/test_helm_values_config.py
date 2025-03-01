@@ -194,3 +194,74 @@ def test_validate_without_release():
     config = HelmValuesConfig()
     with pytest.raises(ValueError, match="Release name is required"):
         config.validate()
+
+
+def test_release_name_validation():
+    """
+    Test that release names are properly validated.
+
+    Release names must match the following pattern: ^[a-z0-9-]{1,53}$.
+    """
+    # Valid cases
+    valid_names = [
+        "my-release",
+        "release123",
+        "a-b-c-123",
+        "a" * 53,  # max length
+    ]
+    for name in valid_names:
+        config = {"version": "1.0", "release": name, "deployments": {}, "config": []}
+        HelmValuesConfig._validate_schema(config)  # Should not raise
+
+    # Invalid cases
+    invalid_names = [
+        "UPPERCASE",  # uppercase not allowed
+        "my_release",  # underscore not allowed
+        "my.release",  # dot not allowed
+        "-starts-with-hyphen",  # cannot start with hyphen
+        "ends-with-hyphen-",  # cannot end with hyphen
+        "a" * 54,  # too long
+        "",  # empty string
+    ]
+    for name in invalid_names:
+        config = {"version": "1.0", "release": name, "deployments": {}, "config": []}
+        with pytest.raises(jsonschema.exceptions.ValidationError):
+            HelmValuesConfig._validate_schema(config)
+
+
+def test_deployment_name_validation():
+    """
+    Test that deployment names are properly validated.
+
+    Deployment names must match the following pattern: ^[a-z0-9-]{1,53}$.
+    """
+    # Valid cases
+    valid_config = {
+        "version": "1.0",
+        "release": "test-release",
+        "deployments": {
+            "my-deployment": {"backend": "no-backend", "auth": {"type": "no-auth"}},
+            "deployment123": {"backend": "no-backend", "auth": {"type": "no-auth"}},
+            "a-b-c-123": {"backend": "no-backend", "auth": {"type": "no-auth"}},
+        },
+        "config": [],
+    }
+    HelmValuesConfig._validate_schema(valid_config)  # Should not raise
+
+    # Invalid cases - test one by one to ensure proper validation
+    base_config = {"version": "1.0", "release": "test-release", "deployments": {}, "config": []}
+
+    invalid_names = [
+        "UPPERCASE",  # uppercase not allowed
+        "my_deployment",  # underscore not allowed
+        "my.deployment",  # dot not allowed
+        "-starts-with-hyphen",  # cannot start with hyphen
+        "ends-with-hyphen-",  # cannot end with hyphen
+        "",  # empty string
+    ]
+
+    for name in invalid_names:
+        config = dict(base_config)
+        config["deployments"] = {name: {"backend": "no-backend", "auth": {"type": "no-auth"}}}
+        with pytest.raises(jsonschema.exceptions.ValidationError):
+            HelmValuesConfig._validate_schema(config)

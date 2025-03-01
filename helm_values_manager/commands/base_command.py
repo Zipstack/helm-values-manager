@@ -73,7 +73,12 @@ class BaseCommand:
 
         Raises:
             IOError: If unable to write to the file.
+            ValueError: If the configuration is invalid (e.g., missing release name).
+            ValidationError: If JSON schema validation fails.
         """
+        # Validate the config before saving
+        config.validate()
+
         try:
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(config.to_dict(), f, indent=2)

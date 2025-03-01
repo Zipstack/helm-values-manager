@@ -8,357 +8,268 @@ The core domain model consists of several key classes that manage configuration 
 
 ```mermaid
 classDiagram
+    %% Core Configuration Manager
     class HelmValuesConfig {
-        +List~Deployment~ deployments
-        +List~ConfigValue~ config
-        -Dict~str,PathData~ _path_map
-        +from_dict(data: dict) HelmValuesConfig
-        +to_dict() dict
-        +validate() None
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
-        +add_config_path(path: str, description: str, required: bool, sensitive: bool) None
+        +str version
+        +str release
+        -Dict[str, Deployment] deployments
+        -Dict[str, PathData] _path_map
+        -SimpleValueBackend _backend
+        +add_config_path(path, description, required, sensitive)
+        +get_value(path, environment, resolve)
+        +set_value(path, environment, value)
+        +validate()
+        +to_dict()
+        +from_dict(data)
     }
 
+    %% Deployment Management Subsystem
+    class Deployment {
+        +str name
+        +Dict auth
+        +str backend
+        +Dict backend_config
+        +to_dict()
+    }
+
+    class ValueBackend {
+        <<interface>>
+        +get_value(path, environment)*
+        +set_value(path, environment, value)*
+        +delete_value(path, environment)*
+    }
+
+    class SimpleValueBackend {
+        -Dict _values
+        +get_value(path, environment)
+        +set_value(path, environment, value)
+        +delete_value(path, environment)
+    }
+
+    %% Value Management Subsystem
     class PathData {
         +str path
-        +Dict metadata
-        -Dict~str,Value~ _values
-        +validate() None
-        +set_value(environment: str, value: Value) None
-        +get_value(environment: str) Optional[Value]
-        +get_environments() Iterator[str]
-        +to_dict() Dict
-        +from_dict(data: Dict, create_value_fn) PathData
+        -ConfigMetadata _metadata
+        -Dict[str, Value] _values
+        +get_value(environment)
+        +set_value(environment, value)
+        +validate()
+        +to_dict()
+        +from_dict(data)
     }
 
     class Value {
         +str path
         +str environment
         -ValueBackend _backend
-        +get() str
-        +set(value: str) None
-        +to_dict() dict
-        +from_dict(data: dict, backend: ValueBackend) Value
+        +get(resolve)
+        +set(value)
+        +delete()
     }
 
-    class ConfigValue {
-        +str path
-        +Optional~str~ description
+    class ConfigMetadata {
+        +str description
         +bool required
         +bool sensitive
-        +Dict~str,str~ values
+        +to_dict()
+        +from_dict(data)
     }
 
-    class Deployment {
-        +str name
-        +Dict~str,Any~ auth
-        +str backend
-        +Dict~str,Any~ backend_config
-    }
-
-    class BaseCommand {
-        <<abstract>>
-        +execute() Any
-        +load_config() HelmValuesConfig
-        +save_config(config: HelmValuesConfig) None
-        #run(config: HelmValuesConfig)* Any
-    }
-
-    class ValueBackend {
-        <<interface>>
-        +get_value(path: str, environment: str)* str
-        +set_value(path: str, environment: str, value: str)* None
-        +validate_auth_config(auth_config: dict)* None
-    }
-
-    class SimpleValueBackend {
-        -Dict~str,str~ values
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
-    }
-
-    class AWSSecretsBackend {
-        -SecretsManagerClient client
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
-        +validate_auth_config(auth_config: dict) None
-    }
-
-    class AzureKeyVaultBackend {
-        -KeyVaultClient client
-        +get_value(path: str, environment: str) str
-        +set_value(path: str, environment: str, value: str) None
-        +validate_auth_config(auth_config: dict) None
-    }
-
-    class HelmLogger {
-        +debug(msg: str, *args: Any) None
-        +error(msg: str, *args: Any) None
-    }
-
-    HelmValuesConfig "1" *-- "*" ConfigValue
-    HelmValuesConfig "1" *-- "*" Deployment
-    HelmValuesConfig "1" *-- "*" PathData
-    PathData "1" *-- "*" Value
-    Value "1" o-- "1" ValueBackend
-    ValueBackend <|.. SimpleValueBackend
-    ValueBackend <|.. AWSSecretsBackend
-    ValueBackend <|.. AzureKeyVaultBackend
-    BaseCommand <|-- SetValueCommand
-    BaseCommand <|-- GetValueCommand
+    %% Relationships
+    HelmValuesConfig "1" *-- "*" Deployment : manages
+    HelmValuesConfig "1" *-- "*" PathData : manages
+    HelmValuesConfig "1" *-- "1" SimpleValueBackend : uses
+    PathData "1" *-- "1" ConfigMetadata : has
+    PathData "1" *-- "*" Value : owns
+    SimpleValueBackend ..|> ValueBackend : implements
+    Value "1" o-- "1" ValueBackend : uses
 ```
 
-### 2. Value Management
+### 2. Component Organization
 
-The system manages configuration values through a hierarchy of classes:
+1. **Core Configuration Manager**
 
-1. **HelmValuesConfig**
-   - Top-level configuration manager
-   - Maintains mapping of paths to PathData instances
-   - Handles backend selection based on value sensitivity
-   - Manages deployments and their configurations
+   - `HelmValuesConfig`: Central manager that coordinates between deployment configurations and value management. It maintains separate collections for deployments and path data, ensuring they remain decoupled while working together at runtime.
 
-2. **PathData**
-   - Represents a single configuration path and its properties
-   - Owns the configuration path and ensures consistency
-   - Stores metadata (description, required status, sensitivity)
-   - Manages environment-specific values through Value instances
-   - Validates path consistency between itself and its Values
-   - Delegates actual value storage to Value instances
+2. **Deployment Management Subsystem**
 
-3. **Value**
-   - Handles actual value storage and retrieval
-   - Uses appropriate backend for storage operations
-   - Maintains reference to its path and environment
+   - `Deployment`: Represents a deployment environment (e.g., dev, prod) and its associated backend configuration. Defines HOW values are stored.
+   - `ValueBackend`: Interface defining the contract for value storage backends.
+   - `SimpleValueBackend`: Default implementation for storing non-sensitive values in memory.
 
-This hierarchy ensures:
-- Clear separation of concerns
-- Consistent path handling across the system
-- Proper validation at each level
-- Flexible backend selection based on value sensitivity
+3. **Value Management Subsystem**
+   - `PathData`: Manages a configuration path's metadata and values. Contains WHAT is stored.
+   - `Value`: Represents a specific value for a path in an environment.
+   - `ConfigMetadata`: Stores metadata about a configuration path (description, required, sensitive).
 
-### 3. Command Pattern
+### 3. Key Design Points
 
-All CLI commands inherit from `BaseCommand` to ensure consistent behavior:
+1. **Separation of Concerns**
 
-```python
-class BaseCommand:
-    def execute(self) -> Any:
-        try:
-            config = self.load_config()
-            result = self.run(config)
-            self.save_config(config)
-            return result
-        except Exception as e:
-            # Handle errors, cleanup if needed
-            raise
+   - Deployment configurations (HOW) and value management (WHAT) are separate subsystems
+   - `HelmValuesConfig` coordinates between them but they don't directly interact
+   - This allows independent evolution of storage backends and value management
 
-    def load_config(self) -> HelmValuesConfig:
-        # Implement file loading with locking
-        pass
+2. **Value Storage**
 
-    def save_config(self, config: HelmValuesConfig) -> None:
-        # Implement file saving with backup
-        pass
+   - Values are stored in a flat structure using paths
+   - Each value knows its environment but isn't directly tied to a deployment
+   - The backend used for storage is determined at runtime based on deployment configuration
 
-    @abstractmethod
-    def run(self, config: HelmValuesConfig) -> Any:
-        # Subclasses implement command-specific logic
-        pass
-```
+3. **Metadata Management**
+   - Each path has associated metadata managed by `PathData`
+   - Metadata influences validation and storage behavior but doesn't affect the deployment configuration
 
-Benefits:
-- Consistent file operations
-- Built-in error handling
-- Automatic file locking
-- Configuration backup support
+### 4. Value Management
 
-#### Command Structure for Deployments and Backends
+The value management system is designed to be flexible and extensible, supporting different types of values and storage backends:
 
-The command structure for managing deployments and backends follows a nested subcommand pattern (see [ADR-011](../ADRs/011-command-structure-for-deployments.md)):
+1. **Path-Based Value Organization**
 
-```
-helm values add-deployment [name]
+   - Values are organized by paths (e.g., "app.replicas", "db.password")
+   - Each path has associated metadata (description, required, sensitive)
+   - Values for each path can be set per environment
 
-helm values add-backend [backend] --deployment=[name] [backend_options]
-  - helm values add-backend aws --deployment=prod --region=us-west-2
-  - helm values add-backend azure --deployment=prod --vault-url=https://myvault.vault.azure.net
-  - helm values add-backend gcp --deployment=prod --project-id=my-project
-  - helm values add-backend git-secret --deployment=prod
+2. **Value Storage and Retrieval**
 
-helm values add-auth [auth_type] --deployment=[name] [auth_options]
-  - helm values add-auth direct --deployment=prod --credentials='{...}'
-  - helm values add-auth env --deployment=prod --env-prefix=AWS_
-  - helm values add-auth file --deployment=prod --auth-path=~/.aws/credentials
-  - helm values add-auth managed-identity --deployment=prod
-```
+   - Values are stored using backends defined by deployments
+   - Non-sensitive values use the SimpleValueBackend
+   - Sensitive values can use specialized backends (e.g., AWS Secrets Manager)
+   - Values can be retrieved in raw form or with secret references resolved
 
-This structure:
-- Separates the concerns of creating a deployment, configuring a backend, and setting up authentication
-- Uses subcommands to provide context-specific options and help text
-- Follows a natural workflow of first creating a deployment, then adding backend and auth configuration
+3. **Validation Rules**
 
-### 4. Storage Backends
+   - Paths must be unique across the configuration
+   - Required paths must have values in all environments
+   - Values must match their expected type (string, number, boolean)
+   - Secret references must be valid and resolvable
 
-The `ValueBackend` interface defines the contract for value storage:
+4. **Security Considerations**
+   - Sensitive values are marked in metadata
+   - Different storage backends for sensitive vs non-sensitive data
+   - Secret references allow secure value resolution
 
-```python
-class ValueBackend(ABC):
-    @abstractmethod
-    def get_value(self, path: str, environment: str) -> str:
-        """Get a value from storage."""
-        pass
+### 5. Configuration File Format
 
-    @abstractmethod
-    def set_value(self, path: str, environment: str, value: str) -> None:
-        """Store a value."""
-        pass
+The configuration file format is defined by a JSON schema that ensures consistency and validation of all configuration data. The schema is available at [`schemas/v1.json`](../helm_values_manager/schemas/v1.json).
 
-    @abstractmethod
-    def validate_auth_config(self, auth_config: dict) -> None:
-        """Validate backend-specific authentication configuration."""
-        pass
-```
+Key aspects of the configuration format:
 
-Implementations:
-- SimpleValueBackend (for non-sensitive values)
-- AWS Secrets Manager Backend
-- Azure Key Vault Backend
-- Additional backends can be easily added
+1. **Core Structure**
 
-For a comprehensive overview of supported backends, authentication types, and backend configurations, see [Backends and Authentication Types](backends-and-auth.md).
+   - Version information (currently 1.0)
+   - Release name (for Helm release identification)
+   - Deployment configurations (backend and authentication settings)
+   - Value configurations (paths, metadata, and environment-specific values)
 
-### 5. Schema Validation
+2. **Validation Rules**
+   - Required fields (version, release, deployments, config)
+   - Value type constraints (string, number, boolean, null)
+   - Name format restrictions (lowercase alphanumeric with hyphens)
+   - Backend configuration requirements (backend type, auth method)
 
-The configuration system uses JSON Schema validation to ensure data integrity and consistency:
+### 6. Error Handling
 
-```mermaid
-classDiagram
-    class SchemaValidator {
-        +validate_config(data: dict) None
-        -load_schema() dict
-        -handle_validation_error(error: ValidationError) str
-    }
+The system implements comprehensive error handling at multiple levels:
 
-    class HelmValuesConfig {
-        +from_dict(data: dict) HelmValuesConfig
-        +to_dict() dict
-        +validate() None
-    }
+1. **Validation Errors**
 
-    HelmValuesConfig ..> SchemaValidator : uses
-```
+   - Schema validation using JSON Schema
+   - Path uniqueness checks
+   - Required value validation
+   - Type validation for values
+   - Deployment configuration validation
 
-#### Schema Structure
+2. **Runtime Errors**
 
-The schema (`schemas/v1.json`) defines:
-1. **Version Control**
-   - Schema version validation
-   - Backward compatibility checks
+   - Backend connection failures
+   - Authentication errors
+   - File access errors
+   - Concurrent access conflicts
 
-2. **Deployment Configuration**
-   - Backend type validation (git-secret, aws, azure, gcp)
-   - Authentication method validation
-   - Backend-specific configuration validation
+3. **Error Propagation**
+   - Low-level components raise specific exceptions
+   - Higher-level components catch and wrap errors with context
+   - Command layer translates errors to user-friendly messages
+   - All errors are logged with appropriate detail level
 
-3. **Value Configuration**
-   - Path format validation (dot notation)
-   - Required/optional field validation
-   - Sensitive value handling
-   - Environment-specific value validation
+### 7. Secret Reference Resolution
 
-#### Validation Points
+The system supports resolving secret references to their actual values:
 
-Schema validation occurs at critical points:
-1. **Configuration Loading** (`from_dict`)
-   - Validates complete configuration structure
-   - Ensures all required fields are present
-   - Validates data types and formats
+1. **Reference Format**
 
-2. **Pre-save Validation** (`to_dict`)
-   - Ensures configuration remains valid after modifications
-   - Validates new values match schema requirements
+   - Secret references use the format: `secret://<backend>/<path>`
+   - Example: `secret://aws/prod/db/password`
+   - References can be nested in string values
 
-3. **Path Addition** (`add_config_path`)
-   - Validates new path format
-   - Ensures path uniqueness
-   - Validates metadata structure
+2. **Resolution Process**
 
-#### Error Handling
+   - When `resolve=True` in get_value:
+     1. Parse the value for secret references
+     2. For each reference:
+        - Validate reference format
+        - Check backend availability
+        - Fetch actual value from backend
+     3. Replace references with actual values
+     4. Return resolved string
 
-The validation system provides:
-1. **Detailed Error Messages**
-   - Exact location of validation failures
-   - Clear explanation of validation rules
-   - Suggestions for fixing issues
-
-2. **Validation Categories**
-   - Schema version mismatches
-   - Missing required fields
-   - Invalid value formats
-   - Backend configuration errors
-   - Authentication configuration errors
-
-3. **Error Recovery**
-   - Validation before persistence
-   - Prevents invalid configurations from being saved
-   - Maintains system consistency
-
-This validation ensures:
-- Configuration integrity
-- Consistent data structure
-- Clear error reporting
-- Safe configuration updates
+3. **Security**
+   - References are stored instead of actual secrets
+   - Resolution happens only when explicitly requested
+   - Backend permissions control access to actual secrets
+   - Failed resolutions return None or raise error based on context
 
 ## Implementation Details
 
 ### 1. Configuration Structure
 
-The configuration follows the v1 schema:
+Below is an early example of the configuration structure. Note that the schema has evolved since then - for the latest schema definition, refer to [`schemas/v1.json`](../helm_values_manager/schemas/v1.json). This example is kept for historical context and to demonstrate the basic concepts:
+
 ```json
 {
-    "version": "1.0",
-    "release": "my-app",
-    "deployments": {
-        "prod": {
-            "backend": "gcp",
-            "auth": {
-                "type": "managed_identity"
-            },
-            "backend_config": {
-                "region": "us-central1"
-            }
-        }
+  "version": "1.0",
+  "release": "my-app",
+  "deployments": {
+    "prod": {
+      "backend": "gcp",
+      "auth": {
+        "type": "managed_identity"
+      },
+      "backend_config": {
+        "region": "us-central1"
+      }
+    }
+  },
+  "config": [
+    {
+      "path": "app.replicas",
+      "description": "Number of application replicas",
+      "required": true,
+      "sensitive": false,
+      "values": {
+        "dev": "3",
+        "prod": "5"
+      }
     },
-    "config": [
-        {
-            "path": "app.replicas",
-            "description": "Number of application replicas",
-            "required": true,
-            "sensitive": false,
-            "values": {
-                "dev": "3",
-                "prod": "5"
-            }
-        },
-        {
-            "path": "app.database.password",
-            "description": "Database password",
-            "required": true,
-            "sensitive": true,
-            "values": {
-                "dev": "secret://gcp-secrets/my-app/dev/db-password",
-                "prod": "secret://gcp-secrets/my-app/prod/db-password"
-            }
-        }
-    ]
+    {
+      "path": "app.database.password",
+      "description": "Database password",
+      "required": true,
+      "sensitive": true,
+      "values": {
+        "dev": "secret://gcp-secrets/my-app/dev/db-password",
+        "prod": "secret://gcp-secrets/my-app/prod/db-password"
+      }
+    }
+  ]
 }
 ```
 
 ### 2. Value Resolution Process
 
 1. Path Lookup:
+
    - O(1) lookup in `_path_map`
    - Validates path existence
    - Retrieves value metadata
@@ -371,6 +282,7 @@ The configuration follows the v1 schema:
 ### 3. Security Features
 
 1. Value Protection:
+
    - Sensitive value marking
    - Secure storage in remote backends
    - Authentication validation
@@ -385,17 +297,20 @@ The configuration follows the v1 schema:
 The logging system follows Helm plugin conventions and provides consistent output formatting:
 
 1. **HelmLogger Class**
+
    - Provides debug and error logging methods
    - Follows Helm output conventions
    - Uses stderr for all output
    - Controls debug output via HELM_DEBUG environment variable
 
 2. **Global Logger Instance**
+
    - Available via `from helm_values_manager.utils.logger import logger`
    - Ensures consistent logging across all components
    - Simplifies testing with mock support
 
 3. **Performance Features**
+
    - Uses string formatting for efficiency
    - Lazy evaluation of debug messages
    - Minimal memory overhead
@@ -408,16 +323,19 @@ The logging system follows Helm plugin conventions and provides consistent outpu
 ## Benefits of This Design
 
 1. **Separation of Concerns**
+
    - Domain logic in `HelmValuesConfig`
    - Storage logic in backends
    - Clean interface boundaries
 
 2. **Extensibility**
+
    - Easy to add new backends
    - Auth handling per backend
    - Consistent validation
 
 3. **Maintainability**
+
    - Central configuration management
    - Clear data flow
    - Type safety through domain model

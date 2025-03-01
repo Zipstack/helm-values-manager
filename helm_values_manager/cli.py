@@ -1,13 +1,12 @@
 """Command line interface for the helm-values-manager plugin."""
 
-from typing import Optional
-
 import typer
 
 from helm_values_manager.commands.add_deployment_command import AddDeploymentCommand
 from helm_values_manager.commands.add_value_config_command import AddValueConfigCommand
 from helm_values_manager.commands.init_command import InitCommand
 from helm_values_manager.commands.set_value_command import SetValueCommand
+from helm_values_manager.models.config_metadata import ConfigMetadata
 from helm_values_manager.utils.logger import HelmLogger
 
 COMMAND_INFO = "helm values-manager"
@@ -50,12 +49,14 @@ def init(
 @app.command("add-value-config")
 def add_value_config(
     path: str = typer.Option(..., "--path", "-p", help="Configuration path (e.g., 'app.replicas')"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="Description of what this configuration does"
+    description: str = typer.Option(
+        ConfigMetadata.DEFAULT_DESCRIPTION, "--description", "-d", help="Description of what this configuration does"
     ),
-    required: bool = typer.Option(False, "--required", "-r", help="Whether this configuration is required"),
+    required: bool = typer.Option(
+        ConfigMetadata.DEFAULT_REQUIRED, "--required", "-r", help="Whether this configuration is required"
+    ),
     sensitive: bool = typer.Option(
-        False,
+        ConfigMetadata.DEFAULT_SENSITIVE,
         "--sensitive",
         "-s",
         help="Whether this configuration contains sensitive data (coming in v0.2.0)",

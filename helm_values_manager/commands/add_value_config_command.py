@@ -3,6 +3,7 @@
 from typing import Optional
 
 from helm_values_manager.commands.base_command import BaseCommand
+from helm_values_manager.models.config_metadata import ConfigMetadata
 from helm_values_manager.models.helm_values_config import HelmValuesConfig
 from helm_values_manager.utils.logger import HelmLogger
 
@@ -35,9 +36,9 @@ class AddValueConfigCommand(BaseCommand):
         if not path:
             raise ValueError("Path cannot be empty")
 
-        description = kwargs.get("description")
-        required = kwargs.get("required", False)
-        sensitive = kwargs.get("sensitive", False)
+        description = kwargs.get("description", ConfigMetadata.DEFAULT_DESCRIPTION)
+        required = kwargs.get("required", ConfigMetadata.DEFAULT_REQUIRED)
+        sensitive = kwargs.get("sensitive", ConfigMetadata.DEFAULT_SENSITIVE)
 
         try:
             # Add the new configuration path

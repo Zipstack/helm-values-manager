@@ -10,11 +10,17 @@
         },
         "release": {
             "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+            "maxLength": 53,
             "description": "Name of the Helm release"
         },
         "deployments": {
             "type": "object",
             "description": "Map of deployment names to their configurations",
+            "propertyNames": {
+                "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+                "description": "Deployment names must be lowercase alphanumeric with hyphens, cannot start/end with hyphen"
+            },
             "additionalProperties": {
                 "type": "object",
                 "required": ["backend", "auth"],
