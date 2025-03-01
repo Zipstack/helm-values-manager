@@ -40,7 +40,7 @@ Helm Values Manager solves these challenges by providing a structured way to def
 ## Installation
 
 ```bash
-helm plugin install https://github.com/zipstack/helm-values-manager
+helm plugin install https://github.com/Zipstack/helm-values-manager
 ```
 
 ## Quick Start
