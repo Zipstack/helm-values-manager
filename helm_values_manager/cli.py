@@ -49,7 +49,7 @@ def init(
 def add_value_config(
     path: str = typer.Option(..., "--path", "-p", help="Configuration path (e.g., 'app.replicas')"),
     description: str = typer.Option(
-        "Description of the configuration", "--description", "-d", help="Description of what this configuration does"
+        "", "--description", "-d", help="Description of what this configuration does"
     ),
     required: bool = typer.Option(False, "--required", "-r", help="Whether this configuration is required"),
     sensitive: bool = typer.Option(
