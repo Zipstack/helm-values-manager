@@ -661,19 +661,19 @@ sequenceDiagram
 Each diagram shows:
 - The exact CLI command being executed
 - All components involved in processing the command
-- Data flow between components
-- Validation steps
-- File system operations
-- Success/error handling
+- The sequence of operations and data flow
+- Error handling and validation steps
+- Lock management for concurrent access
 
-The main CLI commands covered are:
-1. `init` - Initialize new configuration
-2. `add-value-config` - Define a new value configuration with metadata
+## Commands Covered
+
+1. `init` - Initialize a new helm-values configuration
+2. `add-value-config` - Add a new value configuration with metadata
 3. `add-deployment` - Add a new deployment configuration
-4. `set-value` - Set a value for a specific path and environment
-5. `get-value` - Retrieve a value for a specific path and environment
-6. `validate` - Validate the entire configuration
-7. `generate` - Generate values.yaml for a specific environment
+4. `add-backend` - Add a backend to a deployment
+5. `add-auth` - Add authentication to a deployment
+6. `get-value` - Get a value for a specific path and environment
+7. `set-value` - Set a value for a specific path and environment
 8. `list-values` - List all values for a specific environment
 9. `list-deployments` - List all deployments
 10. `remove-deployment` - Remove a deployment configuration
