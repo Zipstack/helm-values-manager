@@ -140,7 +140,8 @@ class HelmValuesConfig:
         Validate the configuration.
 
         Raises:
-            ValueError: If validation fails.
+            ValueError: If validation fails (e.g., missing release name)
+            ValidationError: If JSON schema validation fails
         """
         if not self.release:
             raise ValueError("Release name is required")

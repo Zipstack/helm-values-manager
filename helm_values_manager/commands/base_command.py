@@ -73,7 +73,8 @@ class BaseCommand:
 
         Raises:
             IOError: If unable to write to the file.
-            ValueError: If the configuration is invalid.
+            ValueError: If the configuration is invalid (e.g., missing release name).
+            ValidationError: If JSON schema validation fails.
         """
         # Validate the config before saving
         config.validate()
