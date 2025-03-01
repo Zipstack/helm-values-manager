@@ -15,7 +15,7 @@ from helm_values_manager.utils.logger import HelmLogger
 class PathData:
     """Manages metadata and values for a configuration path."""
 
-    def __init__(self, path: str, metadata: Dict[str, Any] = {}):
+    def __init__(self, path: str, metadata: Optional[Dict[str, Any]] = None):
         """
         Initialize PathData with a path and metadata.
 
@@ -24,6 +24,8 @@ class PathData:
             metadata: Dictionary containing metadata for the path
         """
         self.path = path
+        if metadata is None:
+            metadata = {}
         self._metadata = ConfigMetadata(
             description=metadata.get("description", ConfigMetadata.DEFAULT_DESCRIPTION),
             required=metadata.get("required", ConfigMetadata.DEFAULT_REQUIRED),

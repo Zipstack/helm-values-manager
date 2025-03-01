@@ -30,11 +30,12 @@ class HelmLogger:
             msg: Message with optional string format placeholders
             args: Values to substitute in the message
         """
-        debug_val = os.environ.get("HELM_DEBUG", "").lower()
-        if debug_val and debug_val not in ("0", "false"):
-            if args:
-                msg = msg % args
-            print("[debug] %s" % msg, file=sys.stderr)
+        debug_val = os.environ.get("HELM_DEBUG", "false").lower()
+        if debug_val in ("0", "false"):
+            return
+        if args:
+            msg = msg % args
+        print("[debug] %s" % msg, file=sys.stderr)
 
     @staticmethod
     def error(msg: str, *args: Any) -> None:
