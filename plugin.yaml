@@ -1,5 +1,5 @@
 name: "values-manager"
-version: "0.1.0rc1"
+version: "0.1.0"
 usage: "Manage Helm values and secrets across environments"
 description: |-
   This plugin helps you manage Helm values and secrets across different environments

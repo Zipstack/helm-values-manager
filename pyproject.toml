@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helm-values-manager"
-version = "0.1.0rc1"
+version = "0.1.0"
 description = "A Helm plugin to manage values and secrets across environments"
 readme = "README.md"
 requires-python = ">=3.9"
