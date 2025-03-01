@@ -57,7 +57,7 @@ class ValueBackend(ABC):
 
         valid_types = ["env", "file", "direct", "managed_identity"]
         if auth_config["type"] not in valid_types:
-            raise ValueError(f"Invalid auth type: {auth_config['type']}. " f"Must be one of: {', '.join(valid_types)}")
+            raise ValueError(f"Invalid auth type: {auth_config['type']}. Must be one of: {', '.join(valid_types)}")
 
     @abstractmethod
     def get_value(self, path: str, environment: str, resolve: bool = False) -> Union[str, int, float, bool, None]:

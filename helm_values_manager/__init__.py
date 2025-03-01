@@ -1,4 +1,6 @@
-"""A Helm plugin to manage values and secrets across environments."""
+"""Helm Values Manager package."""
 
-__version__ = "0.1.0"
+from importlib.metadata import version
+
+__version__ = version("helm-values-manager")
 __description__ = "A Helm plugin to manage values and secrets across environments."

@@ -10,7 +10,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant FileSystem
 
-    User->>CLI: helm values init
+    User->>CLI: helm values-manager init --release test-release
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -52,7 +52,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant PathValidator
 
-    User->>CLI: helm values add-value-config --path=app.replicas --required
+    User->>CLI: helm values-manager add-value-config --path app.replicas --description "Number of replicas" --required
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -90,7 +90,7 @@ sequenceDiagram
     participant BaseCommand
     participant HelmValuesConfig
 
-    User->>CLI: helm values add-deployment prod
+    User->>CLI: helm values-manager add-deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -129,7 +129,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant ValueBackend
 
-    User->>CLI: helm values add-backend aws --deployment=prod --region=us-west-2
+    User->>CLI: helm values-manager add-backend aws --deployment prod --region us-west-2
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -173,7 +173,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant ValueBackend
 
-    User->>CLI: helm values add-auth direct --deployment=prod --credentials='{...}'
+    User->>CLI: helm values-manager add-auth direct --deployment prod --credentials '{...}'
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -219,7 +219,7 @@ sequenceDiagram
     participant ValueBackend
     participant Storage
 
-    User->>CLI: helm values set-value path value --env=prod
+    User->>CLI: helm values-manager set-value --path app.replicas --value 3 --deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -279,7 +279,7 @@ sequenceDiagram
     participant ValueBackend
     participant Storage
 
-    User->>CLI: helm values get-value path --env=prod
+    User->>CLI: helm values-manager get-value --path app.replicas --deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -337,7 +337,7 @@ sequenceDiagram
     participant ValueBackend
     participant Validator
 
-    User->>CLI: helm values validate
+    User->>CLI: helm values-manager validate
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -388,7 +388,7 @@ sequenceDiagram
     participant ValueBackend
     participant Generator
 
-    User->>CLI: helm values generate --env=prod
+    User->>CLI: helm values-manager generate --deployment prod --output ./
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -442,7 +442,7 @@ sequenceDiagram
     participant Storage
     participant TableFormatter
 
-    User->>CLI: helm values list-values --env=prod
+    User->>CLI: helm values-manager list-values --deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -490,7 +490,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant TableFormatter
 
-    User->>CLI: helm values list-deployments
+    User->>CLI: helm values-manager list-deployments
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -526,7 +526,7 @@ sequenceDiagram
     participant ValueBackend
     participant Storage
 
-    User->>CLI: helm values remove-deployment prod
+    User->>CLI: helm values-manager remove-deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -576,7 +576,7 @@ sequenceDiagram
     participant ValueBackend
     participant Storage
 
-    User->>CLI: helm values remove-value path --env=prod
+    User->>CLI: helm values-manager remove-value --path app.replicas --deployment prod
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -624,7 +624,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant Value
 
-    User->>CLI: helm values remove-value-config --path=app.replicas
+    User->>CLI: helm values-manager remove-value-config --path app.replicas
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -659,6 +659,7 @@ sequenceDiagram
 ```
 
 Each diagram shows:
+
 - The exact CLI command being executed
 - All components involved in processing the command
 - The sequence of operations and data flow
@@ -679,3 +680,4 @@ Each diagram shows:
 10. `remove-deployment` - Remove a deployment configuration
 11. `remove-value` - Remove a value for a specific path and environment
 12. `remove-value-config` - Remove a value configuration and its associated values
+13. `generate` - Generate a values file for a specific deployment

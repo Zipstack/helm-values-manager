@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 from typer.testing import CliRunner
 
@@ -306,3 +307,158 @@ def test_set_value_no_config(tmp_path):
     result = runner.invoke(app, ["set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"])
     assert result.exit_code == 1
     assert "Configuration file helm-values.json not found" in result.stdout
+
+
+def test_generate_command(tmp_path):
+    """Test generate command."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+
+    # Add a deployment
+    runner.invoke(app, ["add-deployment", "dev"], catch_exceptions=False)
+
+    # Add value configs
+    runner.invoke(
+        app,
+        ["add-value-config", "--path", "app.replicas", "--description", "Number of replicas"],
+        catch_exceptions=False,
+    )
+    runner.invoke(
+        app,
+        ["add-value-config", "--path", "app.image.repository", "--description", "Image repository"],
+        catch_exceptions=False,
+    )
+
+    # Set values
+    runner.invoke(
+        app, ["set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"], catch_exceptions=False
+    )
+    runner.invoke(
+        app,
+        ["set-value", "--path", "app.image.repository", "--deployment", "dev", "--value", "myapp"],
+        catch_exceptions=False,
+    )
+
+    # Generate values file
+    result = runner.invoke(app, ["generate", "--deployment", "dev"], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert "Successfully generated values file for deployment 'dev'" in result.stdout
+
+    # Verify the values file exists
+    values_file = Path("dev.test-release.values.yaml")
+    assert values_file.exists(), "Values file should exist"
+
+
+def test_generate_with_output_path(tmp_path):
+    """Test generate command with custom output path."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Create a custom output directory
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+
+    # Initialize the config
+    runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+
+    # Add a deployment
+    runner.invoke(app, ["add-deployment", "prod"], catch_exceptions=False)
+
+    # Add value configs and set values
+    runner.invoke(
+        app,
+        ["add-value-config", "--path", "app.replicas", "--description", "Number of replicas"],
+        catch_exceptions=False,
+    )
+    runner.invoke(
+        app, ["set-value", "--path", "app.replicas", "--deployment", "prod", "--value", "5"], catch_exceptions=False
+    )
+
+    # Generate values file with custom output path
+    result = runner.invoke(
+        app, ["generate", "--deployment", "prod", "--output", str(output_dir)], catch_exceptions=False
+    )
+    assert result.exit_code == 0
+    assert "Successfully generated values file for deployment 'prod'" in result.stdout
+
+    # Verify the values file exists in the custom output directory
+    values_file = output_dir / "prod.test-release.values.yaml"
+    assert values_file.exists(), "Values file should exist in the custom output directory"
+
+
+def test_generate_nonexistent_deployment(tmp_path):
+    """Test generate command with a nonexistent deployment."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+
+    # Try to generate values for a nonexistent deployment
+    result = runner.invoke(app, ["generate", "--deployment", "nonexistent"])
+    assert result.exit_code == 1
+    assert "Failed to generate values file" in result.stdout
+    assert "Deployment 'nonexistent' not found" in result.stdout
+
+
+def test_generate_no_config(tmp_path):
+    """Test generate command without initializing config first."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Try to generate values without initializing
+    result = runner.invoke(app, ["generate", "--deployment", "dev"])
+    assert result.exit_code == 1
+    assert "Failed to generate values file" in result.stdout
+    assert "Configuration file" in result.stdout
+
+
+def test_generate_command_with_missing_required_value(tmp_path):
+    """Test generate command with missing required values."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+
+    # Add a deployment
+    runner.invoke(app, ["add-deployment", "dev"], catch_exceptions=False)
+
+    # Add a required value config but don't set a value for it
+    runner.invoke(
+        app,
+        ["add-value-config", "--path", "app.required", "--description", "Required value", "--required"],
+        catch_exceptions=False,
+    )
+
+    # Try to generate values without setting the required value
+    result = runner.invoke(app, ["generate", "--deployment", "dev"])
+    assert result.exit_code == 1
+    assert "Failed to generate values file" in result.stdout
+    assert "Missing required values" in result.stdout
+    assert "app.required" in result.stdout
+
+
+def test_generate_command_error_handling(tmp_path):
+    """Test generate command error handling."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    runner.invoke(app, ["init", "--release", "test-release"], catch_exceptions=False)
+
+    # Add a deployment
+    runner.invoke(app, ["add-deployment", "dev"], catch_exceptions=False)
+
+    # Mock the GenerateCommand to raise an exception
+    with patch("helm_values_manager.cli.GenerateCommand") as mock_command:
+        mock_instance = mock_command.return_value
+        mock_instance.execute.side_effect = ValueError("Test error")
+
+        # Try to generate values
+        result = runner.invoke(app, ["generate", "--deployment", "dev"])
+        assert result.exit_code == 1
+        assert "Failed to generate values file: Test error" in result.stdout

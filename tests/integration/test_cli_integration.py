@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 def run_helm_command(command: list[str]) -> tuple[str, str, int]:
@@ -325,7 +326,7 @@ def test_set_value_nonexistent_path(plugin_install, tmp_path):
         ["values-manager", "init", "--release", "test-release"]
     )
     assert init_returncode == 0
-    assert Path("helm-values.json").exists()
+    assert Path(work_dir, "helm-values.json").exists()
 
     # Add a deployment
     add_deployment_stdout, add_deployment_stderr, add_deployment_returncode = run_helm_command(
@@ -375,3 +376,190 @@ def test_set_value_nonexistent_deployment(plugin_install, tmp_path):
     )
     assert returncode == 1
     assert "Deployment 'nonexistent' not found" in stderr
+
+
+def test_generate_help_command(plugin_install):
+    """Test that the generate help command works and shows expected output."""
+    stdout, stderr, returncode = run_helm_command(["values-manager", "generate", "--help"])
+    assert returncode == 0, f"Failed to run help command: {stderr}"
+    assert "Generate a values file for a specific deployment" in stdout, "Help text should include command description"
+    assert "--deployment" in stdout, "Help text should include deployment option"
+    assert "--output" in stdout, "Help text should include output option"
+
+
+def test_generate_command(plugin_install, tmp_path):
+    """Test that the generate command works correctly."""
+    # Create a test directory
+    test_dir = tmp_path / "test_generate_command"
+    test_dir.mkdir()
+    os.chdir(test_dir)
+
+    # Initialize the plugin
+    stdout, stderr, returncode = run_helm_command(["values-manager", "init", "--release", "test-release"])
+    assert returncode == 0, f"Failed to initialize plugin: {stderr}"
+
+    # Add a deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 0, f"Failed to add deployment: {stderr}"
+
+    # Add value configs
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", "app.replicas", "--description", "Number of replicas"]
+    )
+    assert returncode == 0, f"Failed to add value config: {stderr}"
+
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", "app.image.repository", "--description", "Image repository"]
+    )
+    assert returncode == 0, f"Failed to add value config: {stderr}"
+
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", "app.image.tag", "--description", "Image tag"]
+    )
+    assert returncode == 0, f"Failed to add value config: {stderr}"
+
+    # Set values
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"]
+    )
+    assert returncode == 0, f"Failed to set value: {stderr}"
+
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.image.repository", "--deployment", "dev", "--value", "myapp"]
+    )
+    assert returncode == 0, f"Failed to set value: {stderr}"
+
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.image.tag", "--deployment", "dev", "--value", "latest"]
+    )
+    assert returncode == 0, f"Failed to set value: {stderr}"
+
+    # Generate values file
+    stdout, stderr, returncode = run_helm_command(["values-manager", "generate", "--deployment", "dev"])
+    assert returncode == 0, f"Failed to generate values file: {stderr}"
+    assert "Successfully generated values file for deployment 'dev'" in stdout, f"Unexpected output: {stdout}"
+
+    # Verify the values file exists
+    values_file = test_dir / "dev.test-release.values.yaml"
+    assert values_file.exists(), "Values file should exist"
+
+    # Verify the content of the values file
+    with open(values_file, "r") as f:
+        values = yaml.safe_load(f)
+        assert values["app"]["replicas"] == "3", "Values file should contain correct replicas value"
+        assert values["app"]["image"]["repository"] == "myapp", "Values file should contain correct repository value"
+        assert values["app"]["image"]["tag"] == "latest", "Values file should contain correct tag value"
+
+
+def test_generate_with_output_path(plugin_install, tmp_path):
+    """Test that the generate command works with a custom output path."""
+    # Create a test directory
+    test_dir = tmp_path / "test_generate_with_output_path"
+    test_dir.mkdir()
+    os.chdir(test_dir)
+
+    # Create a custom output directory
+    output_dir = test_dir / "output"
+    output_dir.mkdir()
+
+    # Initialize the plugin
+    stdout, stderr, returncode = run_helm_command(["values-manager", "init", "--release", "test-release"])
+    assert returncode == 0, f"Failed to initialize plugin: {stderr}"
+
+    # Add a deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "prod"])
+    assert returncode == 0, f"Failed to add deployment: {stderr}"
+
+    # Add value configs
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "add-value-config", "--path", "app.replicas", "--description", "Number of replicas"]
+    )
+    assert returncode == 0, f"Failed to add value config: {stderr}"
+
+    # Set values
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "set-value", "--path", "app.replicas", "--deployment", "prod", "--value", "5"]
+    )
+    assert returncode == 0, f"Failed to set value: {stderr}"
+
+    # Generate values file with custom output path
+    stdout, stderr, returncode = run_helm_command(
+        ["values-manager", "generate", "--deployment", "prod", "--output", str(output_dir)]
+    )
+    assert returncode == 0, f"Failed to generate values file: {stderr}"
+    assert "Successfully generated values file for deployment 'prod'" in stdout, f"Unexpected output: {stdout}"
+
+    # Verify the values file exists in the custom output directory
+    values_file = output_dir / "prod.test-release.values.yaml"
+    assert values_file.exists(), "Values file should exist in the custom output directory"
+
+    # Verify the content of the values file
+    with open(values_file, "r") as f:
+        values = yaml.safe_load(f)
+        assert values["app"]["replicas"] == "5", "Values file should contain correct replicas value"
+
+
+def test_generate_nonexistent_deployment(plugin_install, tmp_path):
+    """Test that generating values for a nonexistent deployment fails with the correct error message."""
+    # Create a test directory
+    test_dir = tmp_path / "test_generate_nonexistent_deployment"
+    test_dir.mkdir()
+    os.chdir(test_dir)
+
+    # Initialize the plugin
+    stdout, stderr, returncode = run_helm_command(["values-manager", "init", "--release", "test-release"])
+    assert returncode == 0, f"Failed to initialize plugin: {stderr}"
+
+    # Try to generate values for a nonexistent deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "generate", "--deployment", "nonexistent"])
+    assert returncode != 0, "Expected command to fail but it succeeded"
+    assert "Deployment 'nonexistent' not found" in stderr, f"Unexpected error message: {stderr}"
+
+
+def test_generate_no_config(plugin_install, tmp_path):
+    """Test that generating values without initializing fails with the correct error message."""
+    # Create a test directory
+    test_dir = tmp_path / "test_generate_no_config"
+    test_dir.mkdir()
+    os.chdir(test_dir)
+
+    # Try to generate values without initializing
+    stdout, stderr, returncode = run_helm_command(["values-manager", "generate", "--deployment", "dev"])
+    assert returncode != 0, "Expected command to fail but it succeeded"
+    assert "Configuration file helm-values.json not found" in stderr, f"Unexpected error message: {stderr}"
+
+
+def test_generate_with_missing_required_value(plugin_install, tmp_path):
+    """Test generate command with missing required values."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    stdout, stderr, returncode = run_helm_command(["values-manager", "init", "--release", "test-release"])
+    assert returncode == 0, f"Failed to initialize config: {stderr}"
+
+    # Add a deployment
+    stdout, stderr, returncode = run_helm_command(["values-manager", "add-deployment", "dev"])
+    assert returncode == 0, f"Failed to add deployment: {stderr}"
+
+    # Add a required value config but don't set a value for it
+    stdout, stderr, returncode = run_helm_command(
+        [
+            "values-manager",
+            "add-value-config",
+            "--path",
+            "app.required",
+            "--description",
+            "Required value",
+            "--required",
+        ]
+    )
+    assert returncode == 0, f"Failed to add value config: {stderr}"
+
+    # Try to generate values without setting the required value
+    stdout, stderr, returncode = run_helm_command(["values-manager", "generate", "--deployment", "dev"])
+
+    # Verify the command failed
+    assert returncode != 0, "Expected command to fail but it succeeded"
+    assert "Missing required values for deployment 'dev'" in stderr
+    assert "app.required" in stderr

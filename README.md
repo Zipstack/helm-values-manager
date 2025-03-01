@@ -11,6 +11,18 @@
 
 🚀 A powerful Helm plugin for managing values and secrets across multiple environments.
 
+## The Problem
+
+Managing Helm values across multiple environments (dev, staging, prod) is challenging:
+
+- 🔀 **Values Sprawl**: Values spread across multiple files become hard to track
+- 🔍 **Configuration Discovery**: Difficult to know what values can be configured
+- ❌ **Missing Values**: No validation for required values before deployment
+- 🔐 **Secret Management**: Sensitive data mixed with regular values
+- 📝 **Documentation**: Values often lack descriptions and context
+
+Helm Values Manager solves these challenges by providing a structured way to define, validate, and manage values across environments, with built-in support for documentation and secret handling.
+
 ## Features
 
 - 🔐 **Secure Secret Management**: Safely handle sensitive data
@@ -33,18 +45,52 @@ helm plugin install https://github.com/zipstack/helm-values-manager
 
 ## Quick Start
 
-1. Initialize a new configuration:
+1. Initialize a new configuration for your Helm release:
 
 ```bash
-helm values-manager init
+helm values-manager init --release my-app
 ```
 
-This creates:
+2. Add value configurations with descriptions and validation:
 
-- `values-manager.yaml` configuration file
-- `values` directory with environment files (`dev.yaml`, `staging.yaml`, `prod.yaml`)
+```bash
+# Add a required configuration
+helm values-manager add-value-config --path app.replicas --description "Number of application replicas" --required
 
-2. View available commands:
+# Add an optional configuration
+helm values-manager add-value-config --path app.logLevel --description "Application log level (debug/info/warn/error)"
+```
+
+3. Add deployments for different environments:
+
+```bash
+helm values-manager add-deployment dev
+helm values-manager add-deployment prod
+```
+
+4. Set values for each deployment:
+
+```bash
+# Set values for dev
+helm values-manager set-value --path app.replicas --value 1 --deployment dev
+helm values-manager set-value --path app.logLevel --value debug --deployment dev
+
+# Set values for prod
+helm values-manager set-value --path app.replicas --value 3 --deployment prod
+helm values-manager set-value --path app.logLevel --value info --deployment prod
+```
+
+5. Generate values files for deployments:
+
+```bash
+# Generate dev values
+helm values-manager generate --deployment dev --output ./dev
+
+# Generate prod values
+helm values-manager generate --deployment prod --output ./prod
+```
+
+6. View available commands and options:
 
 ```bash
 helm values-manager --help
