@@ -37,6 +37,18 @@ def test_path_data_init(path_data):
     assert path_data.metadata.sensitive is False
 
 
+def test_path_data_init_no_metadata():
+    """Test PathData initialization with no metadata."""
+    path = "test.path"
+    path_data = PathData(path)
+
+    assert path_data.path == path
+    assert path_data.metadata.description == ""
+    assert path_data.metadata.required is False
+    assert path_data.metadata.sensitive is False
+    assert len(path_data._values) == 0
+
+
 def test_set_value(path_data, mock_value):
     """Test setting a value."""
     path_data.set_value("test", mock_value)
