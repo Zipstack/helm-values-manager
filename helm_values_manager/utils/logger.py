@@ -15,7 +15,7 @@ class HelmLogger:
     Logger class that follows Helm plugin conventions.
 
     This logger:
-    1. Writes debug messages only when HELM_DEBUG is set
+    1. Writes debug messages only when HELM_DEBUG is set and not "0" or "false"
     2. Writes all messages to stderr (Helm convention)
     3. Uses string formatting for better performance
     4. Provides consistent error and debug message formatting
@@ -24,13 +24,14 @@ class HelmLogger:
     @staticmethod
     def debug(msg: str, *args: Any) -> None:
         """
-        Print debug message if HELM_DEBUG is set.
+        Print debug message if HELM_DEBUG is set and not "0" or "false".
 
         Args:
             msg: Message with optional string format placeholders
             args: Values to substitute in the message
         """
-        if os.environ.get("HELM_DEBUG"):
+        debug_val = os.environ.get("HELM_DEBUG", "").lower()
+        if debug_val and debug_val not in ("0", "false"):
             if args:
                 msg = msg % args
             print("[debug] %s" % msg, file=sys.stderr)

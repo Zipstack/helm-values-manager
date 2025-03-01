@@ -34,6 +34,28 @@ def test_debug_with_helm_debug_disabled(logger):
         assert stderr.getvalue() == ""
 
 
+def test_debug_with_helm_debug_zero(logger):
+    """Test debug output when HELM_DEBUG=0."""
+    stderr = StringIO()
+    with (
+        mock.patch.dict(os.environ, {"HELM_DEBUG": "0"}),
+        mock.patch("helm_values_manager.utils.logger.sys.stderr", stderr),
+    ):
+        logger.debug("Test message")
+        assert stderr.getvalue() == ""
+
+
+def test_debug_with_helm_debug_false(logger):
+    """Test debug output when HELM_DEBUG=false."""
+    stderr = StringIO()
+    with (
+        mock.patch.dict(os.environ, {"HELM_DEBUG": "false"}),
+        mock.patch("helm_values_manager.utils.logger.sys.stderr", stderr),
+    ):
+        logger.debug("Test message")
+        assert stderr.getvalue() == ""
+
+
 def test_debug_with_formatting(logger):
     """Test debug output with string formatting."""
     stderr = StringIO()
