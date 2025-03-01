@@ -236,6 +236,7 @@ def test_generate_with_none_value(command, mock_config_file):
     """Test generating values file when a value is None."""
     deployment = "dev"
     expected_filename = f"{deployment}.test-release.values.yaml"
+    expected_filepath = f"./{expected_filename}"  # Account for ./ prefix
 
     # Create a mock config with a None value
     config = HelmValuesConfig()
@@ -281,10 +282,12 @@ def test_generate_with_none_value(command, mock_config_file):
             assert expected_filename in result
 
             # Verify file operations
-            mock_file.assert_called_once_with(expected_filename, "w")
-            mock_yaml_dump.assert_called_once()
+            mock_file.assert_called_once_with(expected_filepath, "w", encoding="utf-8")
 
             # Verify yaml.dump was called with the correct data
+            mock_yaml_dump.assert_called_once()
+
+            # Verify the data structure is correct and the None value was skipped
             dumped_data = mock_yaml_dump.call_args[0][0]
 
             # Check that the data structure is correct and the None value was skipped
