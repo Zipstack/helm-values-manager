@@ -223,3 +223,86 @@ def test_add_deployment_no_config(tmp_path):
     result = runner.invoke(app, ["add-deployment", "dev"], catch_exceptions=False)
     assert result.exit_code == 1
     assert "Configuration file helm-values.json not found" in result.stdout
+
+
+def test_set_value_command(tmp_path):
+    """Test set-value command."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    init_result = runner.invoke(app, ["init", "--release", "test-release"])
+    assert init_result.exit_code == 0
+
+    # Add a deployment
+    add_deployment_result = runner.invoke(app, ["add-deployment", "dev"])
+    assert add_deployment_result.exit_code == 0
+
+    # Add a value config
+    add_value_config_result = runner.invoke(
+        app, ["add-value-config", "--path", "app.replicas", "--description", "Number of replicas", "--required"]
+    )
+    assert add_value_config_result.exit_code == 0
+
+    # Set a value
+    result = runner.invoke(app, ["set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"])
+    assert result.exit_code == 0
+    assert "Successfully set value for path 'app.replicas' in deployment 'dev'" in result.stdout
+
+    # Verify the value was set by checking the config file
+    with open("helm-values.json", "r") as f:
+        config = json.load(f)
+
+    # The value itself is stored in the backend, not directly in the config file
+    # But we can verify that the path exists in the config
+    assert "app.replicas" in [path["path"] for path in config["config"]]
+
+
+def test_set_value_nonexistent_path(tmp_path):
+    """Test set-value command with nonexistent path."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    init_result = runner.invoke(app, ["init", "--release", "test-release"])
+    assert init_result.exit_code == 0
+
+    # Add a deployment
+    add_deployment_result = runner.invoke(app, ["add-deployment", "dev"])
+    assert add_deployment_result.exit_code == 0
+
+    # Set a value for a nonexistent path
+    result = runner.invoke(app, ["set-value", "--path", "nonexistent.path", "--deployment", "dev", "--value", "3"])
+    assert result.exit_code == 1
+    assert "Path nonexistent.path not found" in result.stdout
+
+
+def test_set_value_nonexistent_deployment(tmp_path):
+    """Test set-value command with nonexistent deployment."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    # Initialize the config
+    init_result = runner.invoke(app, ["init", "--release", "test-release"])
+    assert init_result.exit_code == 0
+
+    # Add a value config
+    add_value_config_result = runner.invoke(
+        app, ["add-value-config", "--path", "app.replicas", "--description", "Number of replicas", "--required"]
+    )
+    assert add_value_config_result.exit_code == 0
+
+    # Set a value for a nonexistent deployment
+    result = runner.invoke(app, ["set-value", "--path", "app.replicas", "--deployment", "nonexistent", "--value", "3"])
+    assert result.exit_code == 1
+    assert "Deployment 'nonexistent' not found" in result.stdout
+
+
+def test_set_value_no_config(tmp_path):
+    """Test set-value command without initializing config first."""
+    # Change to temp directory
+    os.chdir(tmp_path)
+
+    result = runner.invoke(app, ["set-value", "--path", "app.replicas", "--deployment", "dev", "--value", "3"])
+    assert result.exit_code == 1
+    assert "Configuration file helm-values.json not found" in result.stdout

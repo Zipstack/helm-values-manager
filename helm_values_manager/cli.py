@@ -7,6 +7,7 @@ import typer
 from helm_values_manager.commands.add_deployment_command import AddDeploymentCommand
 from helm_values_manager.commands.add_value_config_command import AddValueConfigCommand
 from helm_values_manager.commands.init_command import InitCommand
+from helm_values_manager.commands.set_value_command import SetValueCommand
 from helm_values_manager.utils.logger import HelmLogger
 
 COMMAND_INFO = "helm values-manager"
@@ -94,6 +95,32 @@ def add_deployment(
         typer.echo(result)
     except Exception as e:
         HelmLogger.error("Failed to add deployment: %s", str(e))
+        raise typer.Exit(code=1) from e
+
+
+@app.command("set-value")
+def set_value(
+    path: str = typer.Option(..., "--path", "-p", help="Configuration path (e.g., 'app.replicas')"),
+    deployment: str = typer.Option(
+        ..., "--deployment", "-d", help="Deployment to set the value for (e.g., 'dev', 'prod')"
+    ),
+    value: str = typer.Option(..., "--value", "-v", help="Value to set"),
+):
+    """Set a value for a specific path and deployment."""
+    try:
+        command = SetValueCommand()
+
+        # Create kwargs for command execution
+        kwargs = {
+            "path": path,
+            "environment": deployment,  # Map deployment to environment for API compatibility
+            "value": value,
+        }
+
+        result = command.execute(**kwargs)
+        typer.echo(result)
+    except Exception as e:
+        HelmLogger.error("Failed to set value: %s", str(e))
         raise typer.Exit(code=1) from e
 
 
