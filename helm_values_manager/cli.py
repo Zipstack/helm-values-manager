@@ -1,7 +1,5 @@
 """Command line interface for the helm-values-manager plugin."""
 
-from typing import Optional
-
 import typer
 
 from helm_values_manager.commands.add_deployment_command import AddDeploymentCommand
@@ -50,8 +48,8 @@ def init(
 @app.command("add-value-config")
 def add_value_config(
     path: str = typer.Option(..., "--path", "-p", help="Configuration path (e.g., 'app.replicas')"),
-    description: Optional[str] = typer.Option(
-        None, "--description", "-d", help="Description of what this configuration does"
+    description: str = typer.Option(
+        "Description of the configuration", "--description", "-d", help="Description of what this configuration does"
     ),
     required: bool = typer.Option(False, "--required", "-r", help="Whether this configuration is required"),
     sensitive: bool = typer.Option(

@@ -72,7 +72,7 @@ def test_default_values():
     }
     config = HelmValuesConfig.from_dict(config_data)
     path_data = config._path_map["app.config.key1"]
-    assert path_data.metadata.description is None
+    assert path_data.metadata.description == ""
     assert path_data.metadata.required is False
     assert path_data.metadata.sensitive is False
 

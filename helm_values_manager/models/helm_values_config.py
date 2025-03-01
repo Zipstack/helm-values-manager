@@ -9,6 +9,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 
 from helm_values_manager.backends.simple import SimpleValueBackend
+from helm_values_manager.models.config_metadata import ConfigMetadata
 from helm_values_manager.models.path_data import PathData
 from helm_values_manager.models.value import Value
 from helm_values_manager.utils.logger import HelmLogger
@@ -65,7 +66,11 @@ class HelmValuesConfig:
             raise
 
     def add_config_path(
-        self, path: str, description: Optional[str] = None, required: bool = False, sensitive: bool = False
+        self,
+        path: str,
+        description: str = ConfigMetadata.DEFAULT_DESCRIPTION,
+        required: bool = ConfigMetadata.DEFAULT_REQUIRED,
+        sensitive: bool = ConfigMetadata.DEFAULT_SENSITIVE,
     ) -> None:
         """
         Add a new configuration path.
@@ -191,9 +196,9 @@ class HelmValuesConfig:
         for config_item in data.get("config", []):
             path = config_item["path"]
             metadata = {
-                "description": config_item.get("description"),
-                "required": config_item.get("required", False),
-                "sensitive": config_item.get("sensitive", False),
+                "description": config_item.get("description", ConfigMetadata.DEFAULT_DESCRIPTION),
+                "required": config_item.get("required", ConfigMetadata.DEFAULT_REQUIRED),
+                "sensitive": config_item.get("sensitive", ConfigMetadata.DEFAULT_SENSITIVE),
             }
             path_data = PathData(path, metadata)
             config._path_map[path] = path_data

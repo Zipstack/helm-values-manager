@@ -1,7 +1,7 @@
 """Tests for the set-value command."""
 
 import json
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
@@ -133,3 +133,16 @@ def test_set_value_none_config(command):
     with patch.object(command, "load_config", return_value=None):
         with pytest.raises(ValueError, match="Configuration not loaded"):
             command.execute(path="app.replicas", environment="dev", value="3")
+
+
+def test_set_value_general_error():
+    """Test that general errors are properly handled."""
+    command = SetValueCommand()
+    config = MagicMock()
+    config.deployments = {"dev": MagicMock()}  # Mock deployment exists
+    config.set_value.side_effect = Exception("Unexpected error")
+
+    with pytest.raises(Exception) as exc_info:
+        command.run(config, path="app.replicas", environment="dev", value="3")
+
+    assert str(exc_info.value) == "Unexpected error"
