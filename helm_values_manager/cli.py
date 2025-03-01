@@ -4,6 +4,7 @@ import typer
 
 from helm_values_manager.commands.add_deployment_command import AddDeploymentCommand
 from helm_values_manager.commands.add_value_config_command import AddValueConfigCommand
+from helm_values_manager.commands.generate_command import GenerateCommand
 from helm_values_manager.commands.init_command import InitCommand
 from helm_values_manager.commands.set_value_command import SetValueCommand
 from helm_values_manager.models.config_metadata import ConfigMetadata
@@ -122,6 +123,25 @@ def set_value(
         typer.echo(result)
     except Exception as e:
         HelmLogger.error("Failed to set value: %s", str(e))
+        raise typer.Exit(code=1) from e
+
+
+@app.command("generate")
+def generate(
+    deployment: str = typer.Option(
+        ..., "--deployment", "-d", help="Deployment to generate values for (e.g., 'dev', 'prod')"
+    ),
+    output_path: str = typer.Option(
+        ".", "--output", "-o", help="Directory to output the values file to (default: current directory)"
+    ),
+):
+    """Generate a values file for a specific deployment."""
+    try:
+        command = GenerateCommand()
+        result = command.execute(deployment=deployment, output_path=output_path)
+        typer.echo(result)
+    except Exception as e:
+        HelmLogger.error("Failed to generate values file: %s", str(e))
         raise typer.Exit(code=1) from e
 
 
