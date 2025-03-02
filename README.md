@@ -89,20 +89,23 @@ helm values-manager generate --deployment dev --output ./dev
 # Generate prod values
 helm values-manager generate --deployment prod --output ./prod
 ```
+
 This will create environment-specific values files:
 
 `dev/dev.my-app.values.yaml`:
+
 ```yaml
 app:
   logLevel: debug
-  replicas: '1'
+  replicas: "1"
 ```
 
 `prod/prod.my-app.values.yaml`:
+
 ```yaml
 app:
   logLevel: info
-  replicas: '3'
+  replicas: "3"
 ```
 
 6. View available commands and options:
@@ -110,6 +113,8 @@ app:
 ```bash
 helm values-manager --help
 ```
+
+For detailed information about all available commands and their options, see our [Command Reference](docs/Commands/README.md).
 
 ## Development
 
