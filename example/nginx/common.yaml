@@ -1,0 +1,11 @@
+nginx:
+  image:
+    registry: docker.io
+    repository: bitnami/nginx
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  serverBlock: ""
+
+  metrics:
+    enabled: false

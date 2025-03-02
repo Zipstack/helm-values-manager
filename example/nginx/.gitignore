@@ -1,0 +1,13 @@
+# Generated value files
+*.nginx-app.values.yaml
+
+# Generated manifest files
+*-manifests.yaml
+
+# Helm Values Manager files
+helm-values.json
+.helm-values.lock
+
+# Temporary files that might be created during development
+*.tmp
+*.bak
