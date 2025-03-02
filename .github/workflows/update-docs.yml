@@ -1,0 +1,80 @@
+name: Update Command Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'helm_values_manager/cli.py'
+      - 'helm_values_manager/commands/**'
+  pull_request:
+    paths:
+      - 'helm_values_manager/cli.py'
+      - 'helm_values_manager/commands/**'
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Generate command documentation
+      run: python .github/workflows/generate_docs.py
+
+    - name: Check for changes
+      id: check_changes
+      run: |
+        git diff --quiet docs/Commands/README.md || echo "changes=true" >> $GITHUB_OUTPUT
+
+    - name: Get branch name
+      id: branch_name
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "branch=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+        else
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        fi
+
+    # Commit directly to branch if not main
+    - name: Commit changes to branch
+      if: |
+        steps.check_changes.outputs.changes == 'true' &&
+        steps.branch_name.outputs.branch != 'main'
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add docs/Commands/README.md
+        git commit -m "docs: Update command documentation [skip ci]"
+        git push
+
+    # Create PR only for main branch
+    - name: Create Pull Request
+      if: |
+        steps.check_changes.outputs.changes == 'true' &&
+        steps.branch_name.outputs.branch == 'main'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        commit-message: 'docs: Update command documentation'
+        title: 'docs: Update command documentation'
+        body: |
+          This PR updates the command documentation to reflect the latest changes in the CLI.
+
+          Changes were automatically generated based on the current CLI implementation.
+        branch: update-command-docs
+        delete-branch: true
+        labels: documentation
+        base: main
