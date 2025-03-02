@@ -184,7 +184,8 @@ Each command supports the `--help` flag for detailed information:
 ```bash
 helm values-manager --help
 helm values-manager <command> --help
-```"""
+```
+"""
     )
 
     return "".join(docs)

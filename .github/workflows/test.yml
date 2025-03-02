@@ -3,8 +3,30 @@ name: Tests
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'helm_values_manager/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'plugin.yaml'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'pyproject.toml'
+      - 'tox.ini'
+      - 'requirements*.txt'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'helm_values_manager/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'plugin.yaml'
+      - 'setup.py'
+      - 'setup.cfg'
+      - 'pyproject.toml'
+      - 'tox.ini'
+      - 'requirements*.txt'
+      - '.github/workflows/test.yml'
 
 jobs:
   test:
