@@ -1,4 +1,4 @@
-"""Command line interface for the helm-values-manager plugin."""
+"""Command line interface for the helm-values-manager plugin. resst."""
 
 import typer
 
