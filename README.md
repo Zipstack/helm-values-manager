@@ -27,7 +27,6 @@ Helm Values Manager solves these challenges by providing a structured way to def
 
 - 🔐 **Secure Secret Management**: Safely handle sensitive data
 - 🌍 **Multi-Environment Support**: Manage values for dev, staging, prod, and more
-- 🔄 **Value Inheritance**: Define common values and override per environment
 - 🔍 **Secret Detection**: Automatically identify and protect sensitive data
 - 📦 **Easy Integration**: Works seamlessly with existing Helm workflows
 
