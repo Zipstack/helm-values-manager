@@ -20,8 +20,8 @@ class ValueBackend(ABC):
     - Values are strings that may be encrypted depending on the backend
     """
 
-    def __init__(self, auth_config: Dict[str, str]) -> None:
-        """Initialize the backend with authentication configuration.
+    def __init__(self, auth_config: Dict[str, str], backend_config: Dict[str, str] = None) -> None:
+        """Initialize the backend with authentication and backend configuration.
 
         Args:
             auth_config: Authentication configuration for the backend.
@@ -30,12 +30,16 @@ class ValueBackend(ABC):
                 - 'file': Use configuration file
                 - 'direct': Use direct credentials
                 - 'managed_identity': Use cloud managed identity
+            backend_config: Optional backend-specific configuration.
+                This can contain additional settings specific to the backend implementation.
+                Defaults to None, which will be treated as an empty dict.
 
         Raises:
             ValueError: If the auth_config is invalid
         """
         self._validate_auth_config(auth_config)
         self.backend_type = self.__class__.__name__.lower().replace("backend", "")
+        self._backend_config = backend_config or {}
 
     def _validate_auth_config(self, auth_config: Dict[str, str]) -> None:
         """Validate the authentication configuration.
