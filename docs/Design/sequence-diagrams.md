@@ -1,5 +1,12 @@
 # Helm Values Manager - CLI Command Sequence Diagrams
 
+## Revision History
+
+| Date       | Description                                       | ADR Reference                                                   |
+| ---------- | ------------------------------------------------- | --------------------------------------------------------------- |
+| 2025-02-15 | Initial sequence diagrams                         | -                                                               |
+| 2025-03-07 | Added backend-specific command registration flows | [ADR-012](../ADRs/012-backend-specific-command-registration.md) |
+
 ## 1. Init Command Flow
 
 ```mermaid
@@ -119,7 +126,116 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 3.1 Add Backend Command Flow (Future Implementation)
+## 4. Backend-Specific Command Registration Flows
+
+### 4.1 Backend Registration Flow
+
+```mermaid
+sequenceDiagram
+    participant BackendModule
+    participant RegisterBackendDecorator
+    participant BackendRegistry
+    participant BackendClass
+
+    BackendModule->>RegisterBackendDecorator: @register_backend("gcp", "GCP Secret Manager", options)
+    activate RegisterBackendDecorator
+
+    RegisterBackendDecorator->>BackendClass: Decorate class
+    RegisterBackendDecorator->>BackendClass: Set BACKEND_TYPE
+    RegisterBackendDecorator->>BackendClass: Set BACKEND_DESCRIPTION
+
+    RegisterBackendDecorator->>BackendRegistry: register("gcp", BackendClass, options)
+    activate BackendRegistry
+
+    BackendRegistry->>BackendRegistry: Store backend class
+    BackendRegistry->>BackendRegistry: Store backend options
+    BackendRegistry-->>RegisterBackendDecorator: Success
+    deactivate BackendRegistry
+
+    RegisterBackendDecorator-->>BackendModule: Return decorated class
+    deactivate RegisterBackendDecorator
+```
+
+### 4.2 Command Generation Flow
+
+```mermaid
+sequenceDiagram
+    participant CLI
+    participant CommandGenerator
+    participant BackendRegistry
+    participant CliApp
+
+    CLI->>CommandGenerator: register_commands_with_app(app)
+    activate CommandGenerator
+
+    CommandGenerator->>BackendRegistry: get_all_backend_types()
+    activate BackendRegistry
+    BackendRegistry-->>CommandGenerator: ["aws", "gcp", "azure"]
+    deactivate BackendRegistry
+
+    loop For each backend type
+        CommandGenerator->>BackendRegistry: get_backend_options(backend_type)
+        activate BackendRegistry
+        BackendRegistry-->>CommandGenerator: [CliOption1, CliOption2, ...]
+        deactivate BackendRegistry
+
+        CommandGenerator->>CommandGenerator: create_backend_command(backend_type, options)
+        CommandGenerator->>CliApp: add_command(command)
+    end
+
+    CommandGenerator-->>CLI: Success
+    deactivate CommandGenerator
+```
+
+### 4.3 Backend-Specific Command Execution Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant BackendCommand
+    participant BackendRegistry
+    participant DeploymentManager
+    participant FileSystem
+
+    User->>CLI: helm values add-backend-gcp --deployment=prod --service-account='{...}'
+    activate CLI
+
+    CLI->>BackendCommand: execute()
+    activate BackendCommand
+
+    BackendCommand->>BackendCommand: Parse and validate arguments
+    BackendCommand->>BackendRegistry: get_backend_class("gcp")
+    activate BackendRegistry
+    BackendRegistry-->>BackendCommand: GCPSecretManagerBackend
+    deactivate BackendRegistry
+
+    BackendCommand->>DeploymentManager: deployment_exists("prod")
+    activate DeploymentManager
+    DeploymentManager-->>BackendCommand: True
+    deactivate DeploymentManager
+
+    BackendCommand->>BackendCommand: Create backend config
+    BackendCommand->>DeploymentManager: update_deployment_backend("prod", "gcp", config)
+    activate DeploymentManager
+
+    DeploymentManager->>DeploymentManager: Update deployment
+    DeploymentManager->>FileSystem: Save config
+    activate FileSystem
+    FileSystem-->>DeploymentManager: Success
+    deactivate FileSystem
+
+    DeploymentManager-->>BackendCommand: Success
+    deactivate DeploymentManager
+
+    BackendCommand-->>CLI: Success
+    deactivate BackendCommand
+
+    CLI-->>User: "Added GCP backend to deployment 'prod'"
+    deactivate CLI
+```
+
+## 5. Set Value Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -129,7 +245,7 @@ sequenceDiagram
     participant HelmValuesConfig
     participant ValueBackend
 
-    User->>CLI: helm values-manager add-backend aws --deployment prod --region us-west-2
+    User->>CLI: helm values-manager set-value app.replicas --deployment prod --value 3
     activate CLI
 
     CLI->>BaseCommand: execute()
@@ -137,16 +253,16 @@ sequenceDiagram
 
     BaseCommand->>BaseCommand: acquire_lock()
     BaseCommand->>BaseCommand: load_config()
-    BaseCommand->>HelmValuesConfig: add_backend_to_deployment(name, backend, backend_config)
+    BaseCommand->>HelmValuesConfig: set_value(path, deployment, value)
     activate HelmValuesConfig
 
-    HelmValuesConfig->>HelmValuesConfig: validate_deployment_exists(name)
-    HelmValuesConfig->>ValueBackend: validate_backend_config(backend, backend_config)
+    HelmValuesConfig->>HelmValuesConfig: validate_path_exists(path)
+    HelmValuesConfig->>HelmValuesConfig: validate_deployment_exists(deployment)
+    HelmValuesConfig->>ValueBackend: set_value(path, value)
     activate ValueBackend
-    ValueBackend-->>HelmValuesConfig: validation result
+    ValueBackend-->>HelmValuesConfig: success
     deactivate ValueBackend
 
-    HelmValuesConfig->>HelmValuesConfig: update_deployment_backend(name, backend, backend_config)
     HelmValuesConfig-->>BaseCommand: success
     deactivate HelmValuesConfig
 
@@ -159,115 +275,11 @@ sequenceDiagram
     BaseCommand-->>CLI: success
     deactivate BaseCommand
 
-    CLI-->>User: "Added aws backend to deployment 'prod'"
+    CLI-->>User: "Set value for 'app.replicas' in deployment 'prod'"
     deactivate CLI
 ```
 
-## 3.2 Add Auth Command Flow (Future Implementation)
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant BaseCommand
-    participant HelmValuesConfig
-    participant ValueBackend
-
-    User->>CLI: helm values-manager add-auth direct --deployment prod --credentials '{...}'
-    activate CLI
-
-    CLI->>BaseCommand: execute()
-    activate BaseCommand
-
-    BaseCommand->>BaseCommand: acquire_lock()
-    BaseCommand->>BaseCommand: load_config()
-    BaseCommand->>HelmValuesConfig: add_auth_to_deployment(name, auth_type, auth_config)
-    activate HelmValuesConfig
-
-    HelmValuesConfig->>HelmValuesConfig: validate_deployment_exists(name)
-    HelmValuesConfig->>ValueBackend: validate_auth_config(auth_type, auth_config)
-    activate ValueBackend
-    ValueBackend-->>HelmValuesConfig: validation result
-    deactivate ValueBackend
-
-    HelmValuesConfig->>HelmValuesConfig: update_deployment_auth(name, auth_type, auth_config)
-    HelmValuesConfig-->>BaseCommand: success
-    deactivate HelmValuesConfig
-
-    BaseCommand->>FileSystem: write_config_file()
-    activate FileSystem
-    FileSystem-->>BaseCommand: success
-    deactivate FileSystem
-
-    BaseCommand->>BaseCommand: release_lock()
-    BaseCommand-->>CLI: success
-    deactivate BaseCommand
-
-    CLI-->>User: "Added direct authentication to deployment 'prod'"
-    deactivate CLI
-```
-
-## 4. Set Value Command Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant BaseCommand
-    participant HelmValuesConfig
-    participant Value
-    participant ValueBackend
-    participant Storage
-
-    User->>CLI: helm values-manager set-value --path app.replicas --value 3 --deployment prod
-    activate CLI
-
-    CLI->>BaseCommand: execute()
-    activate BaseCommand
-
-    BaseCommand->>BaseCommand: acquire_lock()
-    BaseCommand->>BaseCommand: load_config()
-    BaseCommand->>HelmValuesConfig: set_value(path, env, value)
-    activate HelmValuesConfig
-
-    HelmValuesConfig->>HelmValuesConfig: find_config_item(path)
-    HelmValuesConfig->>HelmValuesConfig: get_backend_for_config(config_item, env)
-
-    alt Sensitive Value
-        HelmValuesConfig->>HelmValuesConfig: get_deployment(env)
-        HelmValuesConfig->>ValueBackend: create_secure_backend(deployment)
-    else Non-Sensitive Value
-        HelmValuesConfig->>ValueBackend: create_simple_backend()
-    end
-
-    HelmValuesConfig->>Value: create(path, env, backend)
-    activate Value
-    Value->>ValueBackend: set_value(path, env, value)
-    activate ValueBackend
-
-    alt Secure Backend
-        ValueBackend->>Storage: write(key, value)
-        Storage-->>ValueBackend: success
-    end
-
-    ValueBackend-->>Value: success
-    deactivate ValueBackend
-    Value-->>HelmValuesConfig: success
-    deactivate Value
-
-    HelmValuesConfig-->>BaseCommand: success
-    deactivate HelmValuesConfig
-
-    BaseCommand->>FileSystem: write_config_file()
-    BaseCommand->>BaseCommand: release_lock()
-    BaseCommand-->>CLI: success
-    deactivate BaseCommand
-
-    CLI-->>User: "Value set successfully"
-    deactivate CLI
-```
-
-## 5. Get Value Command Flow
+## 6. Get Value Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -326,7 +338,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 6. Validate Command Flow
+## 7. Validate Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -376,7 +388,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 7. Generate Command Flow
+## 8. Generate Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -429,7 +441,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 8. List Values Command Flow
+## 9. List Values Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -480,7 +492,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 9. List Deployments Command Flow
+## 10. List Deployments Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -515,7 +527,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 10. Remove Deployment Command Flow
+## 11. Remove Deployment Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -564,7 +576,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 11. Remove Value Command Flow
+## 12. Remove Value Command Flow
 
 ```mermaid
 sequenceDiagram
@@ -614,7 +626,7 @@ sequenceDiagram
     deactivate CLI
 ```
 
-## 12. Remove Value Config Command Flow
+## 13. Remove Value Config Command Flow
 
 ```mermaid
 sequenceDiagram

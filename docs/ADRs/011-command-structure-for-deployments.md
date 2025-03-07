@@ -4,7 +4,7 @@ Date: 2025-02-28
 
 ## Status
 
-Accepted
+Superseded by [ADR-012](012-backend-specific-command-registration.md)
 
 ## Context
 

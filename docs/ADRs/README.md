@@ -80,8 +80,15 @@ For new ADRs, use the [ADR template](adr-template.md) as a starting point.
 - **Dependencies**: ADR-001
 
 ### [ADR-011: Command Structure for Deployments and Backends](011-command-structure-for-deployments.md)
-- **Status**: Accepted
+- **Status**: Superseded by ADR-012
 - **Context**: Need for intuitive command structure for managing deployments with multiple backends and auth types
-- **Decision**: Implement nested subcommand structure for deployment, backend, and auth configuration
+- **Decision**: Implement nested subcommand structure for deployment, backend, and auth management
 - **Impact**: Improves user experience, discoverability, and maintainability
 - **Dependencies**: ADR-001
+
+### [ADR-012: Backend-Specific Command Registration](012-backend-specific-command-registration.md)
+- **Status**: Proposed
+- **Context**: Need for more intuitive backend-specific command options
+- **Decision**: Implement backend-specific command registration with auto-generated commands
+- **Impact**: Improves UX by showing only relevant options for each backend type
+- **Dependencies**: ADR-011

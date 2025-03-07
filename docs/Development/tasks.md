@@ -97,17 +97,14 @@
     - [x] Add basic deployment validation
     - [x] Add backend validation
     - [x] Add deployment registration
-  - [ ] Implement generate command
-    - [ ] Add template generation
-    - [ ] Add basic value substitution
+  - [x] Implement generate command
+    - [x] Add template generation
+    - [x] Add basic value substitution
 
 - [ ] Value Management Commands
   - [x] Implement set-value command
     - [x] Add basic path validation
     - [x] Add value storage
-  - [ ] Implement generate command
-    - [ ] Add template generation
-    - [ ] Add basic value substitution
 
 #### Phase 2: Enhanced Safety & Management
 - [x] Enhanced Command Infrastructure
@@ -240,9 +237,19 @@
   - [x] Add tests for add-deployment command
   - [x] Add support for NO_BACKEND and NO_AUTH options
   - [x] Add unit and integration tests for CLI add-deployment command
-  - [ ] Implement add-backend commands (future)
-  - [ ] Implement add-auth commands (future)
   - [x] Update documentation with new command structure
+
+- [ ] Implement backend-specific command registration (ADR-012)
+  - [x] Create ADR for backend-specific command registration
+  - [x] Update design documents with new architecture
+  - [ ] Implement BackendRegistry class
+  - [ ] Create CliOption class for option management
+  - [ ] Implement register_backend decorator
+  - [ ] Update ValueBackend base class with type and description metadata
+  - [ ] Implement CommandGenerator for dynamic command creation
+  - [ ] Update existing backends to use registration pattern
+  - [ ] Add unit tests for backend registration
+  - [ ] Add integration tests for backend commands
 - [ ] Implement value management commands
   - [ ] Implement add-value command
   - [ ] Add validation to prevent adding sensitive values to NO_BACKEND deployments

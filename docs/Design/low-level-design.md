@@ -1,5 +1,13 @@
 # Low Level Design - Helm Values Manager
 
+## Revision History
+
+| Date | Description | ADR Reference |
+|------|-------------|--------------|
+| 2025-02-15 | Initial design | - |
+| 2025-03-07 | Added Backend Registry System | [ADR-012](../ADRs/012-backend-specific-command-registration.md) |
+
+
 ## Core Components
 
 ### 1. Domain Model
@@ -219,6 +227,142 @@ The system supports resolving secret references to their actual values:
    - Resolution happens only when explicitly requested
    - Backend permissions control access to actual secrets
    - Failed resolutions return None or raise error based on context
+
+## Backend Registry System
+
+The Backend Registry System enables dynamic registration and discovery of backend types and their CLI options. This system was added as part of [ADR-012](../ADRs/012-backend-specific-command-registration.md) to improve the user experience by providing backend-specific commands.
+
+### 1. Component Organization
+
+```mermaid
+classDiagram
+    %% Backend Registry System
+    class BackendRegistry {
+        <<static>>
+        -Dict[str, Type] _backends
+        -Dict[str, List[CliOption]] _options
+        +register(backend_type, backend_class, options)
+        +get_backend_class(backend_type)
+        +get_backend_options(backend_type)
+        +get_all_backend_types()
+    }
+
+    class CliOption {
+        +str name
+        +str help
+        +bool required
+        +Any type
+        +Any default
+    }
+
+    class ValueBackend {
+        <<interface>>
+        +BACKEND_TYPE: ClassVar[str]
+        +BACKEND_DESCRIPTION: ClassVar[str]
+        +get_value(path, environment)*
+        +set_value(path, environment, value)*
+        +delete_value(path, environment)*
+    }
+
+    class BackendImplementation {
+        +BACKEND_TYPE: str
+        +BACKEND_DESCRIPTION: str
+        +cli_options: List[CliOption]
+        +get_value(path, environment)
+        +set_value(path, environment, value)
+        +delete_value(path, environment)
+    }
+
+    %% Relationships
+    BackendRegistry "1" o-- "*" CliOption : manages
+    BackendRegistry "1" o-- "*" ValueBackend : registers
+    BackendImplementation ..|> ValueBackend : implements
+```
+
+### 2. Command Generation System
+
+The Command Generation System dynamically creates backend-specific commands based on the registered backends:
+
+```mermaid
+classDiagram
+    %% Command Generation System
+    class CommandGenerator {
+        +create_backend_command(backend_type, options)
+        +register_commands_with_app(app)
+    }
+
+    class BackendCommand {
+        -str backend_type
+        -List[CliOption] options
+        +callback(**kwargs)
+    }
+
+    class BackendRegistry {
+        <<static>>
+        -Dict[str, Type] _backends
+        -Dict[str, List[CliOption]] _options
+        +register(backend_type, backend_class, options)
+        +get_backend_class(backend_type)
+        +get_backend_options(backend_type)
+        +get_all_backend_types()
+    }
+
+    class CliApp {
+        +add_command(command)
+    }
+
+    %% Relationships
+    CommandGenerator ..> BackendCommand : creates
+    CommandGenerator ..> BackendRegistry : uses
+    CommandGenerator ..> CliApp : registers with
+    BackendCommand ..> BackendRegistry : uses
+```
+
+### 3. Backend Registration Process
+
+1. Backend classes use the `@register_backend` decorator to register themselves with the `BackendRegistry`
+2. The decorator adds class variables and registers CLI options specific to the backend
+3. At application startup, all backend modules are imported, triggering registration
+4. The `CommandGenerator` queries the registry for all registered backends
+5. For each backend, a specific command is created with typed options
+6. Commands are registered with the main CLI application
+
+### 4. Integration with Existing Components
+
+The `ValueBackend` interface is extended with class variables for type and description:
+
+```python
+class ValueBackend:
+    """Base class for all value backends."""
+    BACKEND_TYPE: ClassVar[str] = ""
+    BACKEND_DESCRIPTION: ClassVar[str] = ""
+
+    def __init__(self, auth_config: Dict[str, Any]) -> None:
+        """Initialize the backend with authentication configuration."""
+        self._auth_config = auth_config
+        self._backend_config = {}
+        self._validate_auth_config(auth_config)
+```
+
+Backend implementations use the registration decorator and define CLI options:
+
+```python
+@register_backend(
+    backend_type="gcp",
+    description="Google Cloud Secret Manager backend",
+    options=[
+        CliOption("--service-account", help="Service account JSON credentials", required=True),
+        CliOption("--prefix", help="Prefix for secret names", required=False)
+    ]
+)
+class GCPSecretManagerBackend(ValueBackend):
+    """Backend for storing sensitive values in Google Cloud Secret Manager."""
+
+    def __init__(self, auth_config: Dict[str, str]) -> None:
+        """Initialize the GCP Secret Manager backend."""
+        super().__init__(auth_config)
+        # Implementation details...
+```
 
 ## Implementation Details
 
