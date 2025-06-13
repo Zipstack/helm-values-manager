@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
-from helm_values_manager.models import Schema
+from helm_values_manager.models import Schema, SecretReference, ValuesFile
 
 
 def load_schema(schema_path: str = "schema.json") -> Optional[Schema]:
@@ -35,3 +35,38 @@ def validate_path_format(path: str) -> bool:
     
     parts = path.split(".")
     return all(part.replace("-", "").replace("_", "").isalnum() for part in parts if part)
+
+
+def get_values_file_path(env: str, values_path: Optional[str] = None) -> str:
+    """Get the path to the values file for an environment."""
+    if values_path:
+        return values_path
+    return f"values-{env}.json"
+
+
+def load_values(env: str, values_path: Optional[str] = None) -> Dict[str, Any]:
+    """Load values for an environment."""
+    path = Path(get_values_file_path(env, values_path))
+    if not path.exists():
+        return {}
+    
+    with open(path) as f:
+        data = json.load(f)
+    
+    return data
+
+
+def save_values(values: Dict[str, Any], env: str, values_path: Optional[str] = None) -> None:
+    """Save values for an environment."""
+    path = get_values_file_path(env, values_path)
+    with open(path, "w") as f:
+        json.dump(values, f, indent=2)
+
+
+def is_secret_reference(value: Any) -> bool:
+    """Check if a value is a secret reference."""
+    return (
+        isinstance(value, dict) 
+        and value.get("type") == "env" 
+        and "name" in value
+    )

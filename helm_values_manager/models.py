@@ -1,6 +1,6 @@
-from typing import Any, Literal, Optional
+from typing import Any, Dict, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 ValueType = Literal["string", "number", "boolean", "array", "object"]
@@ -19,3 +19,17 @@ class SchemaValue(BaseModel):
 class Schema(BaseModel):
     version: str = Field(default="1.0", description="Schema version")
     values: list[SchemaValue] = Field(default_factory=list, description="List of value definitions")
+
+
+class SecretReference(BaseModel):
+    type: Literal["env"] = Field("env", description="Secret type (only 'env' supported)")
+    name: str = Field(..., description="Environment variable name")
+
+
+# Type for a value in the values file - can be a regular value or a secret reference
+ValueEntry = Union[str, int, float, bool, list, dict, SecretReference]
+
+
+class ValuesFile(RootModel[Dict[str, Any]]):
+    """Represents a values file for an environment."""
+    root: Dict[str, Any] = Field(default_factory=dict)
