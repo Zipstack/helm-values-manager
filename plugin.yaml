@@ -1,0 +1,21 @@
+name: "values-manager"
+version: "0.1.0"
+usage: "Manage Helm value configurations across multiple environments"
+description: "A schema-driven tool for managing Helm values with environment-specific configurations and secret management"
+command: "$HELM_PLUGIN_DIR/bin/helm-values-manager"
+platformCommand:
+  - os: linux
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-values-manager"
+  - os: darwin
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-values-manager"
+  - os: darwin
+    arch: arm64
+    command: "$HELM_PLUGIN_DIR/bin/helm-values-manager"
+  - os: windows
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-values-manager.exe"
+hooks:
+  install: "$HELM_PLUGIN_DIR/install.sh"
+  update: "$HELM_PLUGIN_DIR/install.sh"
