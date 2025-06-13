@@ -37,8 +37,8 @@ Implement `helm values-manager init`:
 ```
 **Status**: Completed - Implemented with --force flag, tests passing
 
-### Phase 2: Schema Management
-#### Task 2.1: `schema add`
+### Phase 2: Schema Management ✅
+#### Task 2.1: `schema add` ✅
 ```prompt
 Create interactive `schema add`:
 1. Prompt for fields:
@@ -52,8 +52,9 @@ Create interactive `schema add`:
 2. Validate path format (alphanumeric + dots)
 3. Append to schema.json
 ```
+**Status**: Completed - Interactive prompts with full validation
 
-#### Task 2.2: Schema Query Commands
+#### Task 2.2: Schema Query Commands ✅
 ```prompt
 Implement:
 - `schema list`: Tabular output (key, path, type, required)
@@ -61,14 +62,16 @@ Implement:
 - Both support --schema flag
 - Handle missing keys gracefully
 ```
+**Status**: Completed - List shows colored status, get shows detailed info
 
-#### Task 2.3: Schema Modification
+#### Task 2.3: Schema Modification ✅
 ```prompt
 Build:
 - `schema update <key>`: Interactive update (pre-fill current values)
 - `schema remove <key>`: Confirm removal + check values references
 - Prevent removal if key exists in any values file
 ```
+**Status**: Completed - Update preserves values, remove has --force flag
 
 ### Phase 3: Values Management
 #### Task 3.1: `values set`
