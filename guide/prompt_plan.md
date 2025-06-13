@@ -73,8 +73,8 @@ Build:
 ```
 **Status**: Completed - Update preserves values, remove has --force flag
 
-### Phase 3: Values Management
-#### Task 3.1: `values set`
+### Phase 3: Values Management ✅
+#### Task 3.1: `values set` ✅
 ```prompt
 Implement `values set <key> <value> --env <env>`:
 1. Parse <value> based on schema type (JSON for arrays/objects)
@@ -82,8 +82,9 @@ Implement `values set <key> <value> --env <env>`:
 3. Create values-<env>.json if missing
 4. Support --values flag for custom path
 ```
+**Status**: Completed - Full type validation and environment isolation
 
-#### Task 3.2: `values set-secret`
+#### Task 3.2: `values set-secret` ✅
 ```prompt
 Create interactive `values set-secret <key> --env <env>`:
 1. Validate key is sensitive in schema
@@ -91,14 +92,16 @@ Create interactive `values set-secret <key> --env <env>`:
 3. Store as {"type": "env", "name": "VAR"}
 4. Validate env var exists (warning only)
 ```
+**Status**: Completed - Interactive prompts with env var validation
 
-#### Task 3.3: Values Query/Delete
+#### Task 3.3: Values Query/Delete ✅
 ```prompt
 Implement:
 - `values get <key> --env <env>`: Print value (mask secrets)
 - `values list --env <env>`: Tabular output (key, value_preview)
 - `values remove <key> --env <env>`: Remove key with confirmation
 ```
+**Status**: Completed - Rich table output with secret masking
 
 ### Phase 4: Core Engine
 #### Task 4.1: Validator
