@@ -399,3 +399,190 @@ def test_validate_secret_reference():
     is_valid, error = validate_secret_reference(not_secret)
     assert not is_valid
     assert "Not a valid secret reference" in error
+
+
+def test_values_set_existing_value_confirmation(tmp_path):
+    """Test confirmation when overwriting existing value."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set initial value
+        result = runner.invoke(app, ["values", "set", "app-name", "initial-app", "--env", "dev"])
+        assert result.exit_code == 0
+        
+        # Try to overwrite without force, but cancel
+        result = runner.invoke(app, ["values", "set", "app-name", "new-app", "--env", "dev"], input="n\n")
+        
+        assert result.exit_code == 0
+        assert "already set to: initial-app" in result.output
+        assert "Value already exists. Overwrite?" in result.output
+        assert "Cancelled" in result.output
+        
+        # Verify value wasn't changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["app-name"] == "initial-app"
+
+
+def test_values_set_existing_value_overwrite(tmp_path):
+    """Test overwriting existing value with confirmation."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set initial value
+        result = runner.invoke(app, ["values", "set", "app-name", "initial-app", "--env", "dev"])
+        assert result.exit_code == 0
+        
+        # Overwrite with confirmation
+        result = runner.invoke(app, ["values", "set", "app-name", "new-app", "--env", "dev"], input="y\n")
+        
+        assert result.exit_code == 0
+        assert "already set to: initial-app" in result.output
+        assert "Set 'app-name' = new-app" in result.output
+        
+        # Verify value was changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["app-name"] == "new-app"
+
+
+def test_values_set_existing_value_force(tmp_path):
+    """Test overwriting existing value with --force flag."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set initial value
+        result = runner.invoke(app, ["values", "set", "app-name", "initial-app", "--env", "dev"])
+        assert result.exit_code == 0
+        
+        # Overwrite with force (no confirmation)
+        result = runner.invoke(app, ["values", "set", "app-name", "forced-app", "--env", "dev", "--force"])
+        
+        assert result.exit_code == 0
+        assert "already set" not in result.output  # No confirmation shown
+        assert "Set 'app-name' = forced-app" in result.output
+        
+        # Verify value was changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["app-name"] == "forced-app"
+
+
+def test_values_set_secret_existing_confirmation(tmp_path, monkeypatch):
+    """Test confirmation when overwriting existing secret."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set environment variables
+        monkeypatch.setenv("OLD_PASSWORD", "old_secret")
+        monkeypatch.setenv("NEW_PASSWORD", "new_secret")
+        
+        # Set initial secret
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nOLD_PASSWORD\n")
+        assert result.exit_code == 0
+        
+        # Try to overwrite but cancel
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nNEW_PASSWORD\nn\n")
+        
+        assert result.exit_code == 0
+        assert "already set as env:OLD_PASSWORD" in result.output
+        assert "Overwrite?" in result.output
+        assert "Cancelled" in result.output
+        
+        # Verify secret wasn't changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["db-password"]["name"] == "OLD_PASSWORD"
+
+
+def test_values_set_secret_existing_overwrite(tmp_path, monkeypatch):
+    """Test overwriting existing secret with confirmation."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set environment variables
+        monkeypatch.setenv("OLD_PASSWORD", "old_secret")
+        monkeypatch.setenv("NEW_PASSWORD", "new_secret")
+        
+        # Set initial secret
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nOLD_PASSWORD\n")
+        assert result.exit_code == 0
+        
+        # Overwrite with confirmation
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nNEW_PASSWORD\ny\n")
+        
+        assert result.exit_code == 0
+        assert "already set as env:OLD_PASSWORD" in result.output
+        assert "Set secret 'db-password'" in result.output
+        
+        # Verify secret was changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["db-password"]["name"] == "NEW_PASSWORD"
+
+
+def test_values_set_secret_existing_force(tmp_path, monkeypatch):
+    """Test overwriting existing secret with --force flag."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set environment variables
+        monkeypatch.setenv("OLD_PASSWORD", "old_secret")
+        monkeypatch.setenv("NEW_PASSWORD", "new_secret")
+        
+        # Set initial secret
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nOLD_PASSWORD\n")
+        assert result.exit_code == 0
+        
+        # Overwrite with force (no confirmation)
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev", "--force"], input="1\nNEW_PASSWORD\n")
+        
+        assert result.exit_code == 0
+        assert "already set" not in result.output  # No confirmation shown
+        assert "Set secret 'db-password'" in result.output
+        
+        # Verify secret was changed
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["db-password"]["name"] == "NEW_PASSWORD"
+
+
+def test_values_set_secret_overwrite_regular_value_warning(tmp_path, monkeypatch):
+    """Test warning when overwriting regular value with secret."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set environment variable
+        monkeypatch.setenv("SECRET_PASSWORD", "secret")
+        
+        # Set initial regular value (even though it should be secret)
+        values = {"db-password": "plain-text-password"}
+        with open("values-dev.json", "w") as f:
+            json.dump(values, f)
+        
+        # Try to overwrite with secret
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nSECRET_PASSWORD\ny\n")
+        
+        assert result.exit_code == 0
+        assert "currently set to: plain-text-password" in result.output
+        assert "This will overwrite a non-secret value with a secret" in result.output
+        
+        # Verify it was changed to secret
+        with open("values-dev.json") as f:
+            values = json.load(f)
+        assert values["db-password"]["type"] == "env"
+        assert values["db-password"]["name"] == "SECRET_PASSWORD"

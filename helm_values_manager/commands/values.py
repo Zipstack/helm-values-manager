@@ -33,6 +33,7 @@ def set_command(
     env: str = typer.Option(..., "--env", "-e", help="Environment name"),
     schema_path: str = typer.Option("schema.json", "--schema", help="Path to schema file"),
     values_path: Optional[str] = typer.Option(None, "--values", help="Path to values file"),
+    force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation for existing values"),
 ):
     """Set a value for a specific environment."""
     # Load schema
@@ -62,6 +63,26 @@ def set_command(
     # Load existing values
     values = load_values(env, values_path)
     
+    # Check if key already exists and confirm overwrite
+    if key in values and not force:
+        current_value = values[key]
+        
+        # Display current value
+        if is_secret_reference(current_value):
+            console.print(f"Key '{key}' already set as [red][SECRET - {current_value['name']}][/red]")
+        else:
+            if isinstance(current_value, (dict, list)):
+                display_value = json.dumps(current_value)
+                if len(display_value) > 50:
+                    display_value = display_value[:47] + "..."
+            else:
+                display_value = str(current_value)
+            console.print(f"Key '{key}' already set to: {display_value}")
+        
+        if not Confirm.ask("Value already exists. Overwrite?", default=False):
+            console.print("Cancelled")
+            raise typer.Exit(0)
+    
     # Set the value
     values[key] = parsed_value
     
@@ -77,6 +98,7 @@ def set_secret_command(
     env: str = typer.Option(..., "--env", "-e", help="Environment name"),
     schema_path: str = typer.Option("schema.json", "--schema", help="Path to schema file"),
     values_path: Optional[str] = typer.Option(None, "--values", help="Path to values file"),
+    force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation for existing values"),
 ):
     """Set a secret value for a specific environment."""
     # Load schema
@@ -116,6 +138,28 @@ def set_secret_command(
         
         # Load existing values
         values = load_values(env, values_path)
+        
+        # Check if key already exists and confirm overwrite
+        if key in values and not force:
+            current_value = values[key]
+            
+            # Display current value
+            if is_secret_reference(current_value):
+                console.print(f"Key '{key}' already set as [red]{current_value['type']}:{current_value['name']}[/red]")
+            else:
+                # Show non-secret value (shouldn't happen for set-secret, but handle gracefully)
+                if isinstance(current_value, (dict, list)):
+                    display_value = json.dumps(current_value)
+                    if len(display_value) > 50:
+                        display_value = display_value[:47] + "..."
+                else:
+                    display_value = str(current_value)
+                console.print(f"Key '{key}' currently set to: {display_value}")
+                console.print("[yellow]Warning:[/yellow] This will overwrite a non-secret value with a secret")
+            
+            if not Confirm.ask("Overwrite?", default=False):
+                console.print("Cancelled")
+                raise typer.Exit(0)
         
         # Set the secret reference
         values[key] = {"type": "env", "name": env_var_name}

@@ -137,6 +137,23 @@ Update `values set-secret` command to:
 ```
 **Status**: Completed - Extensible menu with validation framework
 
+#### Task 3.6: Add Confirmation for Existing Values ✅
+```prompt
+Update both `values set` and `values set-secret` commands to:
+1. Check if the key already exists in the specified environment
+2. If exists:
+   a. Show current value (masked for secrets)
+   b. Prompt: "Value already exists. Overwrite? [y/N]"
+   c. Abort if not confirmed
+3. For `values set-secret`:
+   a. Show both current type and name if available
+   b. Example prompt: 
+        "Key 'database-password' already set as env:PROD_DB_PASSWORD
+         Overwrite? [y/N]"
+4. Add --force flag to bypass confirmation
+```
+**Status**: Completed - Confirmation prompts with --force flag bypass
+
 ### Phase 4: Core Engine
 #### Task 4.1: Validator
 ```prompt
