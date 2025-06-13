@@ -103,6 +103,38 @@ Implement:
 ```
 **Status**: Completed - Rich table output with secret masking
 
+#### Task 3.4: Default Value Removal in Schema Update
+```prompt
+Enhance `schema update <key>` command to:
+1. When editing a schema entry that has a default value:
+   - Add "Remove default value" option to interactive menu
+2. If selected:
+   - Clear the default value from the schema entry
+   - Warn if field is required: "Warning: This field is required but has no default"
+3. Preserve backward compatibility with existing schema format
+```
+
+#### Task 3.5: Extensible Secret Configuration
+```prompt
+Update `values set-secret` command to:
+1. Prompt for secret type with options:
+   - Environment variable (env) - current MVP
+   - [Reserved: vault/aws/azure] - placeholder for future
+2. For 'env' type:
+   - Prompt for environment variable name
+   - Validate env var exists (warning only)
+3. Store in values file with type metadata:
+   {
+     "database-password": {
+       "type": "env",
+       "name": "PROD_DB_PASSWORD"
+     }
+   }
+4. Add validation to generator:
+   - Support only 'env' type for now
+   - Error on unsupported types
+```
+
 ### Phase 4: Core Engine
 #### Task 4.1: Validator
 ```prompt

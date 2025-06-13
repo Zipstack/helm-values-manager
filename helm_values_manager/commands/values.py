@@ -97,18 +97,31 @@ def set_secret_command(
         if not Confirm.ask("Continue anyway?", default=False):
             raise typer.Exit(0)
     
-    # Prompt for environment variable name
-    env_var_name = Prompt.ask("Environment variable name")
+    # Prompt for secret type
+    console.print("\n[bold]Secret configuration types:[/bold]")
+    console.print("1. Environment variable (env) - Available")
+    console.print("2. Vault secrets - [dim]Coming soon[/dim]")
+    console.print("3. AWS Secrets Manager - [dim]Coming soon[/dim]")
+    console.print("4. Azure Key Vault - [dim]Coming soon[/dim]")
     
-    # Check if environment variable exists
-    if env_var_name not in os.environ:
-        console.print(f"[yellow]Warning:[/yellow] Environment variable '{env_var_name}' is not set")
+    secret_type = Prompt.ask("Select secret type", choices=["1"], default="1")
     
-    # Load existing values
-    values = load_values(env, values_path)
-    
-    # Set the secret reference
-    values[key] = {"type": "env", "name": env_var_name}
+    if secret_type == "1":
+        # Environment variable configuration
+        env_var_name = Prompt.ask("Environment variable name")
+        
+        # Check if environment variable exists
+        if env_var_name not in os.environ:
+            console.print(f"[yellow]Warning:[/yellow] Environment variable '{env_var_name}' is not set")
+        
+        # Load existing values
+        values = load_values(env, values_path)
+        
+        # Set the secret reference
+        values[key] = {"type": "env", "name": env_var_name}
+    else:
+        console.print("[red]Error:[/red] Only environment variable secrets are supported in this version")
+        raise typer.Exit(1)
     
     # Save values
     save_values(values, env, values_path)

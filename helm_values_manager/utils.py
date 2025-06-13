@@ -67,6 +67,20 @@ def is_secret_reference(value: Any) -> bool:
     """Check if a value is a secret reference."""
     return (
         isinstance(value, dict) 
-        and value.get("type") == "env" 
+        and "type" in value
         and "name" in value
     )
+
+
+def validate_secret_reference(value: Any) -> tuple[bool, str]:
+    """Validate a secret reference and return (is_valid, error_message)."""
+    if not isinstance(value, dict) or "type" not in value:
+        return False, "Not a valid secret reference"
+    
+    secret_type = value.get("type")
+    if secret_type == "env":
+        if not value.get("name"):
+            return False, "Environment variable name is required"
+        return True, ""
+    else:
+        return False, f"Unsupported secret type: {secret_type}. Only 'env' is supported."

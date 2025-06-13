@@ -439,3 +439,82 @@ def test_schema_remove_nonexistent(tmp_path):
         
         assert result.exit_code == 1
         assert "not found" in result.output
+
+
+def test_schema_update_remove_default(tmp_path):
+    """Test removing default value during schema update."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Create schema with a value that has a default
+        schema = Schema(
+            values=[
+                SchemaValue(
+                    key="replicas",
+                    path="deployment.replicas",
+                    description="Number of replicas",
+                    type="number",
+                    required=False,
+                    default=3,
+                )
+            ]
+        )
+        
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Update and remove default
+        inputs = [
+            "",  # keep path
+            "",  # keep description
+            "number",  # keep type
+            "n",  # not required
+            "3",  # remove default value
+            "n",  # not sensitive
+        ]
+        result = runner.invoke(app, ["schema", "update", "replicas"], input="\n".join(inputs))
+        
+        assert result.exit_code == 0
+        assert "Default value removed" in result.output
+        
+        # Verify default was removed
+        with open("schema.json") as f:
+            schema = Schema(**json.load(f))
+        
+        value = schema.values[0]
+        assert value.default is None
+
+
+def test_schema_update_remove_default_required_warning(tmp_path):
+    """Test warning when removing default from required field."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        # Create schema with required value that has default
+        schema = Schema(
+            values=[
+                SchemaValue(
+                    key="app-name",
+                    path="app.name",
+                    description="App name",
+                    type="string",
+                    required=True,
+                    default="myapp",
+                )
+            ]
+        )
+        
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Try to remove default but cancel due to warning
+        inputs = [
+            "",  # keep path
+            "",  # keep description  
+            "string",  # keep type
+            "y",  # required
+            "3",  # remove default
+            "n",  # don't continue after warning
+            "1",  # keep current default instead
+            "n",  # not sensitive
+        ]
+        result = runner.invoke(app, ["schema", "update", "app-name"], input="\n".join(inputs))
+        
+        assert result.exit_code == 0
+        assert "This field is required but will have no default" in result.output

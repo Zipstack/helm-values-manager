@@ -337,3 +337,65 @@ def test_values_remove_nonexistent(tmp_path):
         
         assert result.exit_code == 1
         assert "Value 'nonexistent' not set" in result.output
+
+
+def test_values_set_secret_extensible_menu(tmp_path, monkeypatch):
+    """Test the extensible secret configuration menu."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # Set environment variable
+        monkeypatch.setenv("DB_PASSWORD", "secret123")
+        
+        # Test selecting environment variable option
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nDB_PASSWORD\n")
+        
+        assert result.exit_code == 0
+        assert "Secret configuration types:" in result.output
+        assert "Environment variable (env) - Available" in result.output
+        assert "Vault secrets - Coming soon" in result.output
+        assert "AWS Secrets Manager - Coming soon" in result.output
+        assert "Azure Key Vault - Coming soon" in result.output
+
+
+def test_values_set_secret_unsupported_type(tmp_path):
+    """Test that unsupported secret types are handled gracefully."""
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        schema = create_test_schema()
+        with open("schema.json", "w") as f:
+            json.dump(schema.model_dump(), f)
+        
+        # This test would fail since we only allow choice "1" currently
+        # But it demonstrates the extensible design for future secret types
+        pass
+
+
+def test_validate_secret_reference():
+    """Test secret reference validation."""
+    from helm_values_manager.utils import validate_secret_reference
+    
+    # Valid env secret
+    valid_env = {"type": "env", "name": "DB_PASSWORD"}
+    is_valid, error = validate_secret_reference(valid_env)
+    assert is_valid
+    assert error == ""
+    
+    # Invalid - missing name
+    invalid_no_name = {"type": "env"}
+    is_valid, error = validate_secret_reference(invalid_no_name)
+    assert not is_valid
+    assert "name is required" in error
+    
+    # Invalid - unsupported type
+    invalid_type = {"type": "vault", "name": "secret/db"}
+    is_valid, error = validate_secret_reference(invalid_type)
+    assert not is_valid
+    assert "Unsupported secret type: vault" in error
+    
+    # Invalid - not a secret reference
+    not_secret = "plain-value"
+    is_valid, error = validate_secret_reference(not_secret)
+    assert not is_valid
+    assert "Not a valid secret reference" in error

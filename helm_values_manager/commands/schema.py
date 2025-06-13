@@ -250,14 +250,40 @@ def update_command(
                     console.print(f"[red]{e}[/red]")
     else:
         default_display = json.dumps(value.default) if value.type in ['array', 'object'] else str(value.default)
-        if Confirm.ask(f"Update default value? [current: {default_display}]", default=False):
-            while True:
-                default_str = Prompt.ask(f"Default value ({value.type})")
-                try:
-                    value.default = parse_value_by_type(default_str, value.type)
-                    break
-                except typer.BadParameter as e:
-                    console.print(f"[red]{e}[/red]")
+        console.print(f"\nCurrent default value: {default_display}")
+        
+        # Offer options for existing default
+        console.print("Options:")
+        console.print("1. Keep current default")
+        console.print("2. Update default value")
+        console.print("3. Remove default value")
+        
+        while True:
+            choice = Prompt.ask("Choose option", choices=["1", "2", "3"], default="1")
+            
+            if choice == "1":
+                # Keep current default
+                break
+            elif choice == "2":
+                # Update default value
+                while True:
+                    default_str = Prompt.ask(f"New default value ({value.type})")
+                    try:
+                        value.default = parse_value_by_type(default_str, value.type)
+                        break
+                    except typer.BadParameter as e:
+                        console.print(f"[red]{e}[/red]")
+                break
+            elif choice == "3":
+                # Remove default value
+                if value.required:
+                    console.print("[yellow]Warning:[/yellow] This field is required but will have no default value")
+                    if not Confirm.ask("Continue removing default?", default=False):
+                        continue
+                
+                value.default = None
+                console.print("[green]✓[/green] Default value removed")
+                break
     
     # Update sensitive
     value.sensitive = Confirm.ask("Sensitive value?", default=value.sensitive)
