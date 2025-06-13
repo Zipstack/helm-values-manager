@@ -103,7 +103,7 @@ Implement:
 ```
 **Status**: Completed - Rich table output with secret masking
 
-#### Task 3.4: Default Value Removal in Schema Update
+#### Task 3.4: Default Value Removal in Schema Update ✅
 ```prompt
 Enhance `schema update <key>` command to:
 1. When editing a schema entry that has a default value:
@@ -113,8 +113,9 @@ Enhance `schema update <key>` command to:
    - Warn if field is required: "Warning: This field is required but has no default"
 3. Preserve backward compatibility with existing schema format
 ```
+**Status**: Completed - Option-based menu with warning system
 
-#### Task 3.5: Extensible Secret Configuration
+#### Task 3.5: Extensible Secret Configuration ✅
 ```prompt
 Update `values set-secret` command to:
 1. Prompt for secret type with options:
@@ -134,6 +135,7 @@ Update `values set-secret` command to:
    - Support only 'env' type for now
    - Error on unsupported types
 ```
+**Status**: Completed - Extensible menu with validation framework
 
 ### Phase 4: Core Engine
 #### Task 4.1: Validator
