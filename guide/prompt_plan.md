@@ -147,12 +147,35 @@ Update both `values set` and `values set-secret` commands to:
    c. Abort if not confirmed
 3. For `values set-secret`:
    a. Show both current type and name if available
-   b. Example prompt: 
+   b. Example prompt:
         "Key 'database-password' already set as env:PROD_DB_PASSWORD
          Overwrite? [y/N]"
 4. Add --force flag to bypass confirmation
 ```
 **Status**: Completed - Confirmation prompts with --force flag bypass
+
+#### Task 3.7: Interactive Environment Setup ✅
+```prompt
+Implement `values init --env <env>` command that:
+1. Loads schema and checks for unset values in specified environment
+2. For each unset value (required first, then optional):
+   a. Show key, description, type, and required status
+   b. Prompt: "Set value for [key]? (Y/n/skip)"
+      - Y: Proceed to value input (normal/sensitive based on schema)
+      - n: Skip this field
+      - skip: Skip all remaining
+3. For sensitive values:
+   a. Use `set-secret` workflow (with type selection)
+4. For non-sensitive values:
+   a. Show current default (if exists)
+   b. Prompt for value with type validation
+5. After all fields:
+   a. Show summary:
+        "Set X values, skipped Y required values"
+   b. List any unset required values
+6. Add --force to disable prompts (use defaults where possible)
+```
+**Status**: Completed - Interactive setup with type validation and extensible secret support
 
 ### Phase 4: Core Engine
 #### Task 4.1: Validator ✅

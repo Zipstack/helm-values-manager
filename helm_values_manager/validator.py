@@ -115,9 +115,12 @@ class Validator:
                         ValidationError("Schema", f"Default value type mismatch for {entry.key}")
                     )
     
-    def _validate_values_for_env(self, env: str):
+    def _validate_values_for_env(self, env: str, values_file_path: Optional[str] = None):
         """Validate values for a specific environment."""
-        values_file = self.values_base_path / f"values-{env}.json"
+        if values_file_path:
+            values_file = Path(values_file_path)
+        else:
+            values_file = self.values_base_path / f"values-{env}.json"
         
         if not values_file.exists():
             # Not an error if no values file exists
@@ -125,12 +128,10 @@ class Validator:
         
         try:
             with open(values_file) as f:
-                values = json.load(f)
+                env_values = json.load(f)
         except json.JSONDecodeError as e:
             self.errors.append(ValidationError("Values", f"Invalid JSON in {values_file}: {e}", env))
             return
-        
-        env_values = values.get(env, {})
         
         # Load schema
         try:
@@ -236,6 +237,28 @@ class Validator:
         for error in self.errors:
             # Debug: print(f"DEBUG: error.env={error.env}, error={error}")
             console.print(f"  - {str(error)}")
+
+
+def validate_single_environment(
+    schema_path: Path,
+    env: str,
+    values_file_path: Optional[str] = None
+) -> bool:
+    """Run validation for a single environment and report results."""
+    validator = Validator(schema_path, Path("."))
+    
+    # Validate schema first
+    validator._validate_schema()
+    
+    # Then validate values for the specific environment
+    validator._validate_values_for_env(env, values_file_path)
+    
+    if len(validator.errors) == 0:
+        console.print(f"✅ Validation passed for environment: {env}")
+        return True
+    else:
+        validator.print_errors()
+        return False
 
 
 def validate_command(

@@ -10,6 +10,7 @@ console = Console()
 
 
 def validate_command(
+    env: str = typer.Option(..., "--env", "-e", help="Environment to validate"),
     schema: str = typer.Option(
         "schema.json",
         "--schema",
@@ -19,24 +20,17 @@ def validate_command(
     values: Optional[str] = typer.Option(
         None,
         "--values",
-        help="Base path for values files (directory containing values-{env}.json files)",
-    ),
-    env: Optional[str] = typer.Option(
-        None,
-        "--env",
-        "-e",
-        help="Validate specific environment only",
+        help="Path to values file (default: values-{env}.json)",
     ),
 ):
-    """Validate schema and values files."""
+    """Validate schema and values file for a specific environment."""
     # Import here to avoid circular imports
-    from helm_values_manager.validator import validate_command as run_validation
+    from helm_values_manager.validator import validate_single_environment
     
     schema_path = Path(schema)
-    values_base_path = Path(values) if values else Path(".")
     
-    # Run validation
-    success = run_validation(schema_path, values_base_path, env)
+    # Run validation for single environment
+    success = validate_single_environment(schema_path, env, values)
     
     if not success:
         raise typer.Exit(code=1)

@@ -12,7 +12,7 @@ runner = CliRunner()
 
 def test_validate_missing_schema(tmp_path):
     """Test validation with missing schema file."""
-    result = runner.invoke(app, ["validate", "--schema", str(tmp_path / "missing.json")])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(tmp_path / "missing.json")])
     assert result.exit_code == 1
     assert "File not found" in result.stdout
 
@@ -22,7 +22,7 @@ def test_validate_invalid_schema_json(tmp_path):
     schema_file = tmp_path / "schema.json"
     schema_file.write_text("invalid json")
     
-    result = runner.invoke(app, ["validate", "--schema", str(schema_file)])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
     assert "Invalid JSON" in result.stdout
 
@@ -45,9 +45,9 @@ def test_validate_valid_schema_only(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    result = runner.invoke(app, ["validate", "--schema", str(schema_file)])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 0
-    assert "All validations passed" in result.stdout
+    assert "Validation passed for environment: dev" in result.stdout
 
 
 def test_validate_duplicate_keys(tmp_path):
@@ -74,7 +74,7 @@ def test_validate_duplicate_keys(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    result = runner.invoke(app, ["validate", "--schema", str(schema_file)])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
     assert "Duplicate key: database" in result.stdout
 
@@ -103,7 +103,7 @@ def test_validate_duplicate_paths(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    result = runner.invoke(app, ["validate", "--schema", str(schema_file)])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
     assert "Duplicate path: database.host" in result.stdout
 
@@ -125,7 +125,7 @@ def test_validate_invalid_type(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    result = runner.invoke(app, ["validate", "--schema", str(schema_file)])
+    result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
     assert ("Invalid schema" in result.stdout or "Invalid type" in result.stdout)
 
@@ -148,20 +148,18 @@ def test_validate_values_type_mismatch(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values with wrong type
+    # Create values with wrong type (flat structure)
     values_file = tmp_path / "values-dev.json"
     values_data = {
-        "dev": {
-            "port": "8080"  # String instead of number
-        }
+        "port": "8080"  # String instead of number
     }
     values_file.write_text(json.dumps(values_data, indent=2))
     
     result = runner.invoke(app, [
         "validate",
+        "--env", "dev",
         "--schema", str(schema_file),
-        "--values", str(tmp_path),
-        "--env", "dev"
+        "--values", str(values_file)
     ])
     assert result.exit_code == 1
     assert "Type mismatch for port" in result.stdout
@@ -185,16 +183,16 @@ def test_validate_missing_required_value(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create empty values file
+    # Create empty values file (flat structure)
     values_file = tmp_path / "values-prod.json"
-    values_data = {"prod": {}}
+    values_data = {}
     values_file.write_text(json.dumps(values_data, indent=2))
     
     result = runner.invoke(app, [
         "validate",
+        "--env", "prod",
         "--schema", str(schema_file),
-        "--values", str(tmp_path),
-        "--env", "prod"
+        "--values", str(values_file)
     ])
     assert result.exit_code == 1
     assert "Missing required value: database-host" in result.stdout
@@ -219,20 +217,18 @@ def test_validate_secret_structure(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values with invalid secret structure
+    # Create values with invalid secret structure (flat structure)
     values_file = tmp_path / "values-dev.json"
     values_data = {
-        "dev": {
-            "api-key": "plain-text-secret"  # Should be object with type and name
-        }
+        "api-key": "plain-text-secret"  # Should be object with type and name
     }
     values_file.write_text(json.dumps(values_data, indent=2))
     
     result = runner.invoke(app, [
         "validate",
+        "--env", "dev",
         "--schema", str(schema_file),
-        "--values", str(tmp_path),
-        "--env", "dev"
+        "--values", str(values_file)
     ])
     assert result.exit_code == 1
     assert "Invalid secret structure for api-key" in result.stdout
@@ -260,60 +256,42 @@ def test_validate_valid_secret(tmp_path, monkeypatch):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values with valid secret
+    # Create values with valid secret (flat structure)
     values_file = tmp_path / "values-dev.json"
     values_data = {
-        "dev": {
-            "api-key": {
-                "type": "env",
-                "name": "API_KEY"
-            }
+        "api-key": {
+            "type": "env",
+            "name": "API_KEY"
         }
     }
     values_file.write_text(json.dumps(values_data, indent=2))
     
     result = runner.invoke(app, [
         "validate",
+        "--env", "dev",
         "--schema", str(schema_file),
-        "--values", str(tmp_path),
-        "--env", "dev"
+        "--values", str(values_file)
     ])
     assert result.exit_code == 0
     assert "Validation passed for environment: dev" in result.stdout
 
 
-def test_validate_all_environments(tmp_path):
-    """Test validation of all environments."""
+def test_validate_missing_env_parameter(tmp_path):
+    """Test that validate command requires --env parameter."""
     # Create schema
     schema_file = tmp_path / "schema.json"
     schema_data = {
         "version": "1.0",
-        "values": [
-            {
-                "key": "replicas",
-                "path": "deployment.replicas",
-                "description": "Number of replicas",
-                "type": "number",
-                "required": True
-            }
-        ]
+        "values": []
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values for multiple environments
-    values_dev = tmp_path / "values-dev.json"
-    values_dev.write_text(json.dumps({"dev": {"replicas": 1}}))
-    
-    values_prod = tmp_path / "values-prod.json"
-    values_prod.write_text(json.dumps({"prod": {"replicas": 3}}))
-    
+    # Try to run validate without --env
     result = runner.invoke(app, [
         "validate",
-        "--schema", str(schema_file),
-        "--values", str(tmp_path)
+        "--schema", str(schema_file)
     ])
-    assert result.exit_code == 0
-    assert "All validations passed" in result.stdout
+    assert result.exit_code != 0  # Should fail
 
 
 def test_validate_unknown_key_in_values(tmp_path):
@@ -326,26 +304,24 @@ def test_validate_unknown_key_in_values(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values with unknown key
+    # Create values with unknown key (flat structure)
     values_file = tmp_path / "values-dev.json"
     values_data = {
-        "dev": {
-            "unknown-key": "value"
-        }
+        "unknown-key": "value"
     }
     values_file.write_text(json.dumps(values_data, indent=2))
     
     result = runner.invoke(app, [
         "validate",
+        "--env", "dev",
         "--schema", str(schema_file),
-        "--values", str(tmp_path),
-        "--env", "dev"
+        "--values", str(values_file)
     ])
     assert result.exit_code == 1
     assert "Unknown key: unknown-key" in result.stdout
 
 
-def test_validate_multi_env_shows_environment_names(tmp_path):
+def test_validate_shows_environment_name_in_errors(tmp_path):
     """Test that validation errors show which environment has issues."""
     # Create schema
     schema_file = tmp_path / "schema.json"
@@ -363,35 +339,17 @@ def test_validate_multi_env_shows_environment_names(tmp_path):
     }
     schema_file.write_text(json.dumps(schema_data, indent=2))
     
-    # Create values for multiple environments with different errors
-    values_dev = tmp_path / "values-dev.json"
-    values_dev.write_text(json.dumps({
-        "dev": {}  # Missing required value
-    }))
+    # Create values with missing required value (flat structure)
+    values_file = tmp_path / "values-staging.json"
+    values_file.write_text(json.dumps({}))  # Missing required value
     
-    values_staging = tmp_path / "values-staging.json"
-    values_staging.write_text(json.dumps({
-        "staging": {
-            "database-host": 123  # Wrong type
-        }
-    }))
-    
-    values_prod = tmp_path / "values-prod.json"
-    values_prod.write_text(json.dumps({
-        "prod": {
-            "database-host": "prod-db.example.com"  # Correct
-        }
-    }))
-    
-    # Validate all environments
+    # Validate staging environment
     result = runner.invoke(app, [
         "validate",
+        "--env", "staging",
         "--schema", str(schema_file),
-        "--values", str(tmp_path)
+        "--values", str(values_file)
     ])
     
     assert result.exit_code == 1
-    assert "[dev] Values: Missing required value: database-host" in result.stdout
-    assert "[staging] Values: Type mismatch for database-host: expected string" in result.stdout
-    # prod should not appear in errors since it's correct
-    assert "[prod]" not in result.stdout
+    assert "[staging] Values: Missing required value: database-host" in result.stdout

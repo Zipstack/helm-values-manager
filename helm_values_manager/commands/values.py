@@ -276,3 +276,157 @@ def remove_command(
     save_values(values, env, values_path)
     
     console.print(f"[green]✓[/green] Removed '{key}' from environment '{env}'")
+
+
+@app.command("init")
+def init_command(
+    env: str = typer.Option(..., "--env", "-e", help="Environment name"),
+    schema_path: str = typer.Option("schema.json", "--schema", "-s", help="Path to schema file"),
+    values_path: Optional[str] = typer.Option(None, "--values", help="Path to values file"),
+    force: bool = typer.Option(False, "--force", "-f", help="Use defaults where possible, skip prompts"),
+):
+    """Interactively set up values for an environment."""
+    # Load schema
+    schema = load_schema(schema_path)
+    if not schema:
+        console.print("[red]Error:[/red] Schema file not found")
+        raise typer.Exit(1)
+    
+    # Load existing values
+    values = load_values(env, values_path)
+    
+    # Track statistics
+    set_count = 0
+    skipped_count = 0
+    skipped_required = []
+    
+    # Sort values: required first, then by key
+    sorted_values = sorted(schema.values, key=lambda v: (not v.required, v.key))
+    
+    console.print(f"\n[bold]Setting up values for environment: {env}[/bold]\n")
+    
+    skip_all = False
+    
+    for schema_value in sorted_values:
+        # Skip if already set
+        if schema_value.key in values:
+            continue
+        
+        # Skip if user chose to skip all
+        if skip_all:
+            skipped_count += 1
+            if schema_value.required:
+                skipped_required.append(schema_value.key)
+            continue
+        
+        # Display field info
+        console.print(f"\n[bold cyan]{schema_value.key}[/bold cyan]")
+        console.print(f"  Description: {schema_value.description}")
+        console.print(f"  Type: {schema_value.type}")
+        console.print(f"  Required: {'Yes' if schema_value.required else 'No'}")
+        if schema_value.default is not None:
+            console.print(f"  Default: {schema_value.default}")
+        
+        # Prompt for action
+        if force:
+            # In force mode, use defaults where possible
+            if schema_value.default is not None:
+                values[schema_value.key] = schema_value.default
+                set_count += 1
+                console.print(f"  → Using default value: {schema_value.default}")
+                continue
+            elif schema_value.required:
+                # Can't skip required values without defaults in force mode
+                console.print(f"  → [yellow]Warning: Required field with no default, skipping[/yellow]")
+                skipped_count += 1
+                skipped_required.append(schema_value.key)
+                continue
+            else:
+                # Skip optional fields without defaults
+                skipped_count += 1
+                continue
+        
+        # Interactive mode
+        action = Prompt.ask(
+            f"\nSet value for '{schema_value.key}'?",
+            choices=["y", "n", "skip"],
+            default="y"
+        )
+        
+        if action == "skip":
+            skip_all = True
+            skipped_count += 1
+            if schema_value.required:
+                skipped_required.append(schema_value.key)
+            continue
+        elif action == "n":
+            skipped_count += 1
+            if schema_value.required:
+                skipped_required.append(schema_value.key)
+            continue
+        
+        # Set the value
+        if schema_value.sensitive:
+            # Use set-secret workflow
+            console.print("\n[yellow]This is a sensitive value. Setting up as secret...[/yellow]")
+            
+            # Display secret type options
+            console.print("  1. Environment variable")
+            console.print("  [dim]2. HashiCorp Vault (coming soon)[/dim]")
+            console.print("  [dim]3. AWS Secrets Manager (coming soon)[/dim]")
+            console.print("  [dim]4. Azure Key Vault (coming soon)[/dim]")
+            
+            # Select secret type
+            secret_type = Prompt.ask(
+                "Select secret type",
+                choices=["1"],
+                default="1"
+            )
+            
+            if secret_type == "1":
+                env_var_name = Prompt.ask("Environment variable name")
+                
+                # Check if environment variable exists
+                if not os.environ.get(env_var_name):
+                    console.print(f"[yellow]⚠ Warning: Environment variable '{env_var_name}' is not set[/yellow]")
+                
+                values[schema_value.key] = {
+                    "type": "env",
+                    "name": env_var_name
+                }
+                set_count += 1
+        else:
+            # Regular value
+            if schema_value.default is not None:
+                prompt_text = f"Value (default: {schema_value.default})"
+                default_str = str(schema_value.default)
+            else:
+                prompt_text = "Value"
+                default_str = None
+            
+            while True:
+                value_str = Prompt.ask(prompt_text, default=default_str)
+                
+                try:
+                    parsed_value = parse_value_by_type(value_str, schema_value.type)
+                    values[schema_value.key] = parsed_value
+                    set_count += 1
+                    break
+                except (ValueError, json.JSONDecodeError, typer.BadParameter) as e:
+                    console.print(f"[red]Error:[/red] {e}")
+                    continue
+    
+    # Save values
+    save_values(values, env, values_path)
+    
+    # Show summary
+    console.print(f"\n[bold]Summary:[/bold]")
+    console.print(f"  Set {set_count} values")
+    console.print(f"  Skipped {skipped_count} values")
+    
+    if skipped_required:
+        console.print(f"\n[yellow]⚠ Warning: The following required values were not set:[/yellow]")
+        for key in skipped_required:
+            console.print(f"  - {key}")
+    
+    console.print(f"\n[green]✓[/green] Initialization complete for environment '{env}'")
