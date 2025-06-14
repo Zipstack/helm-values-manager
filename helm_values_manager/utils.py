@@ -11,10 +11,17 @@ def load_schema(schema_path: str = "schema.json") -> Optional[Schema]:
     if not path.exists():
         return None
     
-    with open(path) as f:
-        data = json.load(f)
-    
-    return Schema(**data)
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return Schema(**data)
+    except json.JSONDecodeError:
+        # Return None to indicate file exists but is invalid
+        # The caller should handle this appropriately
+        return None
+    except Exception:
+        # For any other error (validation, etc.)
+        return None
 
 
 def save_schema(schema: Schema, schema_path: str = "schema.json") -> None:

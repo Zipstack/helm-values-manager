@@ -240,25 +240,110 @@ class Validator:
 
 
 def validate_single_environment(
-    schema_path: Path,
-    env: str,
-    values_file_path: Optional[str] = None
-) -> bool:
-    """Run validation for a single environment and report results."""
-    validator = Validator(schema_path, Path("."))
+    schema: Schema,
+    values: Dict[str, Any],
+    env: str
+) -> List[str]:
+    """Validate schema and values for a single environment and return list of errors.
+    
+    Args:
+        schema: The loaded schema object
+        values: The loaded values dictionary
+        env: Environment name (for error messages)
+        
+    Returns:
+        List of error messages (empty if validation passed)
+    """
+    errors = []
     
     # Validate schema first
-    validator._validate_schema()
+    schema_errors = _validate_schema_integrity(schema)
+    errors.extend(schema_errors)
     
-    # Then validate values for the specific environment
-    validator._validate_values_for_env(env, values_file_path)
+    # Check for required values
+    for schema_value in schema.values:
+        if schema_value.required and schema_value.key not in values:
+            # Check if there's a default value
+            if schema_value.default is None:
+                errors.append(f"[{env}] Values: Missing required value: {schema_value.key}")
     
-    if len(validator.errors) == 0:
-        console.print(f"✅ Validation passed for environment: {env}")
+    # Validate each value
+    for key, value in values.items():
+        # Find corresponding schema value
+        schema_value = next((sv for sv in schema.values if sv.key == key), None)
+        
+        if not schema_value:
+            errors.append(f"[{env}] Values: Unknown key: {key}")
+            continue
+        
+        # Check type
+        if not _is_valid_type(value, schema_value):
+            errors.append(f"[{env}] Values: Type mismatch for {key}: expected {schema_value.type}")
+            continue
+        
+        # Validate secrets
+        if schema_value.sensitive and not isinstance(value, dict):
+            errors.append(f"[{env}] Values: Invalid secret structure for {key}: expected object with 'type' and 'name'")
+        elif isinstance(value, dict) and "type" in value:
+            # It's a secret reference
+            if not _is_valid_secret_reference(value):
+                errors.append(f"[{env}] Values: Invalid secret structure for {key}")
+            elif value["type"] != "env":
+                errors.append(f"[{env}] Values: Unsupported secret type '{value['type']}' for {key}")
+    
+    return errors
+
+
+def _validate_schema_integrity(schema: Schema) -> List[str]:
+    """Validate schema for duplicate keys and paths."""
+    errors = []
+    
+    # Check for duplicate keys
+    seen_keys = set()
+    for schema_value in schema.values:
+        if schema_value.key in seen_keys:
+            errors.append(f"Schema: Duplicate key: {schema_value.key}")
+        seen_keys.add(schema_value.key)
+    
+    # Check for duplicate paths
+    seen_paths = set()
+    for schema_value in schema.values:
+        if schema_value.path in seen_paths:
+            errors.append(f"Schema: Duplicate path: {schema_value.path}")
+        seen_paths.add(schema_value.path)
+    
+    return errors
+
+
+def _is_valid_type(value: Any, schema_value: SchemaValue) -> bool:
+    """Check if value matches expected type."""
+    # If it's a secret reference, type check doesn't apply
+    if isinstance(value, dict) and "type" in value and "name" in value:
         return True
-    else:
-        validator.print_errors()
+    
+    if schema_value.type == "string":
+        return isinstance(value, str)
+    elif schema_value.type == "number":
+        return isinstance(value, (int, float))
+    elif schema_value.type == "boolean":
+        return isinstance(value, bool)
+    elif schema_value.type == "array":
+        return isinstance(value, list)
+    elif schema_value.type == "object":
+        return isinstance(value, dict)
+    
+    return False
+
+
+def _is_valid_secret_reference(value: Any) -> bool:
+    """Check if value is a valid secret reference."""
+    if not isinstance(value, dict):
         return False
+    
+    if "type" not in value or "name" not in value:
+        return False
+    
+    return isinstance(value["type"], str) and isinstance(value["name"], str)
 
 
 def validate_command(

@@ -14,7 +14,7 @@ def test_validate_missing_schema(tmp_path):
     """Test validation with missing schema file."""
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(tmp_path / "missing.json")])
     assert result.exit_code == 1
-    assert "File not found" in result.stdout
+    assert "Schema file not found" in result.stdout
 
 
 def test_validate_invalid_schema_json(tmp_path):
@@ -24,7 +24,7 @@ def test_validate_invalid_schema_json(tmp_path):
     
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
-    assert "Invalid JSON" in result.stdout
+    assert "Invalid JSON in schema file" in result.stdout
 
 
 def test_validate_valid_schema_only(tmp_path):
