@@ -343,3 +343,55 @@ def test_validate_unknown_key_in_values(tmp_path):
     ])
     assert result.exit_code == 1
     assert "Unknown key: unknown-key" in result.stdout
+
+
+def test_validate_multi_env_shows_environment_names(tmp_path):
+    """Test that validation errors show which environment has issues."""
+    # Create schema
+    schema_file = tmp_path / "schema.json"
+    schema_data = {
+        "version": "1.0",
+        "values": [
+            {
+                "key": "database-host",
+                "path": "db.host",
+                "description": "Database hostname",
+                "type": "string",
+                "required": True
+            }
+        ]
+    }
+    schema_file.write_text(json.dumps(schema_data, indent=2))
+    
+    # Create values for multiple environments with different errors
+    values_dev = tmp_path / "values-dev.json"
+    values_dev.write_text(json.dumps({
+        "dev": {}  # Missing required value
+    }))
+    
+    values_staging = tmp_path / "values-staging.json"
+    values_staging.write_text(json.dumps({
+        "staging": {
+            "database-host": 123  # Wrong type
+        }
+    }))
+    
+    values_prod = tmp_path / "values-prod.json"
+    values_prod.write_text(json.dumps({
+        "prod": {
+            "database-host": "prod-db.example.com"  # Correct
+        }
+    }))
+    
+    # Validate all environments
+    result = runner.invoke(app, [
+        "validate",
+        "--schema", str(schema_file),
+        "--values", str(tmp_path)
+    ])
+    
+    assert result.exit_code == 1
+    assert "[dev] Values: Missing required value: database-host" in result.stdout
+    assert "[staging] Values: Type mismatch for database-host: expected string" in result.stdout
+    # prod should not appear in errors since it's correct
+    assert "[prod]" not in result.stdout

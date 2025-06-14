@@ -34,7 +34,7 @@ class ValidationError:
     
     def __str__(self):
         if self.env:
-            return f"[{self.env}] {self.context}: {self.message}"
+            return f"\\[{self.env}] {self.context}: {self.message}"
         return f"{self.context}: {self.message}"
 
 
@@ -192,6 +192,7 @@ class Validator:
         for values_file in self.values_base_path.glob(pattern):
             # Extract environment from filename
             env = values_file.stem.replace("values-", "")
+            # Debug: print(f"Validating environment: {env}")
             self._validate_values_for_env(env)
     
     def _validate_value_type(self, value: Any, expected_type: str) -> bool:
@@ -233,7 +234,8 @@ class Validator:
         
         console.print(ErrorMessage("Validation failed:"))
         for error in self.errors:
-            console.print(f"  - {error}")
+            # Debug: print(f"DEBUG: error.env={error.env}, error={error}")
+            console.print(f"  - {str(error)}")
 
 
 def validate_command(
