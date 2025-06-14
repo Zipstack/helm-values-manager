@@ -13,22 +13,7 @@ A Helm plugin that helps manage Helm value configurations across different deplo
 
 ## Installation
 
-### As a Helm Plugin (Recommended)
-
-Install the plugin using the Helm plugin manager:
-
-```bash
-helm plugin install https://github.com/Zipstack/helm-values-manager
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/Zipstack/helm-values-manager
-helm plugin install ./helm-values-manager
-```
-
-### As a Standalone CLI Tool
+### As a Standalone CLI Tool (Recommended)
 
 Install directly with pip:
 
@@ -50,6 +35,25 @@ cd helm-values-manager
 uv install
 # CLI will be available as: uv run helm-values-manager
 ```
+
+The standalone installation provides better shell completion support and is easier to manage.
+
+### As a Helm Plugin
+
+Install the plugin using the Helm plugin manager:
+
+```bash
+helm plugin install https://github.com/Zipstack/helm-values-manager
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/Zipstack/helm-values-manager
+helm plugin install ./helm-values-manager
+```
+
+**Note**: The helm plugin installation has limited shell completion support due to the plugin wrapper architecture.
 
 ## Quick Start
 
@@ -92,7 +96,7 @@ uv install
 
 ## Command Reference
 
-> **Note**: Replace `helm values-manager` with `helm-values-manager` when using the standalone CLI installation.
+> **Note**: Use `helm-values-manager` for standalone installation or `helm values-manager` for helm plugin installation.
 
 | Command | Description |
 |---------|-------------|

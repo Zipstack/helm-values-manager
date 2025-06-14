@@ -4,6 +4,8 @@
 - Updating schema or schema migration. Cases like default value change / path change / deletion etc.
 - value from multiple options (eg: value should be one of [a,b,c])
 - Nice to have: completion based on resources in json files.
+- Nice to have: completion for plugin
+- Nice to have: publish as pip installable bin
 
 bugs
 - While using `helm-values-manager values init` or `helm-values-manager values set` what is the difference between n/skip both seems to do same functionality
