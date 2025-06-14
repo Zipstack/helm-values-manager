@@ -18,13 +18,13 @@ A Helm plugin that helps manage Helm value configurations across different deplo
 Install the plugin using the Helm plugin manager:
 
 ```bash
-helm plugin install https://github.com/yourusername/helm-values-manager
+helm plugin install https://github.com/Zipstack/helm-values-manager
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/helm-values-manager
+git clone https://github.com/Zipstack/helm-values-manager
 helm plugin install ./helm-values-manager
 ```
 
@@ -45,7 +45,7 @@ uv add helm-values-manager
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/helm-values-manager
+git clone https://github.com/Zipstack/helm-values-manager
 cd helm-values-manager
 uv install
 # CLI will be available as: uv run helm-values-manager
@@ -126,6 +126,54 @@ uv install
 All commands support these options:
 - `--schema PATH`: Path to schema.json (default: ./schema.json)
 - `--values PATH`: Base path for values files (default: ./values-{env}.json)
+
+## Shell Completion
+
+The CLI supports shell completion for enhanced productivity.
+
+### Setup
+
+**For Helm Plugin Installation:**
+```bash
+# Install completion for your shell (bash, zsh, fish, powershell)
+helm values-manager --install-completion zsh
+
+# Restart your shell or source the configuration
+source ~/.zshrc  # for zsh
+source ~/.bashrc # for bash
+```
+
+**For Standalone Installation:**
+```bash
+# Install completion for your shell
+helm-values-manager --install-completion zsh
+
+# Restart your shell or source the configuration
+source ~/.zshrc  # for zsh
+source ~/.bashrc # for bash
+```
+
+### Usage
+
+After setup, you can use tab completion:
+```bash
+# Tab completion for commands
+helm values-manager <TAB><TAB>
+
+# Tab completion for subcommands
+helm values-manager schema <TAB><TAB>
+helm values-manager values <TAB><TAB>
+
+# Show available completion script (without installing)
+helm values-manager --show-completion zsh
+```
+
+### Supported Shells
+
+- **bash**: Most common Linux/macOS shell
+- **zsh**: Default macOS shell (macOS 10.15+)
+- **fish**: Modern shell with advanced features
+- **PowerShell**: Windows PowerShell and PowerShell Core
 
 ## File Structure
 
@@ -260,7 +308,7 @@ This plugin is written in Python and uses:
 ### Building from Source
 
 ```bash
-git clone https://github.com/yourusername/helm-values-manager
+git clone https://github.com/Zipstack/helm-values-manager
 cd helm-values-manager
 uv install
 uv run pytest  # Run tests
