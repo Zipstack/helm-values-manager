@@ -163,7 +163,7 @@ def test_values_init_type_validation(tmp_path):
         ], input="n\nn\ny\ninvalid\n8080\nskip\n")
         
         assert result.exit_code == 0
-        assert "Error:" in result.output  # Should show validation error
+        assert "Invalid value:" in result.output  # Should show validation error
         
         # Check saved values (flat structure)
         with open("values-test.json") as f:

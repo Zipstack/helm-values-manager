@@ -4,6 +4,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from helm_values_manager.errors import ErrorHandler
+
 console = Console()
 
 SCHEMA_FILE = "schema.json"
@@ -16,8 +18,10 @@ def init_command(
     schema_path = Path(SCHEMA_FILE)
     
     if schema_path.exists() and not force:
-        console.print(f"[red]Error:[/red] {SCHEMA_FILE} already exists. Use --force to overwrite.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error(
+            "init",
+            f"{SCHEMA_FILE} already exists. Use --force to overwrite."
+        )
     
     initial_schema = {
         "values": []
@@ -29,5 +33,4 @@ def init_command(
         
         console.print(f"[green]✓[/green] Created {SCHEMA_FILE}")
     except Exception as e:
-        console.print(f"[red]Error:[/red] Failed to create schema file: {e}")
-        raise typer.Exit(1)
+        ErrorHandler.handle_exception(e, "init")

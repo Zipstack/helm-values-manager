@@ -1,0 +1,4 @@
+- Support loading `.env` file for ENV based secrets
+- Support to add schemas without interaction.
+- value from multiple options
+-

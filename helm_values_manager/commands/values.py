@@ -9,6 +9,7 @@ from rich.table import Table
 
 from helm_values_manager.commands.schema import parse_value_by_type
 from helm_values_manager.models import SchemaValue, SecretReference
+from helm_values_manager.errors import ErrorHandler, ValuesError, SchemaError
 from helm_values_manager.utils import (
     get_values_file_path,
     is_secret_reference,
@@ -39,26 +40,22 @@ def set_command(
     # Load schema
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set", "No schema.json found. Run 'init' first.")
     
     # Find the schema value
     schema_value = find_schema_value(schema, key)
     if not schema_value:
-        console.print(f"[red]Error:[/red] Key '{key}' not found in schema")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set", f"Key '{key}' not found in schema")
     
     # Check if value is sensitive
     if schema_value.sensitive:
-        console.print(f"[red]Error:[/red] Key '{key}' is marked as sensitive. Use 'values set-secret' instead.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set", f"Key '{key}' is marked as sensitive. Use 'values set-secret' instead.")
     
     # Parse the value according to type
     try:
         parsed_value = parse_value_by_type(value, schema_value.type)
-    except typer.BadParameter as e:
-        console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+    except (typer.BadParameter, SchemaError) as e:
+        ErrorHandler.print_error("values set", str(e))
     
     # Load existing values
     values = load_values(env, values_path)
@@ -104,18 +101,16 @@ def set_secret_command(
     # Load schema
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set-secret", "No schema.json found. Run 'init' first.")
     
     # Find the schema value
     schema_value = find_schema_value(schema, key)
     if not schema_value:
-        console.print(f"[red]Error:[/red] Key '{key}' not found in schema")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set-secret", f"Key '{key}' not found in schema")
     
     # Check if value is sensitive
     if not schema_value.sensitive:
-        console.print(f"[yellow]Warning:[/yellow] Key '{key}' is not marked as sensitive in schema")
+        ErrorHandler.print_warning(f"Key '{key}' is not marked as sensitive in schema")
         if not Confirm.ask("Continue anyway?", default=False):
             raise typer.Exit(0)
     
@@ -134,7 +129,7 @@ def set_secret_command(
         
         # Check if environment variable exists
         if env_var_name not in os.environ:
-            console.print(f"[yellow]Warning:[/yellow] Environment variable '{env_var_name}' is not set")
+            ErrorHandler.print_warning(f"Environment variable '{env_var_name}' is not set")
         
         # Load existing values
         values = load_values(env, values_path)
@@ -155,7 +150,7 @@ def set_secret_command(
                 else:
                     display_value = str(current_value)
                 console.print(f"Key '{key}' currently set to: {display_value}")
-                console.print("[yellow]Warning:[/yellow] This will overwrite a non-secret value with a secret")
+                ErrorHandler.print_warning("This will overwrite a non-secret value with a secret")
             
             if not Confirm.ask("Overwrite?", default=False):
                 console.print("Cancelled")
@@ -164,8 +159,7 @@ def set_secret_command(
         # Set the secret reference
         values[key] = {"type": "env", "name": env_var_name}
     else:
-        console.print("[red]Error:[/red] Only environment variable secrets are supported in this version")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values set-secret", "Only environment variable secrets are supported in this version")
     
     # Save values
     save_values(values, env, values_path)
@@ -185,8 +179,7 @@ def get_command(
     values = load_values(env, values_path)
     
     if key not in values:
-        console.print(f"[red]Error:[/red] Value '{key}' not set for environment '{env}'")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values get", f"Value '{key}' not set for environment '{env}'")
     
     value = values[key]
     
@@ -254,8 +247,7 @@ def remove_command(
     values = load_values(env, values_path)
     
     if key not in values:
-        console.print(f"[red]Error:[/red] Value '{key}' not set for environment '{env}'")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values remove", f"Value '{key}' not set for environment '{env}'")
     
     # Confirm removal
     if not force:
@@ -289,8 +281,7 @@ def init_command(
     # Load schema
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] Schema file not found")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("values init", "Schema file not found")
     
     # Load existing values
     values = load_values(env, values_path)
@@ -337,7 +328,7 @@ def init_command(
                 continue
             elif schema_value.required:
                 # Can't skip required values without defaults in force mode
-                console.print(f"  → [yellow]Warning: Required field with no default, skipping[/yellow]")
+                console.print(f"  → Required field with no default, skipping")
                 skipped_count += 1
                 skipped_required.append(schema_value.key)
                 continue
@@ -368,7 +359,7 @@ def init_command(
         # Set the value
         if schema_value.sensitive:
             # Use set-secret workflow
-            console.print("\n[yellow]This is a sensitive value. Setting up as secret...[/yellow]")
+            console.print("\n[cyan]This is a sensitive value. Setting up as secret...[/cyan]")
             
             # Display secret type options
             console.print("  1. Environment variable")
@@ -388,7 +379,7 @@ def init_command(
                 
                 # Check if environment variable exists
                 if not os.environ.get(env_var_name):
-                    console.print(f"[yellow]⚠ Warning: Environment variable '{env_var_name}' is not set[/yellow]")
+                    ErrorHandler.print_warning(f"Environment variable '{env_var_name}' is not set")
                 
                 values[schema_value.key] = {
                     "type": "env",
@@ -412,8 +403,8 @@ def init_command(
                     values[schema_value.key] = parsed_value
                     set_count += 1
                     break
-                except (ValueError, json.JSONDecodeError, typer.BadParameter) as e:
-                    console.print(f"[red]Error:[/red] {e}")
+                except (ValueError, json.JSONDecodeError, typer.BadParameter, SchemaError) as e:
+                    console.print(f"[red]Invalid value:[/red] {e}")
                     continue
     
     # Save values
@@ -425,7 +416,7 @@ def init_command(
     console.print(f"  Skipped {skipped_count} values")
     
     if skipped_required:
-        console.print(f"\n[yellow]⚠ Warning: The following required values were not set:[/yellow]")
+        ErrorHandler.print_warning("The following required values were not set:")
         for key in skipped_required:
             console.print(f"  - {key}")
     

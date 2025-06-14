@@ -5,6 +5,7 @@ import typer
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
+from helm_values_manager.errors import ErrorHandler, SchemaError, error_console
 from helm_values_manager.models import SchemaValue, ValueType
 from helm_values_manager.utils import load_schema, save_schema, validate_key_unique, validate_path_format
 
@@ -22,7 +23,7 @@ def parse_value_by_type(value_str: str, value_type: ValueType) -> Any:
                 return float(value_str)
             return int(value_str)
         except ValueError:
-            raise typer.BadParameter(f"Invalid number: {value_str}")
+            raise SchemaError(f"Invalid number: {value_str}")
     elif value_type == "boolean":
         lower = value_str.lower()
         if lower in ("true", "yes", "y", "1"):
@@ -30,7 +31,7 @@ def parse_value_by_type(value_str: str, value_type: ValueType) -> Any:
         elif lower in ("false", "no", "n", "0"):
             return False
         else:
-            raise typer.BadParameter(f"Invalid boolean: {value_str}")
+            raise SchemaError(f"Invalid boolean: {value_str}")
     elif value_type == "array":
         try:
             return json.loads(value_str)
@@ -41,7 +42,7 @@ def parse_value_by_type(value_str: str, value_type: ValueType) -> Any:
         try:
             return json.loads(value_str)
         except json.JSONDecodeError:
-            raise typer.BadParameter(f"Invalid JSON object: {value_str}")
+            raise SchemaError(f"Invalid JSON object: {value_str}")
 
 
 @app.command("add")
@@ -52,8 +53,7 @@ def add_command(
     # Load existing schema
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", "No schema.json found. Run 'init' first.")
     
     console.print("[bold]Add new value to schema[/bold]\n")
     
@@ -61,11 +61,11 @@ def add_command(
     while True:
         key = Prompt.ask("Key (unique identifier)")
         if not key:
-            console.print("[red]Key cannot be empty[/red]")
+            error_console.print("[red]Key cannot be empty[/red]")
             continue
         
         if not validate_key_unique(schema, key):
-            console.print(f"[red]Key '{key}' already exists in schema[/red]")
+            error_console.print(f"[red]Key '{key}' already exists in schema[/red]")
             continue
         
         break
@@ -74,7 +74,7 @@ def add_command(
     while True:
         path = Prompt.ask("Path (dot-separated YAML path)")
         if not validate_path_format(path):
-            console.print("[red]Invalid path format. Use alphanumeric characters and dots only.[/red]")
+            error_console.print("[red]Invalid path format. Use alphanumeric characters and dots only.[/red]")
             continue
         break
     
@@ -88,7 +88,7 @@ def add_command(
         value_type = Prompt.ask("Type", default="string").lower()
         if value_type in type_choices:
             break
-        console.print(f"[red]Invalid type. Choose from: {', '.join(type_choices)}[/red]")
+        error_console.print(f"[red]Invalid type. Choose from: {', '.join(type_choices)}[/red]")
     
     # Prompt for required
     required = Confirm.ask("Required?", default=True)
@@ -101,8 +101,8 @@ def add_command(
             try:
                 default = parse_value_by_type(default_str, value_type)
                 break
-            except typer.BadParameter as e:
-                console.print(f"[red]{e}[/red]")
+            except SchemaError as e:
+                error_console.print(f"[red]{e}[/red]")
     
     # Prompt for sensitive
     sensitive = Confirm.ask("Sensitive value?", default=False)
@@ -139,8 +139,7 @@ def list_command(
     """List all values in the schema."""
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", "No schema.json found. Run 'init' first.")
     
     if not schema.values:
         console.print("No values defined in schema.")
@@ -168,14 +167,12 @@ def get_command(
     """Show details of a specific schema value."""
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", "No schema.json found. Run 'init' first.")
     
     # Find the value
     value = next((v for v in schema.values if v.key == key), None)
     if not value:
-        console.print(f"[red]Error:[/red] Value with key '{key}' not found")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", f"Value with key '{key}' not found")
     
     # Display details
     console.print(f"\n[bold]{value.key}[/bold]")
@@ -196,14 +193,12 @@ def update_command(
     """Update an existing schema value."""
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", "No schema.json found. Run 'init' first.")
     
     # Find the value
     value_index = next((i for i, v in enumerate(schema.values) if v.key == key), None)
     if value_index is None:
-        console.print(f"[red]Error:[/red] Value with key '{key}' not found")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", f"Value with key '{key}' not found")
     
     value = schema.values[value_index]
     console.print(f"[bold]Updating '{key}'[/bold]\n")
@@ -213,7 +208,7 @@ def update_command(
     new_path = Prompt.ask(f"Path [{value.path}]", default=value.path)
     if new_path != value.path:
         while not validate_path_format(new_path):
-            console.print("[red]Invalid path format. Use alphanumeric characters and dots only.[/red]")
+            error_console.print("[red]Invalid path format. Use alphanumeric characters and dots only.[/red]")
             new_path = Prompt.ask(f"Path [{value.path}]", default=value.path)
         value.path = new_path
     
@@ -227,7 +222,7 @@ def update_command(
     new_type = Prompt.ask(f"Type [{value.type}]", default=value.type).lower()
     if new_type != value.type:
         while new_type not in type_choices:
-            console.print(f"[red]Invalid type. Choose from: {', '.join(type_choices)}[/red]")
+            error_console.print(f"[red]Invalid type. Choose from: {', '.join(type_choices)}[/red]")
             new_type = Prompt.ask(f"Type [{value.type}]", default=value.type).lower()
         value.type = new_type
         # Clear default if type changed
@@ -246,8 +241,8 @@ def update_command(
                 try:
                     value.default = parse_value_by_type(default_str, value.type)
                     break
-                except typer.BadParameter as e:
-                    console.print(f"[red]{e}[/red]")
+                except SchemaError as e:
+                    error_console.print(f"[red]{e}[/red]")
     else:
         default_display = json.dumps(value.default) if value.type in ['array', 'object'] else str(value.default)
         console.print(f"\nCurrent default value: {default_display}")
@@ -271,13 +266,13 @@ def update_command(
                     try:
                         value.default = parse_value_by_type(default_str, value.type)
                         break
-                    except typer.BadParameter as e:
-                        console.print(f"[red]{e}[/red]")
+                    except SchemaError as e:
+                        error_console.print(f"[red]{e}[/red]")
                 break
             elif choice == "3":
                 # Remove default value
                 if value.required:
-                    console.print("[yellow]Warning:[/yellow] This field is required but will have no default value")
+                    ErrorHandler.print_warning("This field is required but will have no default value")
                     if not Confirm.ask("Continue removing default?", default=False):
                         continue
                 
@@ -303,14 +298,12 @@ def remove_command(
     """Remove a value from the schema."""
     schema = load_schema(schema_path)
     if not schema:
-        console.print("[red]Error:[/red] No schema.json found. Run 'init' first.")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", "No schema.json found. Run 'init' first.")
     
     # Find the value
     value_index = next((i for i, v in enumerate(schema.values) if v.key == key), None)
     if value_index is None:
-        console.print(f"[red]Error:[/red] Value with key '{key}' not found")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("schema", f"Value with key '{key}' not found")
     
     value = schema.values[value_index]
     

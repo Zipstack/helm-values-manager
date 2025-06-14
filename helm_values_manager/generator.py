@@ -4,13 +4,9 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from helm_values_manager.errors import GeneratorError
 from helm_values_manager.models import Schema, SchemaValue, SecretReference
 from helm_values_manager.utils import is_secret_reference
-
-
-class GeneratorError(Exception):
-    """Base exception for generator errors."""
-    pass
 
 
 def resolve_secret(secret: Dict[str, Any], key: str) -> str:

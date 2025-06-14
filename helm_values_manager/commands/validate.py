@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
+from helm_values_manager.errors import ErrorHandler
 from helm_values_manager.models import Schema
 from helm_values_manager.utils import load_schema, load_values, get_values_file_path
 from helm_values_manager.validator import validate_single_environment
@@ -31,8 +32,7 @@ def validate_command(
     # Check if schema file exists first
     schema_path = Path(schema)
     if not schema_path.exists():
-        console.print("[red]Error:[/red] Schema file not found")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("validate", "Schema file not found")
     
     # Load schema
     try:
@@ -40,11 +40,9 @@ def validate_command(
             data = json.load(f)
         schema_obj = Schema(**data)
     except json.JSONDecodeError:
-        console.print("[red]Error:[/red] Invalid JSON in schema file")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("validate", "Invalid JSON in schema file")
     except Exception as e:
-        console.print(f"[red]Error:[/red] Invalid schema: {e}")
-        raise typer.Exit(1)
+        ErrorHandler.print_error("validate", f"Invalid schema: {e}")
     
     # Load values
     values_data = load_values(env, values)
@@ -53,11 +51,6 @@ def validate_command(
     errors = validate_single_environment(schema_obj, values_data, env)
     
     if errors:
-        console.print("[red]Error:[/red] Validation failed:")
-        for error in errors:
-            # Escape square brackets for Rich
-            escaped_error = error.replace("[", "\\[").replace("]", "]")
-            console.print(f"  - {escaped_error}")
-        raise typer.Exit(1)
+        ErrorHandler.print_errors(errors, f"validate --env {env}")
     else:
         console.print(f"[green]✅[/green] Validation passed for environment: {env}")

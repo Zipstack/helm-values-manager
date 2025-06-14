@@ -14,7 +14,7 @@ def test_validate_missing_schema(tmp_path):
     """Test validation with missing schema file."""
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(tmp_path / "missing.json")])
     assert result.exit_code == 1
-    assert "Schema file not found" in result.stdout
+    assert "Schema file not found" in result.stderr
 
 
 def test_validate_invalid_schema_json(tmp_path):
@@ -24,7 +24,7 @@ def test_validate_invalid_schema_json(tmp_path):
     
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
-    assert "Invalid JSON in schema file" in result.stdout
+    assert "Invalid JSON in schema file" in result.stderr
 
 
 def test_validate_valid_schema_only(tmp_path):
@@ -76,7 +76,7 @@ def test_validate_duplicate_keys(tmp_path):
     
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
-    assert "Duplicate key: database" in result.stdout
+    assert "Duplicate key: database" in result.stderr
 
 
 def test_validate_duplicate_paths(tmp_path):
@@ -105,7 +105,7 @@ def test_validate_duplicate_paths(tmp_path):
     
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
-    assert "Duplicate path: database.host" in result.stdout
+    assert "Duplicate path: database.host" in result.stderr
 
 
 def test_validate_invalid_type(tmp_path):
@@ -127,7 +127,7 @@ def test_validate_invalid_type(tmp_path):
     
     result = runner.invoke(app, ["validate", "--env", "dev", "--schema", str(schema_file)])
     assert result.exit_code == 1
-    assert ("Invalid schema" in result.stdout or "Invalid type" in result.stdout)
+    assert ("Invalid schema" in result.stderr or "Invalid type" in result.stderr)
 
 
 def test_validate_values_type_mismatch(tmp_path):
@@ -162,7 +162,7 @@ def test_validate_values_type_mismatch(tmp_path):
         "--values", str(values_file)
     ])
     assert result.exit_code == 1
-    assert "Type mismatch for port" in result.stdout
+    assert "Type mismatch for port" in result.stderr
 
 
 def test_validate_missing_required_value(tmp_path):
@@ -195,7 +195,7 @@ def test_validate_missing_required_value(tmp_path):
         "--values", str(values_file)
     ])
     assert result.exit_code == 1
-    assert "Missing required value: database-host" in result.stdout
+    assert "Missing required value: database-host" in result.stderr
 
 
 def test_validate_secret_structure(tmp_path):
@@ -231,7 +231,7 @@ def test_validate_secret_structure(tmp_path):
         "--values", str(values_file)
     ])
     assert result.exit_code == 1
-    assert "Invalid secret structure for api-key" in result.stdout
+    assert "Invalid secret structure for api-key" in result.stderr
 
 
 def test_validate_valid_secret(tmp_path, monkeypatch):
@@ -318,7 +318,7 @@ def test_validate_unknown_key_in_values(tmp_path):
         "--values", str(values_file)
     ])
     assert result.exit_code == 1
-    assert "Unknown key: unknown-key" in result.stdout
+    assert "Unknown key: unknown-key" in result.stderr
 
 
 def test_validate_shows_environment_name_in_errors(tmp_path):
@@ -352,4 +352,5 @@ def test_validate_shows_environment_name_in_errors(tmp_path):
     ])
     
     assert result.exit_code == 1
-    assert "[staging] Values: Missing required value: database-host" in result.stdout
+    assert "Missing required value: database-host" in result.stderr
+    assert "staging" in result.stderr
