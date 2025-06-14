@@ -155,7 +155,7 @@ Update both `values set` and `values set-secret` commands to:
 **Status**: Completed - Confirmation prompts with --force flag bypass
 
 ### Phase 4: Core Engine
-#### Task 4.1: Validator
+#### Task 4.1: Validator ✅
 ```prompt
 Create `validate` command:
 1. Check schema integrity (required fields, valid types)
@@ -166,6 +166,7 @@ Create `validate` command:
 3. Aggregate all errors before exit
 4. Support --env for single environment check
 ```
+**Status**: Completed - Full validation with error aggregation and tests
 
 #### Task 4.2: Generator
 ```prompt

@@ -3,7 +3,7 @@ from rich.console import Console
 
 from helm_values_manager import __version__
 from helm_values_manager.commands.init import init_command
-from helm_values_manager.commands import schema, values
+from helm_values_manager.commands import schema, values, validate
 
 app = typer.Typer(
     name="helm-values-manager",
@@ -36,6 +36,7 @@ def main(
 app.command("init")(init_command)
 app.add_typer(schema.app, name="schema", help="Manage schema values")
 app.add_typer(values.app, name="values", help="Manage environment values")
+app.command("validate")(validate.validate_command)
 
 
 if __name__ == "__main__":

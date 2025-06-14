@@ -164,7 +164,7 @@ def test_values_set_secret(tmp_path, monkeypatch):
         # Set environment variable
         monkeypatch.setenv("DB_PASSWORD", "secret123")
         
-        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "prod"], input="DB_PASSWORD\n")
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "prod"], input="1\nDB_PASSWORD\n")
         
         assert result.exit_code == 0
         assert "Set secret 'db-password'" in result.output
@@ -183,7 +183,7 @@ def test_values_set_secret_warning_not_sensitive(tmp_path):
             json.dump(schema.model_dump(), f)
         
         # Try to set non-sensitive value as secret, but cancel
-        result = runner.invoke(app, ["values", "set-secret", "app-name", "--env", "dev"], input="APP_NAME\nn\n")
+        result = runner.invoke(app, ["values", "set-secret", "app-name", "--env", "dev"], input="1\nAPP_NAME\nn\n")
         
         assert result.exit_code == 0
         assert "not marked as sensitive" in result.output
@@ -196,7 +196,7 @@ def test_values_set_secret_env_var_not_set(tmp_path):
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
         
-        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="NONEXISTENT_VAR\n")
+        result = runner.invoke(app, ["values", "set-secret", "db-password", "--env", "dev"], input="1\nNONEXISTENT_VAR\n")
         
         assert result.exit_code == 0
         assert "Environment variable 'NONEXISTENT_VAR' is not set" in result.output
