@@ -140,7 +140,7 @@ def test_complete_customer_workflow(tmp_path, monkeypatch):
         
         # Set secret
         result = runner.invoke(app, ["values", "set-secret", "api-key", "--env", "prod"],
-                             input="1\\nPROD_API_KEY\\n")
+                             input="1\nPROD_API_KEY\n")
         assert result.exit_code == 0
         
         # Set optional array
@@ -243,7 +243,7 @@ def test_multi_environment_workflow(tmp_path, monkeypatch):
         assert result.exit_code == 0
         
         result = runner.invoke(app, ["values", "set-secret", "database-password", "--env", "dev"],
-                             input="1\\nDEV_DB_PASSWORD\\n")
+                             input="1\nDEV_DB_PASSWORD\n")
         assert result.exit_code == 0
         
         # Configure production environment  
@@ -254,7 +254,7 @@ def test_multi_environment_workflow(tmp_path, monkeypatch):
         assert result.exit_code == 0
         
         result = runner.invoke(app, ["values", "set-secret", "database-password", "--env", "prod"],
-                             input="1\\nPROD_DB_PASSWORD\\n")
+                             input="1\nPROD_DB_PASSWORD\n")
         assert result.exit_code == 0
         
         result = runner.invoke(app, ["values", "set", "replicas", "5", "--env", "prod"])
@@ -310,11 +310,11 @@ def test_error_recovery_workflow(tmp_path):
         
         # 3. Try to add duplicate key
         result = runner.invoke(app, ["schema", "add"],
-                             input="test-key\\ntest.path\\nTest description\\nstring\\ny\\nn\\nn\\n")
+                             input="test-key\ntest.path\nTest description\nstring\ny\nn\nn\n")
         assert result.exit_code == 0
         
         result = runner.invoke(app, ["schema", "add"],
-                             input="test-key\\ntest.path2\\nDuplicate key\\nstring\\ny\\nn\\nn\\n")
+                             input="test-key\ntest.path2\nDuplicate key\nstring\ny\nn\nn\n")
         assert result.exit_code == 1
         assert "already exists" in result.output
         
@@ -342,7 +342,7 @@ def test_schema_evolution_workflow(tmp_path):
         assert result.exit_code == 0
         
         result = runner.invoke(app, ["schema", "add"],
-                             input="app-name\\napp.name\\nApplication name\\nstring\\ny\\ny\\nmyapp\\nn\\n")
+                             input="app-name\napp.name\nApplication name\nstring\ny\ny\nmyapp\nn\n")
         assert result.exit_code == 0
         
         # 2. Set initial values
@@ -351,7 +351,7 @@ def test_schema_evolution_workflow(tmp_path):
         
         # 3. Evolve schema - add new optional field
         result = runner.invoke(app, ["schema", "add"],
-                             input="version\\napp.version\\nApplication version\\nstring\\nn\\ny\\n1.0.0\\nn\\n")
+                             input="version\napp.version\nApplication version\nstring\nn\ny\n1.0.0\nn\n")
         assert result.exit_code == 0
         
         # 4. Validate existing environment still works (backwards compatibility)
@@ -368,7 +368,7 @@ def test_schema_evolution_workflow(tmp_path):
         
         # 6. Add new required field
         result = runner.invoke(app, ["schema", "add"],
-                             input="port\\napp.port\\nApplication port\\nnumber\\ny\\nn\\nn\\n")
+                             input="port\napp.port\nApplication port\nnumber\ny\nn\nn\n")
         assert result.exit_code == 0
         
         # 7. Validation should now fail
