@@ -275,7 +275,8 @@ def init_command(
     env: str = typer.Option(..., "--env", "-e", help="Environment name"),
     schema_path: str = typer.Option("schema.json", "--schema", "-s", help="Path to schema file"),
     values_path: Optional[str] = typer.Option(None, "--values", help="Path to values file"),
-    force: bool = typer.Option(False, "--force", "-f", help="Use defaults where possible, skip prompts"),
+    force: bool = typer.Option(False, "--force", "-f", help="Use defaults where possible, prompt only for required fields without defaults"),
+    skip_defaults: bool = typer.Option(False, "--skip-defaults", help="Skip fields with default values entirely"),
 ):
     """Interactively set up values for an environment."""
     # Load schema
@@ -318,31 +319,39 @@ def init_command(
         if schema_value.default is not None:
             console.print(f"  Default: {schema_value.default}")
         
-        # Prompt for action
-        if force:
-            # In force mode, use defaults where possible
-            if schema_value.default is not None:
-                values[schema_value.key] = schema_value.default
-                set_count += 1
-                console.print(f"  → Using default value: {schema_value.default}")
-                continue
-            elif schema_value.required:
-                # Can't skip required values without defaults in force mode
-                console.print(f"  → Required field with no default, skipping")
-                skipped_count += 1
-                skipped_required.append(schema_value.key)
-                continue
-            else:
-                # Skip optional fields without defaults
-                skipped_count += 1
-                continue
+        # Determine behavior based on flags
+        has_default = schema_value.default is not None
         
-        # Interactive mode
-        action = Prompt.ask(
-            f"\nSet value for '{schema_value.key}'?",
-            choices=["y", "n", "skip"],
-            default="y"
-        )
+        # Handle skip-defaults flag
+        if skip_defaults and has_default:
+            skipped_count += 1
+            console.print(f"  → Skipping field with default value")
+            continue
+        
+        # Handle force mode
+        if force and has_default:
+            # Use defaults automatically in force mode
+            values[schema_value.key] = schema_value.default
+            set_count += 1
+            console.print(f"  → Using default value: {schema_value.default}")
+            continue
+        elif force and not has_default and not schema_value.required:
+            # Skip optional fields without defaults in force mode
+            skipped_count += 1
+            console.print(f"  → Skipping optional field without default")
+            continue
+        elif force and not has_default and schema_value.required:
+            # Required fields without defaults must be prompted even in force mode
+            console.print(f"  → Required field with no default, prompting...")
+            # Skip the "Set value?" prompt and go directly to value input
+            action = "y"  # Force yes for required fields in force mode
+        else:
+            # Interactive mode - ask if user wants to set value
+            action = Prompt.ask(
+                f"\nSet value for '{schema_value.key}'?",
+                choices=["y", "n", "skip"],
+                default="y"
+            )
         
         if action == "skip":
             skip_all = True

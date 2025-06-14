@@ -60,18 +60,21 @@ def create_test_schema_for_init():
 
 
 def test_values_init_force_mode_with_defaults(tmp_path):
-    """Test init command in force mode uses defaults where available."""
+    """Test init command in force mode uses defaults and prompts for required fields without defaults."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         schema = create_test_schema_for_init()
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
         
-        result = runner.invoke(app, ["values", "init", "--env", "dev", "--force"])
+        # Force mode now prompts for required fields without defaults
+        # Order: api-key first (1 for env, SECRET_KEY for name), then port (8080)
+        result = runner.invoke(app, ["values", "init", "--env", "dev", "--force"], 
+                             input="1\nSECRET_KEY\n8080\n")
         
         assert result.exit_code == 0
         assert "Using default value: myapp" in result.output
         assert "Using default value: False" in result.output
-        assert "Required field with no default, skipping" in result.output  # port and api-key
+        assert "Required field with no default, prompting" in result.output  # port and api-key
         
         # Check saved values (flat structure)
         with open("values-dev.json") as f:
@@ -79,8 +82,9 @@ def test_values_init_force_mode_with_defaults(tmp_path):
         
         assert values["app-name"] == "myapp"
         assert values["debug"] is False
-        assert "port" not in values  # Required but no default
-        assert "api-key" not in values  # Required but sensitive
+        assert values["port"] == 8080  # Now included because we prompted for it
+        assert values["api-key"]["type"] == "env"  # Secret now set up
+        assert values["api-key"]["name"] == "SECRET_KEY"
 
 
 def test_values_init_interactive_set_values(tmp_path):
@@ -258,7 +262,7 @@ def test_values_init_custom_schema_and_values_path(tmp_path):
             "--schema", "config/custom-schema.json",
             "--values", "config/custom-values-custom.json",
             "--force"
-        ])
+        ], input="1\nCUSTOM_SECRET\n8080\n")  # Input order: api-key secret, then port
         
         assert result.exit_code == 0
         
