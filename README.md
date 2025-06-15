@@ -80,7 +80,7 @@ helm plugin install ./helm-values-manager
    ```bash
    # Set regular values
    helm values-manager values set database-host "prod-db.example.com" --env prod
-   
+
    # Set secrets (uses environment variables)
    helm values-manager values set-secret database-password --env prod
    ```
@@ -319,6 +319,26 @@ git clone https://github.com/Zipstack/helm-values-manager
 cd helm-values-manager
 uv sync  # Install dependencies
 ```
+
+### Setting up Pre-commit Hooks
+
+We use pre-commit hooks to ensure code quality. To set them up:
+
+```bash
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run hooks manually (optional)
+uv run pre-commit run --all-files
+```
+
+The pre-commit hooks will automatically run:
+- Code formatting with Ruff
+- Linting checks
+- Type checking with mypy
+- Unit tests with pytest
+- JSON/YAML validation
+- Trailing whitespace removal
 
 ### Running Tests
 

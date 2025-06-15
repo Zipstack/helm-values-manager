@@ -234,7 +234,7 @@ helm upgrade myapp ./chart -f values-prod.yaml
 ## Implementation Details
 
 ### Technology Stack
-- **Language**: Python 3.8+
+- **Language**: Python 3.9+
 - **CLI Framework**: Typer
 - **JSON Parsing**: Built-in json module
 - **Validation**: JSON Schema validation

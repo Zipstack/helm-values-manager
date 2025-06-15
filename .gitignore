@@ -35,6 +35,7 @@ schema.json
 values-*.json
 *.yaml
 !plugin.yaml
+!.pre-commit-config.yaml
 
 # Logs
 *.log
