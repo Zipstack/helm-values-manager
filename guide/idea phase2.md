@@ -3,6 +3,7 @@
 - Support to add schemas without interaction.
 - Updating schema or schema migration. Cases like default value change / path change / deletion etc.
 - value from multiple options (eg: value should be one of [a,b,c])
+- Should we migrate to existing helm values schema for this plugin?
 - Nice to have: completion based on resources in json files.
 - Nice to have: completion for plugin
 - Nice to have: publish as pip installable bin

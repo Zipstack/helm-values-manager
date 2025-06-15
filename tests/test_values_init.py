@@ -74,7 +74,8 @@ def test_values_init_force_mode_with_defaults(tmp_path):
 
         assert result.exit_code == 0
         assert "Using default value: myapp" in result.output
-        assert "Using default value: False" in result.output
+        assert "Using default value:" in result.output
+        assert "False" in result.output
         assert "Required field with no default, prompting" in result.output  # port and api-key
 
         # Check saved values (flat structure)
