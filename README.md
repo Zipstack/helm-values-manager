@@ -15,24 +15,26 @@ A Helm plugin that helps manage Helm value configurations across different deplo
 
 ### As a Standalone CLI Tool (Recommended)
 
-Install directly with pip:
+Install from GitHub:
 
 ```bash
-pip install helm-values-manager
+pip install git+https://github.com/Zipstack/helm-values-manager.git
+```
+
+Or clone and install locally:
+
+```bash
+git clone https://github.com/Zipstack/helm-values-manager
+cd helm-values-manager
+pip install -e .
 ```
 
 Or with uv:
 
 ```bash
-uv add helm-values-manager
-```
-
-Or install from source:
-
-```bash
 git clone https://github.com/Zipstack/helm-values-manager
 cd helm-values-manager
-uv install
+uv sync
 # CLI will be available as: uv run helm-values-manager
 ```
 
