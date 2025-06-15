@@ -1,6 +1,6 @@
 [project]
 name = "helm-values-manager"
-version = "0.1.0"
+version = "1.0.0"
 description = "A schema-driven tool for managing Helm values with environment-specific configurations and secret management"
 readme = "README.md"
 requires-python = ">=3.8"

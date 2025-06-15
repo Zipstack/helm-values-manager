@@ -1,5 +1,5 @@
 name: "values-manager"
-version: "0.1.0"
+version: "1.0.0"
 usage: "Manage Helm value configurations across multiple environments"
 description: "A schema-driven tool for managing Helm values with environment-specific configurations and secret management"
 command: "$HELM_PLUGIN_DIR/bin/helm-values-manager"
