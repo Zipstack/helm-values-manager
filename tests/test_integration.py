@@ -348,7 +348,7 @@ def test_error_recovery_workflow(tmp_path):
         # 6. Try to generate with validation errors
         result = runner.invoke(app, ["generate", "--env", "test"])
         assert result.exit_code == 1
-        assert "Validation failed" in result.stderr
+        assert "Validation failed" in result.output
 
 
 def test_schema_evolution_workflow(tmp_path):

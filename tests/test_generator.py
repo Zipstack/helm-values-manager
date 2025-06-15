@@ -312,8 +312,8 @@ def test_generate_command_validation_fails(tmp_path):
         result = runner.invoke(app, ["generate", "--env", "dev"])
 
         assert result.exit_code == 1
-        assert "Validation failed" in result.stderr
-        assert "Missing required value: required-field" in result.stderr
+        assert "Validation failed" in result.output
+        assert "Missing required value: required-field" in result.output
 
 
 def test_generate_command_missing_env_var(tmp_path):
@@ -345,7 +345,7 @@ def test_generate_command_missing_env_var(tmp_path):
         result = runner.invoke(app, ["generate", "--env", "prod"])
 
         assert result.exit_code == 1
-        assert "Environment variable 'MISSING_VAR' not found" in result.stderr
+        assert "Environment variable 'MISSING_VAR' not found" in result.output
 
 
 def test_generate_command_complex_example(tmp_path, monkeypatch):
