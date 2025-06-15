@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set
+from typing import Any, Optional
 
 from rich.console import Console
 from rich.text import Text
@@ -47,7 +47,7 @@ class Validator:
     def __init__(self, schema_path: Path, values_base_path: Optional[Path] = None):
         self.schema_path = schema_path
         self.values_base_path = values_base_path or Path(".")
-        self.errors: List[ValidationError] = []
+        self.errors: list[ValidationError] = []
 
     def validate_all(self, env: Optional[str] = None) -> bool:
         """Validate schema and optionally values for specific environment."""
@@ -88,8 +88,8 @@ class Validator:
             self.errors.append(ValidationError("Schema", f"Unsupported version: {schema.version}"))
 
         # Validate each entry
-        seen_keys: Set[str] = set()
-        seen_paths: Set[str] = set()
+        seen_keys: set[str] = set()
+        seen_paths: set[str] = set()
 
         for entry in schema.values:
             # Check for duplicate keys
@@ -248,7 +248,7 @@ class Validator:
             console.print(f"  - {str(error)}")
 
 
-def validate_single_environment(schema: Schema, values: Dict[str, Any], env: str) -> List[str]:
+def validate_single_environment(schema: Schema, values: dict[str, Any], env: str) -> list[str]:
     """Validate schema and values for a single environment and return list of errors.
 
     Args:
@@ -303,7 +303,7 @@ def validate_single_environment(schema: Schema, values: Dict[str, Any], env: str
     return errors
 
 
-def _validate_schema_integrity(schema: Schema) -> List[str]:
+def _validate_schema_integrity(schema: Schema) -> list[str]:
     """Validate schema for duplicate keys and paths."""
     errors = []
 

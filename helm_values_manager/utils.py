@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from helm_values_manager.models import Schema
 
@@ -51,7 +51,7 @@ def get_values_file_path(env: str, values_path: Optional[str] = None) -> str:
     return f"values-{env}.json"
 
 
-def load_values(env: str, values_path: Optional[str] = None) -> Dict[str, Any]:
+def load_values(env: str, values_path: Optional[str] = None) -> dict[str, Any]:
     """Load values for an environment."""
     path = Path(get_values_file_path(env, values_path))
     if not path.exists():
@@ -63,7 +63,7 @@ def load_values(env: str, values_path: Optional[str] = None) -> Dict[str, Any]:
     return data
 
 
-def save_values(values: Dict[str, Any], env: str, values_path: Optional[str] = None) -> None:
+def save_values(values: dict[str, Any], env: str, values_path: Optional[str] = None) -> None:
     """Save values for an environment."""
     path = get_values_file_path(env, values_path)
     with open(path, "w") as f:

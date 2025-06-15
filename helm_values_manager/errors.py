@@ -1,6 +1,6 @@
 """Centralized error handling utilities for consistent error formatting."""
 
-from typing import List, Optional
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -31,7 +31,7 @@ class ErrorHandler:
         error_console.print(f"[yellow]Warning:[/yellow] {message}")
 
     @staticmethod
-    def print_errors(errors: List[str], context: Optional[str] = None) -> None:
+    def print_errors(errors: list[str], context: Optional[str] = None) -> None:
         """Print multiple errors at once."""
         if not errors:
             return

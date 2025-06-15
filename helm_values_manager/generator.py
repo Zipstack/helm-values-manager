@@ -1,7 +1,7 @@
 """Generator module for creating values.yaml from schema and values."""
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
@@ -10,7 +10,7 @@ from helm_values_manager.models import Schema
 from helm_values_manager.utils import is_secret_reference
 
 
-def resolve_secret(secret: Dict[str, Any], key: str) -> str:
+def resolve_secret(secret: dict[str, Any], key: str) -> str:
     """Resolve a secret reference to its actual value.
 
     Args:
@@ -37,7 +37,7 @@ def resolve_secret(secret: Dict[str, Any], key: str) -> str:
     return value
 
 
-def build_nested_dict(flat_values: Dict[str, Any], schema: Schema) -> Dict[str, Any]:
+def build_nested_dict(flat_values: dict[str, Any], schema: Schema) -> dict[str, Any]:
     """Build a nested dictionary from flat values using schema paths.
 
     Args:
@@ -80,7 +80,7 @@ def build_nested_dict(flat_values: Dict[str, Any], schema: Schema) -> Dict[str, 
     return result
 
 
-def generate_values(schema: Schema, values: Dict[str, Any], env: str) -> str:
+def generate_values(schema: Schema, values: dict[str, Any], env: str) -> str:
     """Generate values.yaml content from schema and environment values.
 
     Args:
