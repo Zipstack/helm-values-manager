@@ -32,4 +32,5 @@ ValueEntry = Union[str, int, float, bool, List, Dict, SecretReference]
 
 class ValuesFile(RootModel[Dict[str, Any]]):
     """Represents a values file for an environment."""
+
     root: Dict[str, Any] = Field(default_factory=dict)

@@ -1,4 +1,5 @@
 """Validate command for helm-values-manager."""
+
 import json
 from pathlib import Path
 from typing import Optional
@@ -33,7 +34,7 @@ def validate_command(
     schema_path = Path(schema)
     if not schema_path.exists():
         ErrorHandler.print_error("validate", "Schema file not found")
-    
+
     # Load schema
     try:
         with open(schema_path) as f:
@@ -43,13 +44,13 @@ def validate_command(
         ErrorHandler.print_error("validate", "Invalid JSON in schema file")
     except Exception as e:
         ErrorHandler.print_error("validate", f"Invalid schema: {e}")
-    
+
     # Load values
     values_data = load_values(env, values)
-    
+
     # Run validation
     errors = validate_single_environment(schema_obj, values_data, env)
-    
+
     if errors:
         ErrorHandler.print_errors(errors, f"validate --env {env}")
     else:

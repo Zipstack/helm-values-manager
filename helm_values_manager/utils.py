@@ -10,7 +10,7 @@ def load_schema(schema_path: str = "schema.json") -> Optional[Schema]:
     path = Path(schema_path)
     if not path.exists():
         return None
-    
+
     try:
         with open(path) as f:
             data = json.load(f)
@@ -39,7 +39,7 @@ def validate_path_format(path: str) -> bool:
     """Validate that path contains only alphanumeric characters and dots."""
     if not path:
         return False
-    
+
     parts = path.split(".")
     return all(part.replace("-", "").replace("_", "").isalnum() for part in parts if part)
 
@@ -56,10 +56,10 @@ def load_values(env: str, values_path: Optional[str] = None) -> Dict[str, Any]:
     path = Path(get_values_file_path(env, values_path))
     if not path.exists():
         return {}
-    
+
     with open(path) as f:
         data = json.load(f)
-    
+
     return data
 
 
@@ -72,18 +72,14 @@ def save_values(values: Dict[str, Any], env: str, values_path: Optional[str] = N
 
 def is_secret_reference(value: Any) -> bool:
     """Check if a value is a secret reference."""
-    return (
-        isinstance(value, dict) 
-        and "type" in value
-        and "name" in value
-    )
+    return isinstance(value, dict) and "type" in value and "name" in value
 
 
 def validate_secret_reference(value: Any) -> tuple[bool, str]:
     """Validate a secret reference and return (is_valid, error_message)."""
     if not isinstance(value, dict) or "type" not in value:
         return False, "Not a valid secret reference"
-    
+
     secret_type = value.get("type")
     if secret_type == "env":
         if not value.get("name"):

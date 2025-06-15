@@ -14,7 +14,7 @@ def test_schema_add_command(tmp_path):
         # First create a schema
         result = runner.invoke(app, ["init"])
         assert result.exit_code == 0
-        
+
         # Add a value with all inputs
         inputs = [
             "database-host",  # key
@@ -26,14 +26,14 @@ def test_schema_add_command(tmp_path):
             "n",  # sensitive?
         ]
         result = runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
         assert "Added 'database-host' to schema" in result.output
-        
+
         # Verify the schema was updated
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         assert len(schema.values) == 1
         value = schema.values[0]
         assert value.key == "database-host"
@@ -49,7 +49,7 @@ def test_schema_add_with_default(tmp_path):
     """Test adding a value with a default."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         inputs = [
             "replicas",  # key
             "deployment.replicas",  # path
@@ -61,12 +61,12 @@ def test_schema_add_with_default(tmp_path):
             "n",  # sensitive?
         ]
         result = runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
-        
+
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.key == "replicas"
         assert value.default == 3
@@ -77,11 +77,11 @@ def test_schema_add_duplicate_key(tmp_path):
     """Test that duplicate keys are rejected."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         # Add first value
         inputs = ["test-key", "test.path", "Test", "string", "y", "n", "n"]
         runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         # Try to add duplicate
         inputs = [
             "test-key",  # duplicate key
@@ -94,7 +94,7 @@ def test_schema_add_duplicate_key(tmp_path):
             "n",
         ]
         result = runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
         assert "already exists" in result.output
 
@@ -103,9 +103,9 @@ def test_schema_list_empty(tmp_path):
     """Test listing values when schema is empty."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         result = runner.invoke(app, ["schema", "list"])
-        
+
         assert result.exit_code == 0
         assert "No values defined in schema" in result.output
 
@@ -141,12 +141,12 @@ def test_schema_list_with_values(tmp_path):
                 ),
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         result = runner.invoke(app, ["schema", "list"])
-        
+
         assert result.exit_code == 0
         assert "required-value" in result.output
         assert "optional-value" in result.output
@@ -171,12 +171,12 @@ def test_schema_get_command(tmp_path):
                 )
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         result = runner.invoke(app, ["schema", "get", "test-value"])
-        
+
         assert result.exit_code == 0
         assert "test-value" in result.output
         assert "test.path" in result.output
@@ -190,9 +190,9 @@ def test_schema_get_nonexistent(tmp_path):
     """Test getting a value that doesn't exist."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         result = runner.invoke(app, ["schema", "get", "nonexistent"])
-        
+
         assert result.exit_code == 1
         assert "not found" in result.output
 
@@ -201,7 +201,7 @@ def test_parse_array_type(tmp_path):
     """Test adding array type values."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         # Test JSON array input
         inputs = [
             "hosts",
@@ -214,12 +214,12 @@ def test_parse_array_type(tmp_path):
             "n",
         ]
         result = runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
-        
+
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.type == "array"
         assert value.default == ["example.com", "www.example.com"]
@@ -229,7 +229,7 @@ def test_parse_object_type(tmp_path):
     """Test adding object type values."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         inputs = [
             "resources",
             "resources",
@@ -241,12 +241,12 @@ def test_parse_object_type(tmp_path):
             "n",
         ]
         result = runner.invoke(app, ["schema", "add"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
-        
+
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.type == "object"
         assert value.default == {"cpu": "100m", "memory": "128Mi"}
@@ -268,10 +268,10 @@ def test_schema_update_command(tmp_path):
                 )
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Update the value
         inputs = [
             "new.path",  # new path
@@ -283,14 +283,14 @@ def test_schema_update_command(tmp_path):
             "y",  # sensitive
         ]
         result = runner.invoke(app, ["schema", "update", "test-value"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
         assert "Updated 'test-value' in schema" in result.output
-        
+
         # Verify the updates
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.path == "new.path"
         assert value.description == "Updated description"
@@ -315,10 +315,10 @@ def test_schema_update_type_change(tmp_path):
                 )
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Change type and clear default
         inputs = [
             "",  # keep path
@@ -330,12 +330,12 @@ def test_schema_update_type_change(tmp_path):
             "n",  # not sensitive
         ]
         result = runner.invoke(app, ["schema", "update", "test-value"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
-        
+
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.type == "number"
         assert value.default is None
@@ -345,9 +345,9 @@ def test_schema_update_nonexistent(tmp_path):
     """Test updating a value that doesn't exist."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         result = runner.invoke(app, ["schema", "update", "nonexistent"])
-        
+
         assert result.exit_code == 1
         assert "not found" in result.output
 
@@ -359,23 +359,25 @@ def test_schema_remove_command(tmp_path):
         schema = Schema(
             values=[
                 SchemaValue(key="keep-me", path="keep.path", description="Keep", type="string"),
-                SchemaValue(key="remove-me", path="remove.path", description="Remove", type="string"),
+                SchemaValue(
+                    key="remove-me", path="remove.path", description="Remove", type="string"
+                ),
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Remove with confirmation
         result = runner.invoke(app, ["schema", "remove", "remove-me"], input="y\n")
-        
+
         assert result.exit_code == 0
         assert "Removed 'remove-me' from schema" in result.output
-        
+
         # Verify removal
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         assert len(schema.values) == 1
         assert schema.values[0].key == "keep-me"
 
@@ -387,20 +389,20 @@ def test_schema_remove_with_force(tmp_path):
         schema = Schema(
             values=[SchemaValue(key="remove-me", path="path", description="Remove", type="string")]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Remove with force (no confirmation)
         result = runner.invoke(app, ["schema", "remove", "remove-me", "--force"])
-        
+
         assert result.exit_code == 0
         assert "Removed 'remove-me' from schema" in result.output
-        
+
         # Verify removal
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         assert len(schema.values) == 0
 
 
@@ -411,20 +413,20 @@ def test_schema_remove_cancel(tmp_path):
         schema = Schema(
             values=[SchemaValue(key="keep-me", path="path", description="Keep", type="string")]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Cancel removal
         result = runner.invoke(app, ["schema", "remove", "keep-me"], input="n\n")
-        
+
         assert result.exit_code == 0
         assert "Cancelled" in result.output
-        
+
         # Verify not removed
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         assert len(schema.values) == 1
 
 
@@ -432,9 +434,9 @@ def test_schema_remove_nonexistent(tmp_path):
     """Test removing a value that doesn't exist."""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         runner.invoke(app, ["init"])
-        
+
         result = runner.invoke(app, ["schema", "remove", "nonexistent"])
-        
+
         assert result.exit_code == 1
         assert "not found" in result.output
 
@@ -455,10 +457,10 @@ def test_schema_update_remove_default(tmp_path):
                 )
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Update and remove default
         inputs = [
             "",  # keep path
@@ -469,14 +471,14 @@ def test_schema_update_remove_default(tmp_path):
             "n",  # not sensitive
         ]
         result = runner.invoke(app, ["schema", "update", "replicas"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
         assert "Default value removed" in result.output
-        
+
         # Verify default was removed
         with open("schema.json") as f:
             schema = Schema(**json.load(f))
-        
+
         value = schema.values[0]
         assert value.default is None
 
@@ -497,14 +499,14 @@ def test_schema_update_remove_default_required_warning(tmp_path):
                 )
             ]
         )
-        
+
         with open("schema.json", "w") as f:
             json.dump(schema.model_dump(), f)
-        
+
         # Try to remove default but cancel due to warning
         inputs = [
             "",  # keep path
-            "",  # keep description  
+            "",  # keep description
             "string",  # keep type
             "y",  # required
             "3",  # remove default
@@ -513,6 +515,6 @@ def test_schema_update_remove_default_required_warning(tmp_path):
             "n",  # not sensitive
         ]
         result = runner.invoke(app, ["schema", "update", "app-name"], input="\n".join(inputs))
-        
+
         assert result.exit_code == 0
         assert "This field is required but will have no default" in result.output

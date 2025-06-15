@@ -1,4 +1,5 @@
 """Tests for utility functions."""
+
 import json
 
 import pytest
@@ -39,7 +40,7 @@ def test_load_values_invalid_json(tmp_path):
     """Test loading values with invalid JSON raises error."""
     values_file = tmp_path / "values-invalid.json"
     values_file.write_text("invalid json")
-    
+
     with pytest.raises(json.JSONDecodeError):
         load_values("invalid", str(values_file))
 
@@ -48,9 +49,9 @@ def test_save_values(tmp_path):
     """Test saving values to file."""
     values_file = tmp_path / "values-test.json"
     values = {"key1": "value1", "key2": 42}
-    
+
     save_values(values, "test", str(values_file))
-    
+
     assert values_file.exists()
     with open(values_file) as f:
         saved_data = json.load(f)
@@ -61,7 +62,7 @@ def test_load_schema_invalid_json(tmp_path):
     """Test loading schema with invalid JSON returns None."""
     schema_file = tmp_path / "invalid-schema.json"
     schema_file.write_text("invalid json")
-    
+
     result = load_schema(str(schema_file))
     assert result is None
 
@@ -70,16 +71,16 @@ def test_load_schema_invalid_schema_structure(tmp_path):
     """Test loading schema with invalid structure returns None."""
     schema_file = tmp_path / "invalid-structure.json"
     schema_data = {"missing_version": True, "invalid_field": "value"}  # Missing required fields
-    
+
     with open(schema_file, "w") as f:
         json.dump(schema_data, f)
-    
+
     result = load_schema(str(schema_file))
     # The Schema model provides defaults, so this actually succeeds
     # Let's test that it gets defaults
     assert result is not None
     assert result.version == "1.0"  # Default version
-    assert result.values == []      # Default empty values
+    assert result.values == []  # Default empty values
 
 
 def test_save_schema(tmp_path):
@@ -93,17 +94,17 @@ def test_save_schema(tmp_path):
                 path="test.path",
                 description="Test description",
                 type="string",
-                required=True
+                required=True,
             )
-        ]
+        ],
     )
-    
+
     save_schema(schema, str(schema_file))
-    
+
     assert schema_file.exists()
     with open(schema_file) as f:
         saved_data = json.load(f)
-    
+
     assert saved_data["version"] == "1.0"
     assert len(saved_data["values"]) == 1
     assert saved_data["values"][0]["key"] == "test-key"
@@ -114,10 +115,12 @@ def test_validate_key_unique():
     schema = Schema(
         version="1.0",
         values=[
-            SchemaValue(key="existing", path="test.path", description="", type="string", required=True)
-        ]
+            SchemaValue(
+                key="existing", path="test.path", description="", type="string", required=True
+            )
+        ],
     )
-    
+
     assert not validate_key_unique(schema, "existing")
     assert validate_key_unique(schema, "new-key")
 
@@ -131,13 +134,13 @@ def test_validate_path_format():
     assert validate_path_format("with-dashes")
     assert validate_path_format("with_underscores")
     assert validate_path_format("mixed-path_with.dots")
-    
+
     # Invalid paths
     assert not validate_path_format("")
     # Note: Current implementation filters empty parts, so some edge cases pass
     # assert not validate_path_format(".")  # Actually valid due to filtering
     # assert not validate_path_format(".leading-dot")  # Becomes "leading-dot" after filtering
-    # assert not validate_path_format("trailing-dot.")  # Becomes "trailing-dot" after filtering  
+    # assert not validate_path_format("trailing-dot.")  # Becomes "trailing-dot" after filtering
     # assert not validate_path_format("double..dots")  # Becomes "double", "dots" after filtering
     assert not validate_path_format("with spaces")
     assert not validate_path_format("with@symbols")
@@ -151,7 +154,7 @@ def test_is_secret_reference():
     assert is_secret_reference({"type": "vault", "name": "secret/path"})
     # Note: is_secret_reference only checks structure, not value types
     assert is_secret_reference({"type": "env", "name": 123})  # Would be caught by validation later
-    
+
     # Invalid secret references
     assert not is_secret_reference("string")
     assert not is_secret_reference(42)
@@ -167,27 +170,27 @@ def test_validate_secret_reference():
     is_valid, error = validate_secret_reference({"type": "env", "name": "VAR"})
     assert is_valid
     assert error == ""
-    
+
     # Missing name
     is_valid, error = validate_secret_reference({"type": "env"})
     assert not is_valid
     assert "Environment variable name is required" in error
-    
+
     # Empty name
     is_valid, error = validate_secret_reference({"type": "env", "name": ""})
     assert not is_valid
     assert "Environment variable name is required" in error
-    
+
     # Unsupported type
     is_valid, error = validate_secret_reference({"type": "vault", "name": "secret"})
     assert not is_valid
     assert "Unsupported secret type: vault" in error
-    
+
     # Not a dict
     is_valid, error = validate_secret_reference("not a dict")
     assert not is_valid
     assert "Not a valid secret reference" in error
-    
+
     # Missing type
     is_valid, error = validate_secret_reference({"name": "VAR"})
     assert not is_valid
@@ -204,15 +207,15 @@ def test_load_values_integration(tmp_path):
         "bool-value": True,
         "array-value": ["item1", "item2"],
         "object-value": {"nested": "value"},
-        "secret-value": {"type": "env", "name": "SECRET_VAR"}
+        "secret-value": {"type": "env", "name": "SECRET_VAR"},
     }
-    
+
     with open(values_file, "w") as f:
         json.dump(test_values, f)
-    
+
     result = load_values("integration", str(values_file))
     assert result == test_values
-    
+
     # Test with non-existent file (should return empty dict)
     result = load_values("missing", str(tmp_path / "nonexistent.json"))
     assert result == {}
@@ -230,28 +233,28 @@ def test_schema_round_trip(tmp_path):
                 type="object",
                 required=False,
                 default={"key": "value"},
-                sensitive=True
+                sensitive=True,
             ),
             SchemaValue(
                 key="simple-field",
                 path="app.simple",
                 description="Simple field",
                 type="string",
-                required=True
-            )
-        ]
+                required=True,
+            ),
+        ],
     )
-    
+
     schema_file = tmp_path / "roundtrip-schema.json"
-    
+
     # Save and reload
     save_schema(original_schema, str(schema_file))
     loaded_schema = load_schema(str(schema_file))
-    
+
     assert loaded_schema is not None
     assert loaded_schema.version == original_schema.version
     assert len(loaded_schema.values) == len(original_schema.values)
-    
+
     # Check first value
     loaded_value = loaded_schema.values[0]
     original_value = original_schema.values[0]
