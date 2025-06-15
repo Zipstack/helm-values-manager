@@ -36,7 +36,7 @@ jobs:
 
     - name: Install tox
       run: |
-        pip install tox tox-uv
+        pip install tox
 
     - name: Run tests with tox
       run: |
