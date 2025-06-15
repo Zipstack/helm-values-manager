@@ -310,15 +310,58 @@ This plugin is written in Python and uses:
 - **CLI Framework**: Typer
 - **Dependencies**: PyYAML for YAML generation
 - **Testing**: pytest with comprehensive test coverage
+- **Testing Tool**: tox for consistent testing across environments
 
 ### Building from Source
 
 ```bash
 git clone https://github.com/Zipstack/helm-values-manager
 cd helm-values-manager
-uv install
-uv run pytest  # Run tests
+uv sync  # Install dependencies
 ```
+
+### Running Tests
+
+We use tox for consistent testing across different Python versions and environments:
+
+```bash
+# Run tests for current Python version
+tox
+
+# Run tests for specific Python version
+tox -e py311
+
+# Run linting
+tox -e lint
+
+# Run type checking
+tox -e type-check
+
+# Run integration tests
+tox -e integration
+
+# Run all environments
+tox -p  # parallel execution
+```
+
+### Alternative: Direct pytest (for development)
+
+```bash
+# Using uv
+uv run pytest
+
+# Using pip
+pip install -e .[dev]
+pytest
+```
+
+### Why Tox?
+
+Tox ensures consistent test environments between local development and CI:
+- Isolated virtual environments for each test run
+- Consistent dependency installation
+- Environment variable standardization
+- Cross-platform compatibility
 
 ## Contributing
 

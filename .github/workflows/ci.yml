@@ -38,23 +38,17 @@ jobs:
       with:
         version: "0.5.14"
 
-    - name: Install dependencies
+    - name: Install tox
       run: |
-        uv sync --all-extras --dev
+        pip install tox tox-uv
 
-    - name: Run unit tests
+    - name: Run tests with tox
       run: |
-        uv run pytest tests/ -v --cov=helm_values_manager --cov-report=xml --cov-report=term
-      env:
-        FORCE_COLOR: "0"
-        NO_COLOR: "1"
+        tox -e py${{ matrix.python-version }}
 
-    - name: Run integration tests
+    - name: Run integration tests with tox
       run: |
-        uv run pytest tests/test_integration.py -v
-      env:
-        FORCE_COLOR: "0"
-        NO_COLOR: "1"
+        tox -e integration
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
@@ -85,26 +79,18 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: "0.5.14"
-
-    - name: Install dependencies
+    - name: Install tox
       run: |
-        uv sync --all-extras --dev
+        pip install tox
 
-    - name: Run ruff check
+    - name: Run linting with tox
       run: |
-        uv run ruff check .
+        tox -e lint
 
-    - name: Run ruff format check
+    - name: Run type checking with tox
       run: |
-        uv run ruff format --check .
-
-    - name: Run mypy
-      run: |
-        uv run mypy helm_values_manager --ignore-missing-imports || true
+        tox -e type-check
+      continue-on-error: true
 
   plugin-test:
     runs-on: ubuntu-latest
