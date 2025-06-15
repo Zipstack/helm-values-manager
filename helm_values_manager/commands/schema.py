@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -309,7 +309,7 @@ def remove_command(
     
     # Confirm removal
     if not force:
-        console.print(f"\n[bold]Value to remove:[/bold]")
+        console.print("\n[bold]Value to remove:[/bold]")
         console.print(f"Key: {value.key}")
         console.print(f"Path: {value.path}")
         console.print(f"Description: {value.description}")

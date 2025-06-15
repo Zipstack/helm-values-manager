@@ -1,8 +1,6 @@
 """Tests for values init command flag behavior."""
 import json
-from pathlib import Path
 
-import pytest
 from typer.testing import CliRunner
 
 from helm_values_manager.cli import app

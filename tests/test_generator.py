@@ -1,7 +1,5 @@
 """Tests for the generator module."""
 import json
-import os
-from pathlib import Path
 
 import pytest
 import yaml

@@ -3,7 +3,6 @@ import json
 import os
 from pathlib import Path
 
-import pytest
 from typer.testing import CliRunner
 
 from helm_values_manager.cli import app

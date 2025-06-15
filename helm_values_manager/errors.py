@@ -1,5 +1,4 @@
 """Centralized error handling utilities for consistent error formatting."""
-import sys
 from typing import List, Optional
 
 import typer

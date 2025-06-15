@@ -1,6 +1,5 @@
 """Tests for edge cases and error conditions."""
 import json
-import os
 from pathlib import Path
 
 import pytest

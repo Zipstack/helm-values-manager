@@ -1,7 +1,5 @@
 """Tests for utility functions."""
 import json
-import os
-from pathlib import Path
 
 import pytest
 

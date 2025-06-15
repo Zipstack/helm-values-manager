@@ -1,11 +1,11 @@
 """Generator module for creating values.yaml from schema and values."""
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
 from helm_values_manager.errors import GeneratorError
-from helm_values_manager.models import Schema, SchemaValue, SecretReference
+from helm_values_manager.models import Schema
 from helm_values_manager.utils import is_secret_reference
 
 

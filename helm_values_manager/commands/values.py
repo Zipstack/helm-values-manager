@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Optional
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -8,10 +8,9 @@ from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 from helm_values_manager.commands.schema import parse_value_by_type
-from helm_values_manager.models import SchemaValue, SecretReference
-from helm_values_manager.errors import ErrorHandler, ValuesError, SchemaError
+from helm_values_manager.models import SchemaValue
+from helm_values_manager.errors import ErrorHandler, SchemaError
 from helm_values_manager.utils import (
-    get_values_file_path,
     is_secret_reference,
     load_schema,
     load_values,
@@ -325,7 +324,7 @@ def init_command(
         # Handle skip-defaults flag
         if skip_defaults and has_default:
             skipped_count += 1
-            console.print(f"  → Skipping field with default value")
+            console.print("  → Skipping field with default value")
             continue
         
         # Handle force mode
@@ -338,11 +337,11 @@ def init_command(
         elif force and not has_default and not schema_value.required:
             # Skip optional fields without defaults in force mode
             skipped_count += 1
-            console.print(f"  → Skipping optional field without default")
+            console.print("  → Skipping optional field without default")
             continue
         elif force and not has_default and schema_value.required:
             # Required fields without defaults must be prompted even in force mode
-            console.print(f"  → Required field with no default, prompting...")
+            console.print("  → Required field with no default, prompting...")
             # Skip the "Set value?" prompt and go directly to value input
             action = "y"  # Force yes for required fields in force mode
         else:
@@ -420,7 +419,7 @@ def init_command(
     save_values(values, env, values_path)
     
     # Show summary
-    console.print(f"\n[bold]Summary:[/bold]")
+    console.print("\n[bold]Summary:[/bold]")
     console.print(f"  Set {set_count} values")
     console.print(f"  Skipped {skipped_count} values")
     

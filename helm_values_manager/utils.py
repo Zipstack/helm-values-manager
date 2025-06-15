@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from helm_values_manager.models import Schema, SecretReference, ValuesFile
+from helm_values_manager.models import Schema
 
 
 def load_schema(schema_path: str = "schema.json") -> Optional[Schema]:

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -18,7 +18,7 @@ class SchemaValue(BaseModel):
 
 class Schema(BaseModel):
     version: str = Field(default="1.0", description="Schema version")
-    values: list[SchemaValue] = Field(default_factory=list, description="List of value definitions")
+    values: List[SchemaValue] = Field(default_factory=list, description="List of value definitions")
 
 
 class SecretReference(BaseModel):
@@ -27,7 +27,7 @@ class SecretReference(BaseModel):
 
 
 # Type for a value in the values file - can be a regular value or a secret reference
-ValueEntry = Union[str, int, float, bool, list, dict, SecretReference]
+ValueEntry = Union[str, int, float, bool, List, Dict, SecretReference]
 
 
 class ValuesFile(RootModel[Dict[str, Any]]):

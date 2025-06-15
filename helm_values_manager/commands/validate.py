@@ -8,7 +8,7 @@ from rich.console import Console
 
 from helm_values_manager.errors import ErrorHandler
 from helm_values_manager.models import Schema
-from helm_values_manager.utils import load_schema, load_values, get_values_file_path
+from helm_values_manager.utils import load_values
 from helm_values_manager.validator import validate_single_environment
 
 console = Console()

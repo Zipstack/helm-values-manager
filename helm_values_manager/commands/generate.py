@@ -1,5 +1,4 @@
 """Generate command implementation."""
-import sys
 from typing import Optional
 
 import typer
@@ -7,7 +6,7 @@ from rich.console import Console
 
 from helm_values_manager.errors import ErrorHandler, GeneratorError
 from helm_values_manager.generator import generate_values
-from helm_values_manager.utils import get_values_file_path, load_schema, load_values
+from helm_values_manager.utils import load_schema, load_values
 from helm_values_manager.validator import validate_single_environment
 
 console = Console()
@@ -25,9 +24,6 @@ def generate_command(
     schema_obj = load_schema(schema)
     if not schema_obj:
         ErrorHandler.print_error("generate", "Schema file not found")
-    
-    # Determine values file path
-    values_path = values or get_values_file_path(env)
     
     # Load values
     values_data = load_values(env, values)
