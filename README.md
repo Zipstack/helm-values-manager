@@ -1,5 +1,14 @@
 # helm-values-manager
 
+[![CI](https://github.com/Zipstack/helm-values-manager/workflows/CI/badge.svg)](https://github.com/Zipstack/helm-values-manager/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Zipstack/helm-values-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/Zipstack/helm-values-manager)
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Helm Plugin](https://img.shields.io/badge/helm-plugin-blue.svg)](https://helm.sh/docs/topics/plugins/)
+
 A Helm plugin that helps manage Helm value configurations across different deployments (dev, test, prod) with a schema-driven approach. It separates value definitions (schema) from actual values, enabling vendors to distribute schemas while customers manage their deployment-specific values securely.
 
 ## Features
