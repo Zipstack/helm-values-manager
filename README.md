@@ -344,6 +344,14 @@ tox -e integration
 tox -p  # parallel execution
 ```
 
+You can also use tox via uv (if you have uv installed):
+
+```bash
+# Same commands work with uv
+uv run tox -e lint
+uv run tox -e py311
+```
+
 ### Alternative: Direct pytest (for development)
 
 ```bash
@@ -359,9 +367,10 @@ pytest
 
 Tox ensures consistent test environments between local development and CI:
 - Isolated virtual environments for each test run
-- Consistent dependency installation
-- Environment variable standardization
+- Consistent dependency installation across different Python versions
+- Environment variable standardization (NO_COLOR, FORCE_COLOR)
 - Cross-platform compatibility
+- Works reliably both with direct `tox` commands and via `uv run tox`
 
 ## Contributing
 
