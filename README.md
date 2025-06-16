@@ -24,13 +24,13 @@ A Helm plugin that helps manage Helm value configurations across different deplo
 
 ### As a Standalone CLI Tool (Recommended)
 
-Install from GitHub:
+Install from PyPI:
 
 ```bash
-pip install git+https://github.com/Zipstack/helm-values-manager.git
+pip install helm-values-manager
 ```
 
-Or clone and install locally:
+Or install from source:
 
 ```bash
 git clone https://github.com/Zipstack/helm-values-manager
